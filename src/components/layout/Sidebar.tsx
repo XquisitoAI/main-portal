@@ -1,13 +1,14 @@
 import React, { useEffect, useState, useRef, cloneElement } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { HomeIcon, ListIcon, QrCodeIcon, SettingsIcon, LogOutIcon } from 'lucide-react';
 const Sidebar: React.FC = () => {
-  const location = useLocation();
+  const pathname = usePathname();
   const [expanded, setExpanded] = useState(false);
   const sidebarRef = useRef<HTMLElement>(null);
   // Check if item is active
   const isActive = (path: string) => {
-    return location.pathname === path;
+    return pathname === path;
   };
   // Media query for responsive behavior
   useEffect(() => {
@@ -45,7 +46,7 @@ const Sidebar: React.FC = () => {
       <nav className="flex-1 px-2 py-4">
         <ul className="space-y-2">
           {navItems.map(item => <li key={item.path}>
-              <Link to={item.path} className={`flex items-center px-3 py-3 rounded-lg transition-all relative ${isActive(item.path) ? 'bg-[rgba(0,0,0,0.08)] text-[#0B1220] border-l-[3px] border-[#9A4BB8]' : 'hover:bg-[rgba(0,0,0,0.06)] hover:text-[#111827] border-l-[3px] border-transparent'}`} aria-current={isActive(item.path) ? 'page' : undefined}>
+              <Link href={item.path} className={`flex items-center px-3 py-3 rounded-lg transition-all relative ${isActive(item.path) ? 'bg-[rgba(0,0,0,0.08)] text-[#0B1220] border-l-[3px] border-[#9A4BB8]' : 'hover:bg-[rgba(0,0,0,0.06)] hover:text-[#111827] border-l-[3px] border-transparent'}`} aria-current={isActive(item.path) ? 'page' : undefined}>
                 <span className="flex items-center">
                   {cloneElement(item.icon as React.ReactElement, {
                 className: `h-5 w-5 ${isActive(item.path) ? 'text-[#0B1220]' : ''}`
