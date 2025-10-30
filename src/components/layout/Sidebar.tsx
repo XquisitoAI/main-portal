@@ -1,14 +1,21 @@
 import React, { useEffect, useState, useRef, cloneElement } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useClerk } from '@clerk/nextjs';
 import { HomeIcon, ListIcon, QrCodeIcon, SettingsIcon, LogOutIcon } from 'lucide-react';
 const Sidebar: React.FC = () => {
   const pathname = usePathname();
+  const { signOut } = useClerk();
   const [expanded, setExpanded] = useState(false);
   const sidebarRef = useRef<HTMLElement>(null);
   // Check if item is active
   const isActive = (path: string) => {
     return pathname === path;
+  };
+
+  // Handle sign out
+  const handleSignOut = () => {
+    signOut();
   };
   // Media query for responsive behavior
   useEffect(() => {
@@ -63,7 +70,10 @@ const Sidebar: React.FC = () => {
         </ul>
       </nav>
       <div className="p-4 border-t border-[rgba(0,0,0,0.06)]">
-        <button className={`flex items-center w-full px-3 py-3 rounded-lg hover:bg-[rgba(0,0,0,0.06)] hover:text-[#111827] transition-all`}>
+        <button
+          onClick={handleSignOut}
+          className={`flex items-center w-full px-3 py-3 rounded-lg hover:bg-[rgba(0,0,0,0.06)] hover:text-[#111827] transition-all`}
+        >
           <LogOutIcon className="h-5 w-5" />
           <span className={`ml-3 whitespace-nowrap ${expanded ? 'opacity-100' : 'opacity-0 absolute'} transition-opacity duration-150`}>
             Cerrar sesión

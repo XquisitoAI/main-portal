@@ -133,43 +133,44 @@ const AdminManager: React.FC = () => {
               </button>
             </div>
           </div>
-          {showNewClientForm && <div className="p-6 border-b border-gray-100 bg-gray-50">
-              <form onSubmit={handleAddClient}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Nombre del Restaurante
-                    </label>
-                    <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" value={newClient.name} onChange={e => setNewClient({
-                ...newClient,
-                name: e.target.value
-              })} required />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Servicios Activos
-                    </label>
-                    <div className="flex flex-wrap gap-3">
-                      {servicesList.map(service => <label key={service.id} className="inline-flex items-center">
-                          <input type="checkbox" className="h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500" checked={newClient.services.includes(service.id)} onChange={() => handleServiceToggle(service.id)} />
-                          <span className="ml-2 text-gray-700">
-                            {service.label}
-                          </span>
-                        </label>)}
-                    </div>
+        {showNewClientForm && <div className="p-6 border-b border-gray-100 bg-gray-50">
+            <form onSubmit={handleAddClient}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Nombre del Restaurante
+                  </label>
+                  <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" value={newClient.name} onChange={e => setNewClient({
+              ...newClient,
+              name: e.target.value
+            })} required />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Servicios Activos
+                  </label>
+                  <div className="flex flex-wrap gap-3">
+                    {servicesList.map(service => <label key={service.id} className="inline-flex items-center">
+                        <input type="checkbox" className="h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500" checked={newClient.services.includes(service.id)} onChange={() => handleServiceToggle(service.id)} />
+                        <span className="ml-2 text-gray-700">
+                          {service.label}
+                        </span>
+                      </label>)}
                   </div>
                 </div>
-                <div className="mt-6 flex justify-end space-x-3">
-                  <button type="button" className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50" onClick={() => setShowNewClientForm(false)}>
-                    Cancelar
-                  </button>
-                  <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                    Guardar Cliente
-                  </button>
-                </div>
-              </form>
-            </div>}
-          <div className="overflow-x-auto">
+              </div>
+              <div className="mt-6 flex justify-end space-x-3">
+                <button type="button" className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50" onClick={() => setShowNewClientForm(false)}>
+                  Cancelar
+                </button>
+                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                  Guardar Cliente
+                </button>
+              </div>
+            </form>
+          </div>
+        }
+        <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
@@ -224,7 +225,8 @@ const AdminManager: React.FC = () => {
               </tbody>
             </table>
           </div>
-        </div>}
+        </div>
+      }
       {activeTab === 'branches' && <div className="bg-white rounded-lg shadow-sm">
           <div className="p-6 border-b border-gray-100 flex justify-between items-center">
             <h2 className="text-lg font-medium text-gray-800">
@@ -297,7 +299,8 @@ const AdminManager: React.FC = () => {
                   </button>
                 </div>
               </form>
-            </div>}
+            </div>
+          }
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
@@ -358,7 +361,8 @@ const AdminManager: React.FC = () => {
               </tbody>
             </table>
           </div>
-        </div>}
+        </div>
+      }
     </div>;
 };
 export default AdminManager;
