@@ -2,21 +2,33 @@
 export const mockClients = [{
   id: 'client1',
   name: 'Restaurante El Dorado',
+  ownerName: 'Carlos Mendoza',
+  phone: '+52 55 1234 5678',
+  email: 'carlos.mendoza@eldorado.com',
   active: true,
   services: ['tap-order-pay', 'flex-bill', 'tap-pay'],
-  createdAt: '2023-01-15T08:00:00Z'
+  createdAt: '2023-01-15T08:00:00Z',
+  updatedAt: '2023-01-15T08:00:00Z'
 }, {
   id: 'client2',
   name: 'La Trattoria Italiana',
+  ownerName: 'Giuseppe Romano',
+  phone: '+52 55 9876 5432',
+  email: 'giuseppe@trattoria.com',
   active: true,
   services: ['flex-bill', 'food-hall'],
-  createdAt: '2023-03-10T10:30:00Z'
+  createdAt: '2023-03-10T10:30:00Z',
+  updatedAt: '2023-03-10T10:30:00Z'
 }, {
   id: 'client3',
   name: 'Sushi Express',
+  ownerName: 'Hiroshi Tanaka',
+  phone: '+52 55 5555 1234',
+  email: 'tanaka@sushiexpress.com',
   active: true,
   services: ['pick-n-go', 'tap-pay'],
-  createdAt: '2023-05-22T14:15:00Z'
+  createdAt: '2023-05-22T14:15:00Z',
+  updatedAt: '2023-05-22T14:15:00Z'
 }];
 export const mockBranches = [{
   id: 'branch1',
@@ -24,28 +36,36 @@ export const mockBranches = [{
   name: 'Sucursal Centro',
   address: 'Av. Reforma 123, Centro',
   tables: 25,
-  active: true
+  active: true,
+  createdAt: '2023-01-15T08:00:00Z',
+  updatedAt: '2023-01-15T08:00:00Z'
 }, {
   id: 'branch2',
   clientId: 'client1',
   name: 'Sucursal Norte',
   address: 'Blvd. Norte 456, Zona Industrial',
   tables: 18,
-  active: true
+  active: true,
+  createdAt: '2023-02-10T10:30:00Z',
+  updatedAt: '2023-02-10T10:30:00Z'
 }, {
   id: 'branch3',
   clientId: 'client2',
   name: 'Sucursal Principal',
   address: 'Calle Italia 789, Polanco',
   tables: 30,
-  active: true
+  active: true,
+  createdAt: '2023-03-10T10:30:00Z',
+  updatedAt: '2023-03-10T10:30:00Z'
 }, {
   id: 'branch4',
   clientId: 'client3',
   name: 'Sucursal Plaza',
   address: 'Plaza Comercial 234, Reforma',
   tables: 15,
-  active: true
+  active: true,
+  createdAt: '2023-05-22T14:15:00Z',
+  updatedAt: '2023-05-22T14:15:00Z'
 }];
 export const mockKpis = {
   sales: {

@@ -1,38 +1,26 @@
-import React, { useState, createContext, useContext } from 'react';
-import { mockClients, mockBranches } from '../utils/mockData';
-interface Client {
-  id: string;
-  name: string;
-  active: boolean;
-  services: string[];
-  createdAt: string;
-}
-interface Branch {
-  id: string;
-  clientId: string;
-  name: string;
-  address: string;
-  tables: number;
-  active: boolean;
-}
-interface QrCode {
-  id: string;
-  branchId: string;
-  tableNumber: number;
-  url: string;
-  createdAt: string;
-}
+import React, { useState, createContext, useContext, useEffect } from 'react';
+import { Client, Branch, QrCode, ClientFormData, BranchFormData, LoadingState } from '../types';
+import mainPortalApi from '../services/mainPortalApi';
 interface AppContextType {
   selectedClient: string | null;
   selectedBranch: string | null;
   clients: Client[];
   branches: Branch[];
   qrCodes: QrCode[];
+  loading: LoadingState;
+  error: string | null;
   setSelectedClient: (id: string | null) => void;
   setSelectedBranch: (id: string | null) => void;
-  addClient: (client: Omit<Client, 'id' | 'createdAt'>) => void;
-  addBranch: (branch: Omit<Branch, 'id'>) => void;
+  loadClients: () => Promise<void>;
+  loadBranches: () => Promise<void>;
+  addClient: (client: ClientFormData) => Promise<void>;
+  updateClient: (id: string, client: Partial<ClientFormData>) => Promise<void>;
+  deleteClient: (id: string) => Promise<void>;
+  addBranch: (branch: BranchFormData) => Promise<void>;
+  updateBranch: (id: string, branch: Partial<BranchFormData>) => Promise<void>;
+  deleteBranch: (id: string) => Promise<void>;
   generateQrCode: (branchId: string, tableNumber: number) => void;
+  clearError: () => void;
 }
 const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppContextProvider: React.FC<{
@@ -42,23 +30,148 @@ export const AppContextProvider: React.FC<{
 }) => {
   const [selectedClient, setSelectedClient] = useState<string | null>(null);
   const [selectedBranch, setSelectedBranch] = useState<string | null>(null);
-  const [clients, setClients] = useState<Client[]>(mockClients);
-  const [branches, setBranches] = useState<Branch[]>(mockBranches);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [branches, setBranches] = useState<Branch[]>([]);
   const [qrCodes, setQrCodes] = useState<QrCode[]>([]);
-  const addClient = (client: Omit<Client, 'id' | 'createdAt'>) => {
-    const newClient = {
-      ...client,
-      id: `client-${Date.now()}`,
-      createdAt: new Date().toISOString()
-    };
-    setClients([...clients, newClient]);
+  const [loading, setLoading] = useState<LoadingState>({
+    isLoading: false,
+    isSaving: false,
+    isDeleting: false
+  });
+  const [error, setError] = useState<string | null>(null);
+
+  // Función utilitaria para manejar errores
+  const handleError = (error: any) => {
+    console.error('API Error:', error);
+    setError(error.message || 'Ha ocurrido un error inesperado');
   };
-  const addBranch = (branch: Omit<Branch, 'id'>) => {
-    const newBranch = {
-      ...branch,
-      id: `branch-${Date.now()}`
-    };
-    setBranches([...branches, newBranch]);
+
+  // Limpiar errores
+  const clearError = () => {
+    setError(null);
+  };
+
+  // Cargar clientes desde la API
+  const loadClients = async () => {
+    try {
+      setLoading(prev => ({ ...prev, isLoading: true }));
+      clearError();
+      const data = await mainPortalApi.clients.getAll();
+      setClients(data);
+    } catch (error) {
+      handleError(error);
+    } finally {
+      setLoading(prev => ({ ...prev, isLoading: false }));
+    }
+  };
+
+  // Cargar sucursales desde la API
+  const loadBranches = async () => {
+    try {
+      setLoading(prev => ({ ...prev, isLoading: true }));
+      clearError();
+      const data = await mainPortalApi.branches.getAll();
+      setBranches(data);
+    } catch (error) {
+      handleError(error);
+    } finally {
+      setLoading(prev => ({ ...prev, isLoading: false }));
+    }
+  };
+
+  // Efecto para cargar datos iniciales
+  useEffect(() => {
+    loadClients();
+    loadBranches();
+  }, []);
+
+  const addClient = async (client: ClientFormData) => {
+    try {
+      setLoading(prev => ({ ...prev, isSaving: true }));
+      clearError();
+      const newClient = await mainPortalApi.clients.create(client);
+      setClients(prev => [...prev, newClient]);
+    } catch (error) {
+      handleError(error);
+      throw error; // Re-throw para que el componente pueda manejar el error
+    } finally {
+      setLoading(prev => ({ ...prev, isSaving: false }));
+    }
+  };
+
+  const updateClient = async (id: string, clientData: Partial<ClientFormData>) => {
+    try {
+      setLoading(prev => ({ ...prev, isSaving: true }));
+      clearError();
+      const updatedClient = await mainPortalApi.clients.update(id, clientData);
+      setClients(prev => prev.map(client =>
+        client.id === id ? updatedClient : client
+      ));
+    } catch (error) {
+      handleError(error);
+      throw error;
+    } finally {
+      setLoading(prev => ({ ...prev, isSaving: false }));
+    }
+  };
+
+  const deleteClient = async (id: string) => {
+    try {
+      setLoading(prev => ({ ...prev, isDeleting: true }));
+      clearError();
+      await mainPortalApi.clients.delete(id);
+      setClients(prev => prev.filter(client => client.id !== id));
+      setBranches(prev => prev.filter(branch => branch.clientId !== id));
+    } catch (error) {
+      handleError(error);
+      throw error;
+    } finally {
+      setLoading(prev => ({ ...prev, isDeleting: false }));
+    }
+  };
+
+  const addBranch = async (branch: BranchFormData) => {
+    try {
+      setLoading(prev => ({ ...prev, isSaving: true }));
+      clearError();
+      const newBranch = await mainPortalApi.branches.create(branch);
+      setBranches(prev => [...prev, newBranch]);
+    } catch (error) {
+      handleError(error);
+      throw error;
+    } finally {
+      setLoading(prev => ({ ...prev, isSaving: false }));
+    }
+  };
+
+  const updateBranch = async (id: string, branchData: Partial<BranchFormData>) => {
+    try {
+      setLoading(prev => ({ ...prev, isSaving: true }));
+      clearError();
+      const updatedBranch = await mainPortalApi.branches.update(id, branchData);
+      setBranches(prev => prev.map(branch =>
+        branch.id === id ? updatedBranch : branch
+      ));
+    } catch (error) {
+      handleError(error);
+      throw error;
+    } finally {
+      setLoading(prev => ({ ...prev, isSaving: false }));
+    }
+  };
+
+  const deleteBranch = async (id: string) => {
+    try {
+      setLoading(prev => ({ ...prev, isDeleting: true }));
+      clearError();
+      await mainPortalApi.branches.delete(id);
+      setBranches(prev => prev.filter(branch => branch.id !== id));
+    } catch (error) {
+      handleError(error);
+      throw error;
+    } finally {
+      setLoading(prev => ({ ...prev, isDeleting: false }));
+    }
   };
   const generateQrCode = (branchId: string, tableNumber: number) => {
     const newQrCode = {
@@ -76,11 +189,20 @@ export const AppContextProvider: React.FC<{
     clients,
     branches,
     qrCodes,
+    loading,
+    error,
     setSelectedClient,
     setSelectedBranch,
+    loadClients,
+    loadBranches,
     addClient,
+    updateClient,
+    deleteClient,
     addBranch,
-    generateQrCode
+    updateBranch,
+    deleteBranch,
+    generateQrCode,
+    clearError
   }}>
       {children}
     </AppContext.Provider>;
