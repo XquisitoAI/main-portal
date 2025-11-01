@@ -12,16 +12,8 @@ export const apiClient = axios.create({
   },
 });
 
-// Interceptor para agregar token de autenticación
-apiClient.interceptors.request.use(
-  async (config) => {
-    // El token se agregará automáticamente desde el hook useAuth de Clerk
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
+// Note: Authentication is now handled by the useMainPortalApi hook using Clerk's useAuth
+// This axios client is kept for backward compatibility but should not be used for authenticated requests
 
 // Interceptor para manejo de respuestas
 apiClient.interceptors.response.use(

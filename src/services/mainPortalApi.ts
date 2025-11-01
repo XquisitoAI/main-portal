@@ -1,4 +1,4 @@
-import { apiClient } from '../config/api';
+import { useAuth } from '@clerk/nextjs';
 import type {
   Client,
   Branch,
@@ -8,7 +8,14 @@ import type {
 } from '../types';
 
 // ===============================================
-// SERVICIOS PARA CLIENTES
+// CONFIGURACIÓN DE LA API
+// ===============================================
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';
+const MAIN_PORTAL_BASE = `${API_BASE_URL}/api/main-portal`;
+
+// ===============================================
+// FUNCIONES DE CONVERSIÓN DE DATOS
 // ===============================================
 
 // Función para convertir datos del backend a formato frontend
@@ -55,108 +62,8 @@ const convertBranchToBackend = (frontendBranch: BranchFormData | Partial<BranchF
   active: frontendBranch.active
 });
 
-export const clientService = {
-  // Obtener todos los clientes
-  async getAll(): Promise<Client[]> {
-    const response = await apiClient.get<ApiResponse<any[]>>('/api/main-portal/clients');
-    const backendClients = response.data.data || [];
-    return backendClients.map(convertClientFromBackend);
-  },
-
-  // Obtener cliente por ID
-  async getById(id: string): Promise<Client> {
-    const response = await apiClient.get<ApiResponse<any>>(`/api/main-portal/clients/${id}`);
-    if (!response.data.data) {
-      throw new Error('Cliente no encontrado');
-    }
-    return convertClientFromBackend(response.data.data);
-  },
-
-  // Crear nuevo cliente
-  async create(clientData: ClientFormData): Promise<Client> {
-    const backendData = convertClientToBackend(clientData);
-    console.log(backendData)
-    const response = await apiClient.post<ApiResponse<any>>('/api/main-portal/clients', backendData);
-    console.log(response);
-    
-    if (!response.data.data) {
-      throw new Error('Error al crear el cliente');
-    }
-    return convertClientFromBackend(response.data.data);
-  },
-
-  // Actualizar cliente
-  async update(id: string, clientData: Partial<ClientFormData>): Promise<Client> {
-    const backendData = convertClientToBackend(clientData);
-    const response = await apiClient.put<ApiResponse<any>>(`/api/main-portal/clients/${id}`, backendData);
-    if (!response.data.data) {
-      throw new Error('Error al actualizar el cliente');
-    }
-    return convertClientFromBackend(response.data.data);
-  },
-
-  // Eliminar cliente
-  async delete(id: string): Promise<void> {
-    await apiClient.delete(`/api/main-portal/clients/${id}`);
-  }
-};
-
 // ===============================================
-// SERVICIOS PARA SUCURSALES
-// ===============================================
-
-export const branchService = {
-  // Obtener todas las sucursales
-  async getAll(): Promise<Branch[]> {
-    const response = await apiClient.get<ApiResponse<any[]>>('/api/main-portal/branches');
-    const backendBranches = response.data.data || [];
-    return backendBranches.map(convertBranchFromBackend);
-  },
-
-  // Obtener sucursales por cliente
-  async getByClient(clientId: string): Promise<Branch[]> {
-    const response = await apiClient.get<ApiResponse<any[]>>(`/api/main-portal/branches?client_id=${clientId}`);
-    const backendBranches = response.data.data || [];
-    return backendBranches.map(convertBranchFromBackend);
-  },
-
-  // Obtener sucursal por ID
-  async getById(id: string): Promise<Branch> {
-    const response = await apiClient.get<ApiResponse<any>>(`/api/main-portal/branches/${id}`);
-    if (!response.data.data) {
-      throw new Error('Sucursal no encontrada');
-    }
-    return convertBranchFromBackend(response.data.data);
-  },
-
-  // Crear nueva sucursal
-  async create(branchData: BranchFormData): Promise<Branch> {
-    const backendData = convertBranchToBackend(branchData);
-    const response = await apiClient.post<ApiResponse<any>>('/api/main-portal/branches', backendData);
-    if (!response.data.data) {
-      throw new Error('Error al crear la sucursal');
-    }
-    return convertBranchFromBackend(response.data.data);
-  },
-
-  // Actualizar sucursal
-  async update(id: string, branchData: Partial<BranchFormData>): Promise<Branch> {
-    const backendData = convertBranchToBackend(branchData);
-    const response = await apiClient.put<ApiResponse<any>>(`/api/main-portal/branches/${id}`, backendData);
-    if (!response.data.data) {
-      throw new Error('Error al actualizar la sucursal');
-    }
-    return convertBranchFromBackend(response.data.data);
-  },
-
-  // Eliminar sucursal
-  async delete(id: string): Promise<void> {
-    await apiClient.delete(`/api/main-portal/branches/${id}`);
-  }
-};
-
-// ===============================================
-// SERVICIOS DE ESTADÍSTICAS
+// ESTADÍSTICAS
 // ===============================================
 
 export interface MainPortalStats {
@@ -175,16 +82,221 @@ export interface MainPortalStats {
   };
 }
 
-export const statsService = {
-  // Obtener estadísticas generales
-  async getMainPortalStats(): Promise<MainPortalStats> {
-    const response = await apiClient.get<ApiResponse<MainPortalStats>>('/api/main-portal/stats');
-    if (!response.data.data) {
-      throw new Error('Error al obtener estadísticas');
+// ===============================================
+// CLASE PRINCIPAL DEL SERVICIO API
+// ===============================================
+
+class MainPortalApiService {
+  private async makeRequest<T>(
+    endpoint: string,
+    options: RequestInit = {},
+    token?: string
+  ): Promise<T> {
+    try {
+      const url = `${MAIN_PORTAL_BASE}${endpoint}`;
+
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        ...((options.headers as Record<string, string>) || {}),
+      };
+
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(url, {
+        ...options,
+        headers,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.message || 'API request failed');
+      }
+
+      return data.data;
+    } catch (error) {
+      console.error(`Main Portal API request failed: ${endpoint}`, error);
+      throw error;
     }
-    return response.data.data;
   }
-};
+
+  // ===============================================
+  // MÉTODOS DE CLIENTES
+  // ===============================================
+
+  async getAllClients(token: string): Promise<Client[]> {
+    const backendClients = await this.makeRequest<any[]>('/clients', {
+      method: 'GET',
+    }, token);
+    return (backendClients || []).map(convertClientFromBackend);
+  }
+
+  async getClientById(id: string, token: string): Promise<Client> {
+    const backendClient = await this.makeRequest<any>(`/clients/${id}`, {
+      method: 'GET',
+    }, token);
+    return convertClientFromBackend(backendClient);
+  }
+
+  async createClient(clientData: ClientFormData, token: string): Promise<Client> {
+    const backendData = convertClientToBackend(clientData);
+    const backendClient = await this.makeRequest<any>('/clients', {
+      method: 'POST',
+      body: JSON.stringify(backendData),
+    }, token);
+    return convertClientFromBackend(backendClient);
+  }
+
+  async updateClient(id: string, clientData: Partial<ClientFormData>, token: string): Promise<Client> {
+    const backendData = convertClientToBackend(clientData);
+    const backendClient = await this.makeRequest<any>(`/clients/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(backendData),
+    }, token);
+    return convertClientFromBackend(backendClient);
+  }
+
+  async deleteClient(id: string, token: string): Promise<void> {
+    await this.makeRequest<void>(`/clients/${id}`, {
+      method: 'DELETE',
+    }, token);
+  }
+
+  // ===============================================
+  // MÉTODOS DE SUCURSALES
+  // ===============================================
+
+  async getAllBranches(token: string): Promise<Branch[]> {
+    const backendBranches = await this.makeRequest<any[]>('/branches', {
+      method: 'GET',
+    }, token);
+    return (backendBranches || []).map(convertBranchFromBackend);
+  }
+
+  async getBranchesByClient(clientId: string, token: string): Promise<Branch[]> {
+    const backendBranches = await this.makeRequest<any[]>(`/branches?client_id=${clientId}`, {
+      method: 'GET',
+    }, token);
+    return (backendBranches || []).map(convertBranchFromBackend);
+  }
+
+  async getBranchById(id: string, token: string): Promise<Branch> {
+    const backendBranch = await this.makeRequest<any>(`/branches/${id}`, {
+      method: 'GET',
+    }, token);
+    return convertBranchFromBackend(backendBranch);
+  }
+
+  async createBranch(branchData: BranchFormData, token: string): Promise<Branch> {
+    const backendData = convertBranchToBackend(branchData);
+    const backendBranch = await this.makeRequest<any>('/branches', {
+      method: 'POST',
+      body: JSON.stringify(backendData),
+    }, token);
+    return convertBranchFromBackend(backendBranch);
+  }
+
+  async updateBranch(id: string, branchData: Partial<BranchFormData>, token: string): Promise<Branch> {
+    const backendData = convertBranchToBackend(branchData);
+    const backendBranch = await this.makeRequest<any>(`/branches/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(backendData),
+    }, token);
+    return convertBranchFromBackend(backendBranch);
+  }
+
+  async deleteBranch(id: string, token: string): Promise<void> {
+    await this.makeRequest<void>(`/branches/${id}`, {
+      method: 'DELETE',
+    }, token);
+  }
+
+  // ===============================================
+  // MÉTODOS DE ESTADÍSTICAS
+  // ===============================================
+
+  async getMainPortalStats(token: string): Promise<MainPortalStats> {
+    return this.makeRequest<MainPortalStats>('/stats', {
+      method: 'GET',
+    }, token);
+  }
+}
+
+// ===============================================
+// HOOK PERSONALIZADO PARA USAR LA API
+// ===============================================
+
+export function useMainPortalApi() {
+  const { getToken } = useAuth();
+
+  const makeAuthenticatedRequest = async <T>(
+    requestFn: (token: string) => Promise<T>
+  ): Promise<T> => {
+    try {
+      const token = await getToken();
+
+      if (!token) {
+        throw new Error('User not authenticated');
+      }
+
+      return await requestFn(token);
+    } catch (error) {
+      console.error('Authenticated request failed:', error);
+      throw error;
+    }
+  };
+
+  return {
+    // Métodos de clientes
+    getAllClients: () => makeAuthenticatedRequest(
+      (token) => mainPortalApiService.getAllClients(token)
+    ),
+    getClientById: (id: string) => makeAuthenticatedRequest(
+      (token) => mainPortalApiService.getClientById(id, token)
+    ),
+    createClient: (data: ClientFormData) => makeAuthenticatedRequest(
+      (token) => mainPortalApiService.createClient(data, token)
+    ),
+    updateClient: (id: string, data: Partial<ClientFormData>) => makeAuthenticatedRequest(
+      (token) => mainPortalApiService.updateClient(id, data, token)
+    ),
+    deleteClient: (id: string) => makeAuthenticatedRequest(
+      (token) => mainPortalApiService.deleteClient(id, token)
+    ),
+
+    // Métodos de sucursales
+    getAllBranches: () => makeAuthenticatedRequest(
+      (token) => mainPortalApiService.getAllBranches(token)
+    ),
+    getBranchesByClient: (clientId: string) => makeAuthenticatedRequest(
+      (token) => mainPortalApiService.getBranchesByClient(clientId, token)
+    ),
+    getBranchById: (id: string) => makeAuthenticatedRequest(
+      (token) => mainPortalApiService.getBranchById(id, token)
+    ),
+    createBranch: (data: BranchFormData) => makeAuthenticatedRequest(
+      (token) => mainPortalApiService.createBranch(data, token)
+    ),
+    updateBranch: (id: string, data: Partial<BranchFormData>) => makeAuthenticatedRequest(
+      (token) => mainPortalApiService.updateBranch(id, data, token)
+    ),
+    deleteBranch: (id: string) => makeAuthenticatedRequest(
+      (token) => mainPortalApiService.deleteBranch(id, token)
+    ),
+
+    // Métodos de estadísticas
+    getMainPortalStats: () => makeAuthenticatedRequest(
+      (token) => mainPortalApiService.getMainPortalStats(token)
+    )
+  };
+}
 
 // ===============================================
 // FUNCIÓN HELPER PARA MANEJO DE ERRORES
@@ -205,13 +317,34 @@ export const handleMainPortalApiError = (error: any) => {
 };
 
 // ===============================================
-// EXPORTACIÓN POR DEFECTO
+// INSTANCIA EXPORTADA DEL SERVICIO
+// ===============================================
+
+export const mainPortalApiService = new MainPortalApiService();
+
+// ===============================================
+// EXPORTACIÓN LEGACY PARA COMPATIBILIDAD
 // ===============================================
 
 const mainPortalApi = {
-  clients: clientService,
-  branches: branchService,
-  stats: statsService,
+  clients: {
+    getAll: () => { throw new Error('Use useMainPortalApi hook instead'); },
+    getById: () => { throw new Error('Use useMainPortalApi hook instead'); },
+    create: () => { throw new Error('Use useMainPortalApi hook instead'); },
+    update: () => { throw new Error('Use useMainPortalApi hook instead'); },
+    delete: () => { throw new Error('Use useMainPortalApi hook instead'); }
+  },
+  branches: {
+    getAll: () => { throw new Error('Use useMainPortalApi hook instead'); },
+    getByClient: () => { throw new Error('Use useMainPortalApi hook instead'); },
+    getById: () => { throw new Error('Use useMainPortalApi hook instead'); },
+    create: () => { throw new Error('Use useMainPortalApi hook instead'); },
+    update: () => { throw new Error('Use useMainPortalApi hook instead'); },
+    delete: () => { throw new Error('Use useMainPortalApi hook instead'); }
+  },
+  stats: {
+    getMainPortalStats: () => { throw new Error('Use useMainPortalApi hook instead'); }
+  },
   handleError: handleMainPortalApiError
 };
 

@@ -1,6 +1,6 @@
 import React, { useState, createContext, useContext, useEffect } from 'react';
 import { Client, Branch, QrCode, ClientFormData, BranchFormData, LoadingState } from '../types';
-import mainPortalApi from '../services/mainPortalApi';
+import { useMainPortalApi } from '../services/mainPortalApi';
 interface AppContextType {
   selectedClient: string | null;
   selectedBranch: string | null;
@@ -40,6 +40,9 @@ export const AppContextProvider: React.FC<{
   });
   const [error, setError] = useState<string | null>(null);
 
+  // Use the new authenticated API hook
+  const mainPortalApi = useMainPortalApi();
+
   // Función utilitaria para manejar errores
   const handleError = (error: any) => {
     console.error('API Error:', error);
@@ -56,7 +59,7 @@ export const AppContextProvider: React.FC<{
     try {
       setLoading(prev => ({ ...prev, isLoading: true }));
       clearError();
-      const data = await mainPortalApi.clients.getAll();
+      const data = await mainPortalApi.getAllClients();
       setClients(data);
     } catch (error) {
       handleError(error);
@@ -70,7 +73,7 @@ export const AppContextProvider: React.FC<{
     try {
       setLoading(prev => ({ ...prev, isLoading: true }));
       clearError();
-      const data = await mainPortalApi.branches.getAll();
+      const data = await mainPortalApi.getAllBranches();
       setBranches(data);
     } catch (error) {
       handleError(error);
@@ -89,7 +92,7 @@ export const AppContextProvider: React.FC<{
     try {
       setLoading(prev => ({ ...prev, isSaving: true }));
       clearError();
-      const newClient = await mainPortalApi.clients.create(client);
+      const newClient = await mainPortalApi.createClient(client);
       setClients(prev => [...prev, newClient]);
     } catch (error) {
       handleError(error);
@@ -103,7 +106,7 @@ export const AppContextProvider: React.FC<{
     try {
       setLoading(prev => ({ ...prev, isSaving: true }));
       clearError();
-      const updatedClient = await mainPortalApi.clients.update(id, clientData);
+      const updatedClient = await mainPortalApi.updateClient(id, clientData);
       setClients(prev => prev.map(client =>
         client.id === id ? updatedClient : client
       ));
@@ -119,7 +122,7 @@ export const AppContextProvider: React.FC<{
     try {
       setLoading(prev => ({ ...prev, isDeleting: true }));
       clearError();
-      await mainPortalApi.clients.delete(id);
+      await mainPortalApi.deleteClient(id);
       setClients(prev => prev.filter(client => client.id !== id));
       setBranches(prev => prev.filter(branch => branch.clientId !== id));
     } catch (error) {
@@ -134,7 +137,7 @@ export const AppContextProvider: React.FC<{
     try {
       setLoading(prev => ({ ...prev, isSaving: true }));
       clearError();
-      const newBranch = await mainPortalApi.branches.create(branch);
+      const newBranch = await mainPortalApi.createBranch(branch);
       setBranches(prev => [...prev, newBranch]);
     } catch (error) {
       handleError(error);
@@ -148,7 +151,7 @@ export const AppContextProvider: React.FC<{
     try {
       setLoading(prev => ({ ...prev, isSaving: true }));
       clearError();
-      const updatedBranch = await mainPortalApi.branches.update(id, branchData);
+      const updatedBranch = await mainPortalApi.updateBranch(id, branchData);
       setBranches(prev => prev.map(branch =>
         branch.id === id ? updatedBranch : branch
       ));
@@ -164,7 +167,7 @@ export const AppContextProvider: React.FC<{
     try {
       setLoading(prev => ({ ...prev, isDeleting: true }));
       clearError();
-      await mainPortalApi.branches.delete(id);
+      await mainPortalApi.deleteBranch(id);
       setBranches(prev => prev.filter(branch => branch.id !== id));
     } catch (error) {
       handleError(error);
