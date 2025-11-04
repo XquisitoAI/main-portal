@@ -1,5 +1,5 @@
 import React, { useState, createContext, useContext, useEffect } from 'react';
-import { Client, Branch, QrCode, ClientFormData, BranchFormData, LoadingState } from '../types';
+import { Client, Branch, QrCode, ClientFormData, ClientFormDataWithInvitation, BranchFormData, LoadingState } from '../types';
 import { useMainPortalApi } from '../services/mainPortalApi';
 interface AppContextType {
   selectedClient: string | null;
@@ -13,7 +13,7 @@ interface AppContextType {
   setSelectedBranch: (id: string | null) => void;
   loadClients: () => Promise<void>;
   loadBranches: () => Promise<void>;
-  addClient: (client: ClientFormData) => Promise<void>;
+  addClient: (client: ClientFormDataWithInvitation) => Promise<void>;
   updateClient: (id: string, client: Partial<ClientFormData>) => Promise<void>;
   deleteClient: (id: string) => Promise<void>;
   addBranch: (branch: BranchFormData) => Promise<void>;
@@ -88,7 +88,7 @@ export const AppContextProvider: React.FC<{
     loadBranches();
   }, []);
 
-  const addClient = async (client: ClientFormData) => {
+  const addClient = async (client: ClientFormDataWithInvitation) => {
     try {
       setLoading(prev => ({ ...prev, isSaving: true }));
       clearError();

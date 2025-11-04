@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Client, ClientFormData, AVAILABLE_SERVICES } from '../../types';
+import { Client, ClientFormData, ClientFormDataWithInvitation, AVAILABLE_SERVICES } from '../../types';
 import Modal from '../ui/Modal';
 
 interface ClientModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: ClientFormData) => void;
+  onSave: (data: ClientFormDataWithInvitation) => void;
   client?: Client | null;
   isLoading?: boolean;
 }
@@ -26,13 +26,16 @@ const ClientModal: React.FC<ClientModalProps> = ({
     active: true
   });
 
+  // Estado para el checkbox de invitación
+  const [sendInvitation, setSendInvitation] = useState(true);
+
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Resetear formulario cuando cambia el cliente o se abre/cierra
   useEffect(() => {
     if (isOpen) {
       if (client) {
-        // Modo edición
+        // Modo edición - no mostrar checkbox de invitación
         setFormData({
           name: client.name,
           ownerName: client.ownerName,
@@ -41,8 +44,9 @@ const ClientModal: React.FC<ClientModalProps> = ({
           services: client.services,
           active: client.active
         });
+        setSendInvitation(false); // No enviar invitación en modo edición
       } else {
-        // Modo creación
+        // Modo creación - mostrar checkbox de invitación
         setFormData({
           name: '',
           ownerName: '',
@@ -51,6 +55,7 @@ const ClientModal: React.FC<ClientModalProps> = ({
           services: [],
           active: true
         });
+        setSendInvitation(true); // Por defecto enviar invitación
       }
       setErrors({});
     }
@@ -97,7 +102,8 @@ const ClientModal: React.FC<ClientModalProps> = ({
     e.preventDefault();
 
     if (validateForm()) {
-      onSave(formData);
+      // Pasar datos del formulario junto con la opción de enviar invitación
+      onSave({ ...formData, sendInvitation });
     }
   };
 
@@ -231,7 +237,7 @@ const ClientModal: React.FC<ClientModalProps> = ({
         </div>
 
         {/* Estado */}
-        <div>
+        <div className="space-y-4">
           <label className="flex items-center">
             <input
               type="checkbox"
@@ -241,6 +247,30 @@ const ClientModal: React.FC<ClientModalProps> = ({
             />
             <span className="ml-2 text-sm text-gray-700">Cliente activo</span>
           </label>
+
+          {/* Información de invitación - solo mostrar en modo creación */}
+          {!client && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-start">
+                <input
+                  type="checkbox"
+                  className="h-5 w-5 text-blue-600 rounded border-gray-300 mt-0.5"
+                  checked={sendInvitation}
+                  readOnly
+                  disabled
+                />
+                <div className="ml-3">
+                  <span className="text-sm font-medium text-blue-900">
+                    📧 Invitación automática por email
+                  </span>
+                  <p className="text-xs text-blue-700 mt-1">
+                    Se enviará automáticamente un email de invitación al cliente
+                    para que pueda registrarse en el Admin Portal.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Botones */}

@@ -3,6 +3,7 @@ import type {
   Client,
   Branch,
   ClientFormData,
+  ClientFormDataWithInvitation,
   BranchFormData,
   ApiResponse
 } from '../types';
@@ -32,13 +33,15 @@ const convertClientFromBackend = (backendClient: any): Client => ({
 });
 
 // Función para convertir datos del frontend a formato backend
-const convertClientToBackend = (frontendClient: ClientFormData | Partial<ClientFormData>) => ({
+const convertClientToBackend = (frontendClient: ClientFormDataWithInvitation | ClientFormData | Partial<ClientFormData>) => ({
   name: frontendClient.name,
   owner_name: frontendClient.ownerName,
   phone: frontendClient.phone,
   email: frontendClient.email,
   services: frontendClient.services,
-  active: frontendClient.active
+  active: frontendClient.active,
+  // Solo incluir sendInvitation si está presente
+  ...(('sendInvitation' in frontendClient) && { sendInvitation: frontendClient.sendInvitation })
 });
 
 // Función para convertir sucursales del backend a formato frontend
@@ -145,7 +148,7 @@ class MainPortalApiService {
     return convertClientFromBackend(backendClient);
   }
 
-  async createClient(clientData: ClientFormData, token: string): Promise<Client> {
+  async createClient(clientData: ClientFormDataWithInvitation, token: string): Promise<Client> {
     const backendData = convertClientToBackend(clientData);
     const backendClient = await this.makeRequest<any>('/clients', {
       method: 'POST',
@@ -227,6 +230,12 @@ class MainPortalApiService {
       method: 'GET',
     }, token);
   }
+
+  async getInvitationStatuses(token: string): Promise<Record<string, any>> {
+    return this.makeRequest<Record<string, any>>('/invitations/status', {
+      method: 'GET',
+    }, token);
+  }
 }
 
 // ===============================================
@@ -261,7 +270,7 @@ export function useMainPortalApi() {
     getClientById: (id: string) => makeAuthenticatedRequest(
       (token) => mainPortalApiService.getClientById(id, token)
     ),
-    createClient: (data: ClientFormData) => makeAuthenticatedRequest(
+    createClient: (data: ClientFormDataWithInvitation) => makeAuthenticatedRequest(
       (token) => mainPortalApiService.createClient(data, token)
     ),
     updateClient: (id: string, data: Partial<ClientFormData>) => makeAuthenticatedRequest(
@@ -291,9 +300,11 @@ export function useMainPortalApi() {
       (token) => mainPortalApiService.deleteBranch(id, token)
     ),
 
-    // Métodos de estadísticas
     getMainPortalStats: () => makeAuthenticatedRequest(
       (token) => mainPortalApiService.getMainPortalStats(token)
+    ),
+    getInvitationStatuses: () => makeAuthenticatedRequest(
+      (token) => mainPortalApiService.getInvitationStatuses(token)
     )
   };
 }

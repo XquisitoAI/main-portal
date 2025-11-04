@@ -2,10 +2,11 @@ import React, { useMemo, useState } from 'react';
 import { useAppContext } from '../../context/AppContext';
 import { PlusIcon, TrashIcon, PencilIcon, SearchIcon } from 'lucide-react';
 import { formatDate } from '../../utils/formatters';
-import { Client, Branch, AVAILABLE_SERVICES } from '../../types';
+import { Client, Branch, ClientFormDataWithInvitation, AVAILABLE_SERVICES } from '../../types';
 import ClientModal from '../modals/ClientModal';
 import BranchModal from '../modals/BranchModal';
 import ConfirmDeleteModal from '../modals/ConfirmDeleteModal';
+import InvitationStatus from '../ui/InvitationStatus';
 const AdminManager: React.FC = () => {
   const {
     clients,
@@ -85,16 +86,25 @@ const AdminManager: React.FC = () => {
     });
   }, [branches, branchSearchTerm]);
   // Manejar guardado de clientes
-  const handleSaveClient = async (clientData: any) => {
+  const handleSaveClient = async (clientData: ClientFormDataWithInvitation) => {
     setIsLoading(prev => ({ ...prev, saving: true }));
 
     try {
       if (clientModal.client) {
-        // Editar cliente existente
-        updateClient(clientModal.client.id, clientData);
+        // Editar cliente existente - no se envía invitación
+        const { sendInvitation, ...clientDataForUpdate } = clientData;
+        updateClient(clientModal.client.id, clientDataForUpdate);
       } else {
-        // Crear nuevo cliente
-        addClient(clientData);
+        // Crear nuevo cliente - enviar invitación si está marcado
+        const { sendInvitation, ...clientDataForCreation } = clientData;
+
+        if (sendInvitation) {
+          console.log('🆕 Creando cliente con invitación por email habilitada');
+        } else {
+          console.log('🆕 Creando cliente sin enviar invitación por email');
+        }
+
+        addClient(clientDataForCreation);
       }
       closeClientModal();
     } catch (error) {
@@ -203,6 +213,9 @@ const AdminManager: React.FC = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Estado
                   </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Registro Admin
+                  </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Acciones
                   </th>
@@ -242,6 +255,12 @@ const AdminManager: React.FC = () => {
                       <span className={`px-2 py-1 text-xs rounded-full ${client.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                         {client.active ? 'Activo' : 'Inactivo'}
                       </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <InvitationStatus
+                        clientId={client.id}
+                        clientEmail={client.email}
+                      />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button

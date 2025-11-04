@@ -38,6 +38,9 @@ export interface QrCode {
 // ============================================
 
 export type ClientFormData = Omit<Client, 'id' | 'createdAt' | 'updatedAt'>;
+export type ClientFormDataWithInvitation = ClientFormData & {
+  sendInvitation?: boolean;
+};
 export type BranchFormData = Omit<Branch, 'id' | 'createdAt' | 'updatedAt'>;
 
 // ============================================
