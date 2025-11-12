@@ -61,6 +61,41 @@ const ClientModal: React.FC<ClientModalProps> = ({
     }
   }, [isOpen, client]);
 
+  // Función para validar teléfono
+  const validatePhone = (phone: string): string | null => {
+    if (!phone.trim()) {
+      return 'El número de teléfono es requerido';
+    }
+
+    // Validar que solo contenga números
+    if (!/^\d+$/.test(phone)) {
+      return 'El teléfono solo puede contener números';
+    }
+
+    // Validar longitud mínima
+    if (phone.length < 10) {
+      return 'El teléfono debe tener al menos 10 números';
+    }
+
+    return null; // Válido
+  };
+
+  // Manejar cambio de teléfono - solo números
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+
+    // Solo permitir números - filtrar cualquier otro caracter
+    const numbersOnly = value.replace(/[^\d]/g, '');
+
+    // Actualizar el valor solo con números
+    setFormData(prev => ({ ...prev, phone: numbersOnly }));
+
+    // Limpiar error de teléfono si existe
+    if (errors.phone) {
+      setErrors(prev => ({ ...prev, phone: '' }));
+    }
+  };
+
   // Validaciones
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -77,10 +112,10 @@ const ClientModal: React.FC<ClientModalProps> = ({
       newErrors.ownerName = 'El nombre del dueño debe tener al menos 2 caracteres';
     }
 
-    if (!formData.phone.trim()) {
-      newErrors.phone = 'El número de teléfono es requerido';
-    } else if (!/^[\+]?[\d\s\-\(\)]+$/.test(formData.phone)) {
-      newErrors.phone = 'Formato de teléfono no válido';
+    // Validación mejorada de teléfono
+    const phoneError = validatePhone(formData.phone);
+    if (phoneError) {
+      newErrors.phone = phoneError;
     }
 
     if (!formData.email.trim()) {
@@ -176,11 +211,17 @@ const ClientModal: React.FC<ClientModalProps> = ({
                 errors.phone ? 'border-red-300' : 'border-gray-300'
               }`}
               value={formData.phone}
-              onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-              placeholder="Ej: +52 55 1234 5678"
+              onChange={handlePhoneChange}
+              placeholder="Ej: 5551234567"
+              maxLength={15}
             />
             {errors.phone && (
               <p className="mt-1 text-sm text-red-600">{errors.phone}</p>
+            )}
+            {!errors.phone && (
+              <p className="mt-1 text-xs text-gray-500">
+                Solo números. Mínimo 10 dígitos.
+              </p>
             )}
           </div>
 
