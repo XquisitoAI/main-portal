@@ -1,78 +1,14 @@
 import React, { useState, Component } from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, Label } from 'recharts';
 import { SearchIcon } from 'lucide-react';
 import { formatCurrency, formatNumber } from '../../utils/formatters';
 import DetailedServiceChart from './DetailedServiceChart';
-// Datos para el gráfico de GMV
-const gmvData = [{
-  name: 'Tap Order & Pay',
-  value: 381000,
-  color: '#8884d8'
-}, {
-  name: 'Flex Bill',
-  value: 1300000,
-  color: '#82ca9d'
-}, {
-  name: 'Pick & Go',
-  value: 254000,
-  color: '#ffc658'
-}, {
-  name: 'Food Hall',
-  value: 127000,
-  color: '#ff8042'
-}, {
-  name: 'Tap & Pay',
-  value: 635000,
-  color: '#0088fe'
-}];
-// Datos para el gráfico de órdenes
-const ordersData = [{
-  name: 'Tap Order & Pay',
-  value: 2840,
-  color: '#8884d8'
-}, {
-  name: 'Flex Bill',
-  value: 6225,
-  color: '#82ca9d'
-}, {
-  name: 'Pick & Go',
-  value: 845,
-  color: '#ffc658'
-}, {
-  name: 'Food Hall',
-  value: 992,
-  color: '#ff8042'
-}, {
-  name: 'Tap & Pay',
-  value: 1496,
-  color: '#0088fe'
-}];
-// Datos para el gráfico de transacciones
-const transactionsData = [{
-  name: 'Tap Order & Pay',
-  value: 3120,
-  color: '#8884d8'
-}, {
-  name: 'Flex Bill',
-  value: 7850,
-  color: '#82ca9d'
-}, {
-  name: 'Pick & Go',
-  value: 1230,
-  color: '#ffc658'
-}, {
-  name: 'Food Hall',
-  value: 1450,
-  color: '#ff8042'
-}, {
-  name: 'Tap & Pay',
-  value: 2380,
-  color: '#0088fe'
-}];
-// Calcular el total de GMV, órdenes y transacciones
-const totalGMV = gmvData.reduce((sum, item) => sum + item.value, 0);
-const totalOrders = ordersData.reduce((sum, item) => sum + item.value, 0);
-const totalTransactions = transactionsData.reduce((sum, item) => sum + item.value, 0);
+
+// Colores por servicio
+const SERVICE_COLORS: { [key: string]: string } = {
+  'Flex Bill': '#82ca9d',
+  'Tap Order & Pay': '#8884d8'
+};
 // Componente para el tooltip personalizado
 const CustomTooltip = ({
   active,
@@ -90,14 +26,53 @@ const CustomTooltip = ({
 };
 interface ServiceDistributionChartsProps {
   compact?: boolean;
+  volumeByService?: Array<{ service: string; volume: number }>;
+  ordersByService?: Array<{ service: string; count: number }>;
+  transactionsByService?: Array<{ service: string; count: number }>;
+  filters?: {
+    restaurant_id?: number | number[];
+    service?: string;
+    start_date?: string;
+    end_date?: string;
+  };
 }
+
 const ServiceDistributionCharts: React.FC<ServiceDistributionChartsProps> = ({
-  compact = false
+  compact = false,
+  volumeByService = [],
+  ordersByService = [],
+  transactionsByService = [],
+  filters = {}
 }) => {
   // Estados para controlar la visualización de las gráficas detalladas
   const [showVolumeDetail, setShowVolumeDetail] = useState(false);
   const [showOrdersDetail, setShowOrdersDetail] = useState(false);
   const [showTransactionsDetail, setShowTransactionsDetail] = useState(false);
+
+  // Convertir datos del backend a formato para las gráficas
+  const gmvData = volumeByService.map(item => ({
+    name: item.service,
+    value: item.volume,
+    color: SERVICE_COLORS[item.service] || '#8884d8'
+  }));
+
+  const ordersData = ordersByService.map(item => ({
+    name: item.service,
+    value: item.count,
+    color: SERVICE_COLORS[item.service] || '#8884d8'
+  }));
+
+  const transactionsData = transactionsByService.map(item => ({
+    name: item.service,
+    value: item.count,
+    color: SERVICE_COLORS[item.service] || '#8884d8'
+  }));
+
+  // Calcular totales
+  const totalGMV = gmvData.reduce((sum, item) => sum + item.value, 0);
+  const totalOrders = ordersData.reduce((sum, item) => sum + item.value, 0);
+  const totalTransactions = transactionsData.reduce((sum, item) => sum + item.value, 0);
+
   // Preparar los datos con valores formateados para el tooltip
   const gmvDataFormatted = gmvData.map(item => ({
     ...item,
@@ -232,9 +207,9 @@ const ServiceDistributionCharts: React.FC<ServiceDistributionChartsProps> = ({
         </div>
       </div>
       {/* Gráficas detalladas como modales */}
-      {showVolumeDetail && <DetailedServiceChart onClose={() => setShowVolumeDetail(false)} title="Volumen Transaccionado por Servicio" chartType="volume" serviceData={gmvData} />}
-      {showOrdersDetail && <DetailedServiceChart onClose={() => setShowOrdersDetail(false)} title="Órdenes por Servicio por período" chartType="orders" serviceData={ordersData} />}
-      {showTransactionsDetail && <DetailedServiceChart onClose={() => setShowTransactionsDetail(false)} title="Transacciones por Servicio por período" chartType="transactions" serviceData={transactionsData} />}
+      {showVolumeDetail && <DetailedServiceChart onClose={() => setShowVolumeDetail(false)} title="Volumen Transaccionado por Servicio" chartType="volume" serviceData={gmvData} filters={filters} />}
+      {showOrdersDetail && <DetailedServiceChart onClose={() => setShowOrdersDetail(false)} title="Órdenes por Servicio por período" chartType="orders" serviceData={ordersData} filters={filters} />}
+      {showTransactionsDetail && <DetailedServiceChart onClose={() => setShowTransactionsDetail(false)} title="Transacciones por Servicio por período" chartType="transactions" serviceData={transactionsData} filters={filters} />}
     </div>;
 };
 export default ServiceDistributionCharts;

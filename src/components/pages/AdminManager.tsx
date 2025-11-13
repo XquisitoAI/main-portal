@@ -1,12 +1,25 @@
 import React, { useMemo, useState } from 'react';
 import { useAppContext } from '../../context/AppContext';
-import { PlusIcon, TrashIcon, PencilIcon, SearchIcon } from 'lucide-react';
+import { PlusIcon, TrashIcon, PencilIcon, SearchIcon, TrendingUpIcon, DollarSignIcon, UsersIcon, ShoppingCartIcon, UserCheckIcon, CreditCardIcon } from 'lucide-react';
 import { formatDate } from '../../utils/formatters';
 import { Client, Branch, AVAILABLE_SERVICES } from '../../types';
 import ClientModal from '../modals/ClientModal';
 import BranchModal from '../modals/BranchModal';
 import ConfirmDeleteModal from '../modals/ConfirmDeleteModal';
-const AdminManager: React.FC = () => {
+import { useSuperAdminStats, useRestaurants } from '../../hooks/useApiData';
+import type { SuperAdminFilters } from '../../types/api';
+import SuperAdminFiltersComponent from '../dashboard/SuperAdminFilters';
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+
+interface AdminManagerProps {
+  defaultTab?: 'clientes' | 'sucursales' | 'super-admin';
+  showTabs?: ('clientes' | 'sucursales' | 'super-admin')[];
+}
+
+const AdminManager: React.FC<AdminManagerProps> = ({
+  defaultTab = 'super-admin',
+  showTabs = ['clientes', 'sucursales', 'super-admin']
+}) => {
   const {
     clients,
     branches,
@@ -17,7 +30,14 @@ const AdminManager: React.FC = () => {
     updateBranch,
     deleteBranch
   } = useAppContext();
-  const [activeTab, setActiveTab] = useState('clients');
+
+  const [activeTab, setActiveTab] = useState(defaultTab);
+  const [superAdminFilters, setSuperAdminFilters] = useState<SuperAdminFilters>({});
+
+  // Fetch super admin stats y restaurantes
+  const { data: superAdminStats, isLoading: statsLoading, isError: statsError } = useSuperAdminStats(superAdminFilters);
+  const { data: restaurantsList, isLoading: restaurantsLoading } = useRestaurants();
+
   const [searchTerm, setSearchTerm] = useState('');
   const [branchSearchTerm, setBranchSearchTerm] = useState('');
 
@@ -41,6 +61,7 @@ const AdminManager: React.FC = () => {
     saving: false,
     deleting: false
   });
+
   // Funciones para manejar modales de clientes
   const openClientModal = (client?: Client) => {
     setClientModal({ isOpen: true, client: client || null });
@@ -67,6 +88,7 @@ const AdminManager: React.FC = () => {
   const closeDeleteModal = () => {
     setDeleteModal({ isOpen: false, type: '' as 'client' | 'branch', item: null });
   };
+
   const filteredClients = useMemo(() => {
     if (!searchTerm.trim()) return clients;
     const normalizedSearchTerm = searchTerm.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -84,6 +106,7 @@ const AdminManager: React.FC = () => {
       return normalizedName.includes(normalizedSearchTerm);
     });
   }, [branches, branchSearchTerm]);
+
   // Manejar guardado de clientes
   const handleSaveClient = async (clientData: any) => {
     setIsLoading(prev => ({ ...prev, saving: true }));
@@ -143,24 +166,262 @@ const AdminManager: React.FC = () => {
       setIsLoading(prev => ({ ...prev, deleting: false }));
     }
   };
+
   // Función para obtener la etiqueta de un servicio a partir de su ID
   const getServiceLabel = (serviceId: string) => {
     const service = AVAILABLE_SERVICES.find(s => s.id === serviceId);
     return service ? service.label : serviceId;
   };
+
+  // Formatear número con comas
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('es-GT', {
+      style: 'currency',
+      currency: 'GTQ'
+    }).format(value);
+  };
+
+  // Colores para los gráficos
+  const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
+
   return <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-800">Admin Manager</h1>
         <div className="flex space-x-2">
-          <button className={`px-4 py-2 rounded-lg ${activeTab === 'clients' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`} onClick={() => setActiveTab('clients')}>
-            Clientes
-          </button>
-          <button className={`px-4 py-2 rounded-lg ${activeTab === 'branches' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`} onClick={() => setActiveTab('branches')}>
-            Sucursales
-          </button>
+          {showTabs.includes('super-admin') && (
+            <button className={`px-4 py-2 rounded-lg ${activeTab === 'super-admin' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`} onClick={() => setActiveTab('super-admin')}>
+              Super Admin
+            </button>
+          )}
+          {showTabs.includes('clientes') && (
+            <button className={`px-4 py-2 rounded-lg ${activeTab === 'clientes' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`} onClick={() => setActiveTab('clientes')}>
+              Clientes
+            </button>
+          )}
+          {showTabs.includes('sucursales') && (
+            <button className={`px-4 py-2 rounded-lg ${activeTab === 'sucursales' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`} onClick={() => setActiveTab('sucursales')}>
+              Sucursales
+            </button>
+          )}
         </div>
       </div>
-      {activeTab === 'clients' && <div className="bg-white rounded-lg shadow-sm">
+
+      {/* SUPER ADMIN TAB */}
+      {activeTab === 'super-admin' && (
+        <div className="space-y-6">
+          {/* Filtros */}
+          <SuperAdminFiltersComponent
+            restaurants={(restaurantsList || []).map((r: any) => ({ id: r.id, name: r.name }))}
+            onFilterChange={setSuperAdminFilters}
+          />
+
+          {/* Loading y Error States */}
+          {statsLoading && restaurantsLoading && (
+            <div className="bg-white rounded-lg shadow-sm p-12 text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="mt-4 text-gray-600">Cargando estadísticas...</p>
+            </div>
+          )}
+
+          {statsError && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <p className="text-red-800">Error al cargar las estadísticas. Por favor, intenta de nuevo.</p>
+            </div>
+          )}
+
+          {/* Stats Cards */}
+          {!statsLoading && !statsError && superAdminStats && (
+            <>
+              {/* Métricas principales - Grid de 4 columnas */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {/* Volumen Transaccionado */}
+                <div className="bg-white rounded-lg shadow-sm p-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-sm font-medium text-gray-600">Volumen Transaccionado</h3>
+                    <TrendingUpIcon className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {formatCurrency(superAdminStats.transaction_volume)}
+                  </p>
+                </div>
+
+                {/* Ingresos Xquisito */}
+                <div className="bg-white rounded-lg shadow-sm p-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-sm font-medium text-gray-600">Ingresos Xquisito</h3>
+                    <DollarSignIcon className="h-5 w-5 text-green-600" />
+                  </div>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {formatCurrency(superAdminStats.xquisito_income)}
+                  </p>
+                </div>
+
+                {/* Diners Activos */}
+                <div className="bg-white rounded-lg shadow-sm p-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-sm font-medium text-gray-600">Diners Activos</h3>
+                    <UsersIcon className="h-5 w-5 text-purple-600" />
+                  </div>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {superAdminStats.active_diners.toLocaleString()}
+                  </p>
+                </div>
+
+                {/* Órdenes Exitosas */}
+                <div className="bg-white rounded-lg shadow-sm p-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-sm font-medium text-gray-600">Órdenes Exitosas</h3>
+                    <ShoppingCartIcon className="h-5 w-5 text-orange-600" />
+                  </div>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {superAdminStats.successful_orders.toLocaleString()}
+                  </p>
+                </div>
+              </div>
+
+              {/* Segunda fila de métricas */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Administradores Activos */}
+                <div className="bg-white rounded-lg shadow-sm p-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-sm font-medium text-gray-600">Administradores Activos</h3>
+                    <UserCheckIcon className="h-5 w-5 text-indigo-600" />
+                  </div>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {superAdminStats.active_admins.toLocaleString()}
+                  </p>
+                </div>
+
+                {/* Método de Pago Más Usado */}
+                <div className="bg-white rounded-lg shadow-sm p-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-sm font-medium text-gray-600">Método de Pago Más Usado</h3>
+                    <CreditCardIcon className="h-5 w-5 text-pink-600" />
+                  </div>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {superAdminStats.most_used_payment_method.method}
+                  </p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    {superAdminStats.most_used_payment_method.count.toLocaleString()} transacciones
+                  </p>
+                </div>
+
+                {/* Total de Transacciones */}
+                <div className="bg-white rounded-lg shadow-sm p-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-sm font-medium text-gray-600">Total de Transacciones</h3>
+                    <CreditCardIcon className="h-5 w-5 text-teal-600" />
+                  </div>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {superAdminStats.total_transactions.toLocaleString()}
+                  </p>
+                </div>
+              </div>
+
+              {/* Gráficos por Servicio */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Volumen por Servicio */}
+                <div className="bg-white rounded-lg shadow-sm p-6">
+                  <h3 className="text-lg font-medium text-gray-800 mb-4">Volumen por Servicio</h3>
+                  {superAdminStats.volume_by_service.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={250}>
+                      <PieChart>
+                        <Pie
+                          data={superAdminStats.volume_by_service.map((item: any) => ({
+                            name: item.service,
+                            value: item.volume
+                          }))}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={(entry: any) => `${entry.name}: ${formatCurrency(entry.value)}`}
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="value"
+                        >
+                          {superAdminStats.volume_by_service.map((_: any, index: number) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <p className="text-gray-500 text-center py-8">No hay datos disponibles</p>
+                  )}
+                </div>
+
+                {/* Órdenes por Servicio */}
+                <div className="bg-white rounded-lg shadow-sm p-6">
+                  <h3 className="text-lg font-medium text-gray-800 mb-4">Órdenes por Servicio</h3>
+                  {superAdminStats.orders_by_service.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={250}>
+                      <PieChart>
+                        <Pie
+                          data={superAdminStats.orders_by_service.map((item: any) => ({
+                            name: item.service,
+                            value: item.count
+                          }))}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={(entry: any) => `${entry.name}: ${entry.value}`}
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="value"
+                        >
+                          {superAdminStats.orders_by_service.map((_: any, index: number) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <p className="text-gray-500 text-center py-8">No hay datos disponibles</p>
+                  )}
+                </div>
+
+                {/* Transacciones por Servicio */}
+                <div className="bg-white rounded-lg shadow-sm p-6">
+                  <h3 className="text-lg font-medium text-gray-800 mb-4">Transacciones por Servicio</h3>
+                  {superAdminStats.transactions_by_service.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={250}>
+                      <PieChart>
+                        <Pie
+                          data={superAdminStats.transactions_by_service.map((item: any) => ({
+                            name: item.service,
+                            value: item.count
+                          }))}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={(entry: any) => `${entry.name}: ${entry.value}`}
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="value"
+                        >
+                          {superAdminStats.transactions_by_service.map((_: any, index: number) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <p className="text-gray-500 text-center py-8">No hay datos disponibles</p>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'clientes' && <div className="bg-white rounded-lg shadow-sm">
           <div className="p-6 border-b border-gray-100 flex justify-between items-center">
             <h2 className="text-lg font-medium text-gray-800">
               Gestión de Clientes
@@ -170,11 +431,11 @@ const AdminManager: React.FC = () => {
                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                   <SearchIcon className="h-4 w-4 text-gray-400" />
                 </div>
-                <input 
-                  type="text" 
-                  className="pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-[240px]" 
-                  placeholder="Buscar por nombre..." 
-                  value={searchTerm} 
+                <input
+                  type="text"
+                  className="pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-[240px]"
+                  placeholder="Buscar por nombre..."
+                  value={searchTerm}
                   onChange={e => setSearchTerm(e.target.value)}
                 />
               </div>
@@ -265,7 +526,7 @@ const AdminManager: React.FC = () => {
           </div>
         </div>
       }
-      {activeTab === 'branches' && <div className="bg-white rounded-lg shadow-sm">
+      {activeTab === 'sucursales' && <div className="bg-white rounded-lg shadow-sm">
           <div className="p-6 border-b border-gray-100 flex justify-between items-center">
             <h2 className="text-lg font-medium text-gray-800">
               Gestión de Sucursales

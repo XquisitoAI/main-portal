@@ -303,3 +303,40 @@ export interface SuperAdminDashboard {
     created_at: string;
   }>;
 }
+
+export interface SuperAdminStats {
+  // Métricas principales
+  transaction_volume: number;
+  xquisito_income: number;
+  active_diners: number;
+  successful_orders: number;
+  active_admins: number;
+  most_used_payment_method: {
+    method: string;
+    count: number;
+  };
+  total_transactions: number;
+
+  // Métricas por servicio
+  volume_by_service: Array<{
+    service: string;
+    volume: number;
+  }>;
+  orders_by_service: Array<{
+    service: string;
+    count: number;
+  }>;
+  transactions_by_service: Array<{
+    service: string;
+    count: number;
+  }>;
+}
+
+export interface SuperAdminFilters {
+  start_date?: string;
+  end_date?: string;
+  restaurant_id?: number | number[]; // Permitir un ID o array de IDs
+  service?: 'todos' | 'flex-bill' | 'tap-order-pay' | string; // Permitir string para múltiples servicios separados por coma
+  gender?: 'todos' | 'male' | 'female' | 'other';
+  age_range?: 'todos' | '18-24' | '25-34' | '35-44' | '45-54' | '55+';
+}

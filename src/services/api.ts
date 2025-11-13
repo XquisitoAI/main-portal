@@ -5,7 +5,9 @@ import type {
   Order,
   ApiResponse,
   PaginatedResponse,
-  DashboardFilters
+  DashboardFilters,
+  SuperAdminStats,
+  SuperAdminFilters
 } from '../types/api';
 
 // Servicio para obtener todos los restaurantes (super admin view)
@@ -112,6 +114,30 @@ export const authService = {
   async getCurrentUser() {
     const response = await apiClient.get('/api/admin-portal/auth/me');
     return response.data;
+  }
+};
+
+// Servicio para estadísticas del super admin
+export const superAdminService = {
+  // Obtener todas las estadísticas del super admin
+  async getStats(filters: SuperAdminFilters = {}): Promise<SuperAdminStats> {
+    const params = new URLSearchParams();
+
+    // Convertir filtros a query parameters
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        params.append(key, value.toString());
+      }
+    });
+
+    const response = await apiClient.get<ApiResponse<SuperAdminStats>>(
+      `/api/super-admin/stats?${params.toString()}`
+    );
+
+    if (!response.data.data) {
+      throw new Error('No super admin stats data received from server');
+    }
+    return response.data.data;
   }
 };
 

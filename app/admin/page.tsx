@@ -6,7 +6,10 @@ import AdminManager from '../../src/components/pages/AdminManager'
 export default function AdminPage() {
   return (
     <Layout>
-      <AdminManager />
+      <AdminManager
+        defaultTab="clientes"
+        showTabs={['clientes', 'sucursales']}
+      />
     </Layout>
   )
 }

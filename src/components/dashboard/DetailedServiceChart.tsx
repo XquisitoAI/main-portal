@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { XIcon, RefreshCwIcon, SearchIcon } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { formatCurrency, formatNumber, formatChange } from '../../utils/formatters';
+import { useAuthenticatedApi } from '../../hooks/useAuthenticatedApi';
+import LoadingSpinner from '../ui/LoadingSpinner';
+
 interface DetailedServiceChartProps {
   onClose: () => void;
   title: string;
@@ -11,6 +14,12 @@ interface DetailedServiceChartProps {
     value: number;
     color: string;
   }[];
+  filters?: {
+    restaurant_id?: number | number[];
+    service?: string;
+    start_date?: string;
+    end_date?: string;
+  };
 }
 // Datos mock para la gráfica temporal
 const generateMockTimeData = (chartType: 'volume' | 'orders' | 'transactions', viewType: 'daily' | 'weekly' | 'monthly', startDate: Date, endDate: Date, serviceData: {
@@ -22,8 +31,8 @@ const generateMockTimeData = (chartType: 'volume' | 'orders' | 'transactions', v
   const dayDiff = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
   // Generar datos según el tipo de vista
   if (viewType === 'daily') {
-    // Limitamos a 14 días para mejor visualización
-    for (let i = 0; i <= Math.min(dayDiff, 14); i++) {
+    // Usar todo el rango de fechas seleccionado
+    for (let i = 0; i <= dayDiff; i++) {
       const currentDate = new Date(startDate);
       currentDate.setDate(startDate.getDate() + i);
       const entry: any = {
@@ -31,8 +40,8 @@ const generateMockTimeData = (chartType: 'volume' | 'orders' | 'transactions', v
       };
       // Agregar valores para cada servicio
       serviceData.forEach(service => {
-        // Valor base proporcional al valor actual del servicio
-        const baseValue = service.value / 30; // Dividir el valor total entre 30 días
+        // Valor base proporcional al valor actual del servicio y días en el rango
+        const baseValue = service.value / Math.max(dayDiff, 1); // Dividir el valor total entre los días del rango
         // Añadir variación aleatoria (±20%)
         const randomFactor = 0.8 + Math.random() * 0.4;
         // Tendencia ascendente suave (aumenta ligeramente con el tiempo)
@@ -127,25 +136,87 @@ const DetailedServiceChart: React.FC<DetailedServiceChartProps> = ({
   onClose,
   title,
   chartType,
-  serviceData
+  serviceData,
+  filters = {}
 }) => {
+  const authenticatedApi = useAuthenticatedApi();
+
+  // Determinar fechas iniciales basadas en los filtros o usar valores por defecto
+  const getInitialDateRange = () => {
+    if (filters.start_date && filters.end_date) {
+      return {
+        startDate: new Date(filters.start_date),
+        endDate: new Date(filters.end_date)
+      };
+    }
+    return {
+      startDate: new Date(new Date().setDate(new Date().getDate() - 30)),
+      endDate: new Date()
+    };
+  };
+
   // Estado para los filtros
   const [viewType, setViewType] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
-  const [dateRange, setDateRange] = useState({
-    startDate: new Date(new Date().setDate(new Date().getDate() - 30)),
-    endDate: new Date()
-  });
+  const [dateRange, setDateRange] = useState(getInitialDateRange());
   // Estado para los datos de la gráfica
   const [chartData, setChartData] = useState<any[]>([]);
   const [percentChange, setPercentChange] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
   // Extraer nombres de servicios
   const serviceNames = serviceData.map(service => service.name);
+
+  // Función para obtener datos reales del backend
+  const fetchTimelineData = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const endpoint = chartType === 'volume'
+        ? '/api/super-admin/timeline/volume'
+        : chartType === 'orders'
+        ? '/api/super-admin/timeline/orders'
+        : '/api/super-admin/timeline/transactions';
+
+      const params = new URLSearchParams();
+      params.append('view_type', viewType);
+      params.append('start_date', dateRange.startDate.toISOString());
+      params.append('end_date', dateRange.endDate.toISOString());
+
+      if (filters.restaurant_id !== undefined) {
+        if (Array.isArray(filters.restaurant_id)) {
+          params.append('restaurant_id', filters.restaurant_id.join(','));
+        } else {
+          params.append('restaurant_id', filters.restaurant_id.toString());
+        }
+      }
+
+      if (filters.service && filters.service !== 'todos') {
+        params.append('service', filters.service);
+      }
+
+      const response = await authenticatedApi.get(`${endpoint}?${params.toString()}`);
+      const data = response.data.data;
+
+      setChartData(data);
+      setPercentChange(calculateTotalChange(data, serviceNames));
+    } catch (err: any) {
+      console.error('Error fetching timeline data:', err);
+      setError(err.message || 'Error al cargar los datos');
+      // Usar datos mock como fallback
+      const data = generateMockTimeData(chartType, viewType, dateRange.startDate, dateRange.endDate, serviceData);
+      setChartData(data);
+      setPercentChange(calculateTotalChange(data, serviceNames));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Actualizar los datos cuando cambien los filtros
   useEffect(() => {
-    const data = generateMockTimeData(chartType, viewType, dateRange.startDate, dateRange.endDate, serviceData);
-    setChartData(data);
-    setPercentChange(calculateTotalChange(data, serviceNames));
-  }, [viewType, dateRange, chartType, serviceData]);
+    fetchTimelineData();
+  }, [viewType, dateRange, chartType, filters]);
   // Formatear valores según el tipo de métrica
   const formatValue = (value: number) => {
     switch (chartType) {
@@ -224,6 +295,14 @@ const DetailedServiceChart: React.FC<DetailedServiceChartProps> = ({
             {formatChange(percentChange)}
           </div>
         </div>
+        {/* Mensaje de error si hay */}
+        {error && (
+          <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+            <p className="text-sm text-yellow-800">
+              {error} - Mostrando datos estimados
+            </p>
+          </div>
+        )}
         {/* Controles de filtro */}
         <div className="flex flex-wrap gap-4 mb-6 items-center">
           {/* Selector de rango de fechas */}
@@ -251,39 +330,45 @@ const DetailedServiceChart: React.FC<DetailedServiceChartProps> = ({
           </div>
         </div>
         {/* Gráfica */}
-        <div className="h-80">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData} margin={{
-            top: 10,
-            right: 30,
-            left: 20,
-            bottom: 30
-          }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} />
-              <XAxis dataKey="date" tick={{
-              fontSize: 12
-            }} tickMargin={10} axisLine={{
-              stroke: '#E5E7EB'
-            }} tickLine={false} />
-              <YAxis tickFormatter={value => {
-              const formatted = formatValue(value);
-              return chartType === 'volume' ? formatted.split('.')[0] : formatted;
-            }} tick={{
-              fontSize: 12
-            }} axisLine={false} tickLine={false} />
-              <Tooltip content={<CustomTooltip />} />
-              <Legend wrapperStyle={{
-              paddingTop: 15,
-              fontSize: 12
-            }} />
-              {serviceData.map(service => <Line key={service.name} type="monotone" dataKey={service.name} stroke={service.color} strokeWidth={2} dot={{
-              r: 3,
-              fill: service.color
-            }} activeDot={{
-              r: 5
-            }} />)}
-            </LineChart>
-          </ResponsiveContainer>
+        <div className="h-80 relative">
+          {isLoading ? (
+            <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75">
+              <LoadingSpinner message="Cargando datos..." />
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData} margin={{
+              top: 10,
+              right: 30,
+              left: 20,
+              bottom: 30
+            }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="date" tick={{
+                fontSize: 12
+              }} tickMargin={10} axisLine={{
+                stroke: '#E5E7EB'
+              }} tickLine={false} />
+                <YAxis tickFormatter={value => {
+                const formatted = formatValue(value);
+                return chartType === 'volume' ? formatted.split('.')[0] : formatted;
+              }} tick={{
+                fontSize: 12
+              }} axisLine={false} tickLine={false} />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend wrapperStyle={{
+                paddingTop: 15,
+                fontSize: 12
+              }} />
+                {serviceData.map(service => <Line key={service.name} type="monotone" dataKey={service.name} stroke={service.color} strokeWidth={2} dot={{
+                r: 3,
+                fill: service.color
+              }} activeDot={{
+                r: 5
+              }} />)}
+              </LineChart>
+            </ResponsiveContainer>
+          )}
         </div>
         {/* Botón de limpiar filtros */}
         <div className="flex justify-end mt-4">
