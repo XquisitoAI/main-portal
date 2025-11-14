@@ -1,19 +1,55 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { analyticsService, restaurantService, authService } from '../services/api';
-import type { DashboardFilters, SuperAdminFilters, SuperAdminStats } from '../types/api';
-import { useAuthenticatedApi } from './useAuthenticatedApi';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  analyticsService,
+  restaurantService,
+  authService,
+} from "../services/api";
+import type {
+  DashboardFilters,
+  SuperAdminFilters,
+  SuperAdminStats,
+} from "../types/api";
+import { useAuthenticatedApi } from "./useAuthenticatedApi";
 
 // Query keys para React Query
 export const queryKeys = {
-  restaurants: ['restaurants'],
-  restaurant: (id: number) => ['restaurant', id],
-  dashboardMetrics: (filters: DashboardFilters) => ['dashboardMetrics', filters],
-  orders: (restaurantId?: number, limit?: number, offset?: number, status?: string, dateFilter?: string) =>
-    ['orders', restaurantId, limit, offset, status, dateFilter],
-  dashboardSummary: (restaurantId: number) => ['dashboardSummary', restaurantId],
-  topSellingItem: (filters: Record<string, unknown>) => ['topSellingItem', filters],
-  currentUser: ['currentUser'],
-  superAdminStats: (filters: SuperAdminFilters) => ['superAdminStats', filters]
+  restaurants: ["restaurants"],
+  restaurant: (id: number) => ["restaurant", id],
+  dashboardMetrics: (filters: DashboardFilters) => [
+    "dashboardMetrics",
+    filters,
+  ],
+  orders: (
+    restaurantId?: number,
+    limit?: number,
+    offset?: number,
+    status?: string,
+    dateFilter?: string
+  ) => ["orders", restaurantId, limit, offset, status, dateFilter],
+  dashboardSummary: (restaurantId: number) => [
+    "dashboardSummary",
+    restaurantId,
+  ],
+  topSellingItem: (filters: Record<string, unknown>) => [
+    "topSellingItem",
+    filters,
+  ],
+  currentUser: ["currentUser"],
+  superAdminStats: (filters: SuperAdminFilters) => ["superAdminStats", filters],
+  volumeTimeline: (filters: SuperAdminFilters & { view_type?: string }) => [
+    "volumeTimeline",
+    filters,
+  ],
+  ordersTimeline: (filters: SuperAdminFilters & { view_type?: string }) => [
+    "ordersTimeline",
+    filters,
+  ],
+  transactionsTimeline: (
+    filters: SuperAdminFilters & { view_type?: string }
+  ) => ["transactionsTimeline", filters],
+  paymentMethodsTimeline: (
+    filters: SuperAdminFilters & { view_type?: string }
+  ) => ["paymentMethodsTimeline", filters],
 };
 
 // Hook para obtener todos los restaurantes
@@ -23,12 +59,13 @@ export const useRestaurants = () => {
   return useQuery({
     queryKey: queryKeys.restaurants,
     queryFn: async () => {
-      console.log('🔍 Fetching restaurants from super-admin endpoint with authenticated API');
-      const response = await authenticatedApi.get('/api/super-admin/restaurants');
+      const response = await authenticatedApi.get(
+        "/api/super-admin/restaurants"
+      );
       return response.data.data || [];
     },
     staleTime: 5 * 60 * 1000, // 5 minutos
-    retry: 2
+    retry: 2,
   });
 };
 
@@ -39,7 +76,7 @@ export const useRestaurant = (id: number) => {
     queryFn: () => restaurantService.getById(id),
     enabled: !!id,
     staleTime: 10 * 60 * 1000, // 10 minutos
-    retry: 2
+    retry: 2,
   });
 };
 
@@ -50,7 +87,7 @@ export const useDashboardMetrics = (filters: DashboardFilters = {}) => {
     queryFn: () => analyticsService.getDashboardMetrics(filters),
     staleTime: 2 * 60 * 1000, // 2 minutos - métricas cambian más frecuentemente
     retry: 2,
-    refetchInterval: 5 * 60 * 1000 // Refetch cada 5 minutos para datos frescos
+    refetchInterval: 5 * 60 * 1000, // Refetch cada 5 minutos para datos frescos
   });
 };
 
@@ -59,15 +96,22 @@ export const useOrders = (
   restaurantId?: number,
   limit = 20,
   offset = 0,
-  status = 'todos',
-  dateFilter = 'hoy'
+  status = "todos",
+  dateFilter = "hoy"
 ) => {
   return useQuery({
     queryKey: queryKeys.orders(restaurantId, limit, offset, status, dateFilter),
-    queryFn: () => analyticsService.getOrders(restaurantId, limit, offset, status, dateFilter),
+    queryFn: () =>
+      analyticsService.getOrders(
+        restaurantId,
+        limit,
+        offset,
+        status,
+        dateFilter
+      ),
     staleTime: 1 * 60 * 1000, // 1 minuto - órdenes cambian frecuentemente
     retry: 2,
-    placeholderData: (previousData) => previousData // Para paginación suave
+    placeholderData: (previousData) => previousData, // Para paginación suave
   });
 };
 
@@ -78,7 +122,7 @@ export const useDashboardSummary = (restaurantId: number) => {
     queryFn: () => analyticsService.getDashboardSummary(restaurantId),
     enabled: !!restaurantId,
     staleTime: 2 * 60 * 1000, // 2 minutos
-    retry: 2
+    retry: 2,
   });
 };
 
@@ -88,7 +132,7 @@ export const useTopSellingItem = (filters: Record<string, unknown> = {}) => {
     queryKey: queryKeys.topSellingItem(filters),
     queryFn: () => analyticsService.getTopSellingItem(filters),
     staleTime: 5 * 60 * 1000, // 5 minutos
-    retry: 2
+    retry: 2,
   });
 };
 
@@ -98,7 +142,7 @@ export const useCurrentUser = () => {
     queryKey: queryKeys.currentUser,
     queryFn: authService.getCurrentUser,
     staleTime: 10 * 60 * 1000, // 10 minutos
-    retry: 1
+    retry: 1,
   });
 };
 
@@ -111,7 +155,7 @@ export const useSyncUser = () => {
     onSuccess: () => {
       // Invalidar la query del usuario actual para refrescar datos
       queryClient.invalidateQueries({ queryKey: queryKeys.currentUser });
-    }
+    },
   });
 };
 
@@ -129,7 +173,7 @@ export const useDashboardData = (filters: DashboardFilters = {}) => {
     refetch: () => {
       metricsQuery.refetch();
       restaurantsQuery.refetch();
-    }
+    },
   };
 };
 
@@ -143,11 +187,11 @@ export const useSuperAdminStats = (filters: SuperAdminFilters = {}) => {
       // Construir query params
       const params = new URLSearchParams();
       Object.entries(filters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== 'todos') {
+        if (value !== undefined && value !== null && value !== "todos") {
           // Si es un array, convertirlo a string separado por comas
           if (Array.isArray(value)) {
             if (value.length > 0) {
-              params.append(key, value.join(','));
+              params.append(key, value.join(","));
             }
           } else {
             params.append(key, value.toString());
@@ -156,15 +200,94 @@ export const useSuperAdminStats = (filters: SuperAdminFilters = {}) => {
       });
 
       const queryString = params.toString();
-      const url = `/api/super-admin/stats${queryString ? `?${queryString}` : ''}`;
-
-      console.log('🔍 Fetching super admin stats with authenticated API:', url);
+      const url = `/api/super-admin/stats${queryString ? `?${queryString}` : ""}`;
 
       const response = await authenticatedApi.get(url);
       return response.data.data;
     },
     staleTime: 2 * 60 * 1000, // 2 minutos
     retry: 2,
-    refetchInterval: 5 * 60 * 1000 // Refetch cada 5 minutos para datos frescos
+    refetchInterval: 5 * 60 * 1000, // Refetch cada 5 minutos para datos frescos
   });
+};
+
+// Hook genérico para obtener datos de timeline
+const useTimeline = (
+  endpoint: string,
+  filters: SuperAdminFilters & { view_type?: string },
+  queryKey: any[]
+) => {
+  const authenticatedApi = useAuthenticatedApi();
+
+  return useQuery({
+    queryKey,
+    queryFn: async () => {
+      // Construir query params
+      const params = new URLSearchParams();
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "todos") {
+          // Si es un array, convertirlo a string separado por comas
+          if (Array.isArray(value)) {
+            if (value.length > 0) {
+              params.append(key, value.join(","));
+            }
+          } else {
+            params.append(key, value.toString());
+          }
+        }
+      });
+
+      const queryString = params.toString();
+      const url = `/api/super-admin/${endpoint}${queryString ? `?${queryString}` : ""}`;
+
+      const response = await authenticatedApi.get(url);
+      return response.data.data;
+    },
+    staleTime: 2 * 60 * 1000, // 2 minutos
+    retry: 2,
+    enabled: !!filters.start_date && !!filters.end_date, // Solo ejecutar si hay fechas
+  });
+};
+
+// Hook para obtener timeline de volumen
+export const useVolumeTimeline = (
+  filters: SuperAdminFilters & { view_type?: string } = {}
+) => {
+  return useTimeline(
+    "timeline/volume",
+    filters,
+    queryKeys.volumeTimeline(filters)
+  );
+};
+
+// Hook para obtener timeline de órdenes
+export const useOrdersTimeline = (
+  filters: SuperAdminFilters & { view_type?: string } = {}
+) => {
+  return useTimeline(
+    "timeline/orders",
+    filters,
+    queryKeys.ordersTimeline(filters)
+  );
+};
+
+// Hook para obtener timeline de transacciones
+export const useTransactionsTimeline = (
+  filters: SuperAdminFilters & { view_type?: string } = {}
+) => {
+  return useTimeline(
+    "timeline/transactions",
+    filters,
+    queryKeys.transactionsTimeline(filters)
+  );
+};
+
+export const usePaymentMethodsTimeline = (
+  filters: SuperAdminFilters & { view_type?: string } = {}
+) => {
+  return useTimeline(
+    "timeline/payment-methods",
+    filters,
+    queryKeys.paymentMethodsTimeline(filters)
+  );
 };

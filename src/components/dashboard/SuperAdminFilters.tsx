@@ -94,7 +94,7 @@ const SuperAdminFiltersComponent: React.FC<SuperAdminFiltersProps> = ({
               Restaurante
             </label>
             <select
-              value={filters.restaurant_id || ''}
+              value={typeof filters.restaurant_id === 'number' ? filters.restaurant_id : ''}
               onChange={(e) => handleFilterChange('restaurant_id', e.target.value ? parseInt(e.target.value) : undefined)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >

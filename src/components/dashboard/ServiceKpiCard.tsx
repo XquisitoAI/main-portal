@@ -1,14 +1,21 @@
-import React, { useState } from 'react';
-import { formatCurrency, formatCompactNumber, formatPercent } from '../../utils/formatters';
-import ServiceDashboardModal from './ServiceDashboardModal';
+import React, { useState } from "react";
+import {
+  formatCurrency,
+  formatCompactNumber,
+  formatPercent,
+} from "../../utils/formatters";
+import ServiceDashboardModal from "./ServiceDashboardModal";
+import type { SuperAdminFilters } from "../../types/api";
+
 interface KeyMetric {
   name: string;
   value: number;
   unit: string;
 }
+
 interface ServiceKpiCardProps {
   name: string;
-  status: 'active' | 'paused' | 'suspended' | 'trial';
+  status: "active" | "paused" | "suspended" | "trial";
   gmv: number;
   gmvPercentage: number;
   usage: number;
@@ -16,7 +23,9 @@ interface ServiceKpiCardProps {
   keyMetric: KeyMetric;
   secondaryMetric: KeyMetric;
   onClick?: () => void;
+  initialFilters?: SuperAdminFilters;
 }
+
 const ServiceKpiCard: React.FC<ServiceKpiCardProps> = ({
   name,
   status,
@@ -26,43 +35,58 @@ const ServiceKpiCard: React.FC<ServiceKpiCardProps> = ({
   quota,
   keyMetric,
   secondaryMetric,
-  onClick
+  onClick,
+  initialFilters,
 }) => {
   // Estado para controlar la visualización del modal
   const [showDashboard, setShowDashboard] = useState(false);
   // Status badge styling
   const getStatusStyle = () => {
     switch (status) {
-      case 'active':
-        return 'bg-green-100 text-green-800';
-      case 'paused':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'suspended':
-        return 'bg-red-100 text-red-800';
-      case 'trial':
-        return 'bg-blue-100 text-blue-800';
+      case "active":
+        return "bg-green-100 text-green-800";
+      case "paused":
+        return "bg-yellow-100 text-yellow-800";
+      case "suspended":
+        return "bg-red-100 text-red-800";
+      case "trial":
+        return "bg-blue-100 text-blue-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
+
   // Key metric styling
   const getMetricStyle = () => {
-    if (keyMetric.name === 'Tasa de aprobación' && keyMetric.value < 90) {
-      return 'text-red-600';
+    if (keyMetric.name === "Tasa de aprobación" && keyMetric.value < 90) {
+      return "text-red-600";
     }
-    return 'text-gray-700';
+    return "text-gray-700";
   };
+
   // Manejar el clic en la tarjeta
   const handleCardClick = () => {
     setShowDashboard(true);
     if (onClick) onClick();
   };
-  return <>
-      <div className="bg-gray-50 rounded-lg border border-gray-100 p-3 cursor-pointer transition-all hover:shadow-sm hover:bg-gray-50" onClick={handleCardClick}>
+  return (
+    <>
+      <div
+        className="bg-gray-50 rounded-lg border border-gray-100 p-3 cursor-pointer transition-all hover:shadow-sm hover:bg-gray-50"
+        onClick={handleCardClick}
+      >
         <div className="flex items-center justify-between mb-2">
           <h3 className="font-medium text-gray-800 text-sm">{name}</h3>
-          <span className={`text-xs px-1.5 py-0.5 rounded-full ${getStatusStyle()}`}>
-            {status === 'active' ? 'activo' : status === 'paused' ? 'pausado' : status === 'suspended' ? 'suspendido' : 'prueba'}
+          <span
+            className={`text-xs px-1.5 py-0.5 rounded-full ${getStatusStyle()}`}
+          >
+            {status === "active"
+              ? "activo"
+              : status === "paused"
+                ? "pausado"
+                : status === "suspended"
+                  ? "suspendido"
+                  : "prueba"}
           </span>
         </div>
         <div className="mb-2">
@@ -91,7 +115,15 @@ const ServiceKpiCard: React.FC<ServiceKpiCardProps> = ({
         </div>
       </div>
       {/* Modal de dashboard detallado */}
-      {showDashboard && <ServiceDashboardModal onClose={() => setShowDashboard(false)} serviceName={name} />}
-    </>;
+      {showDashboard && (
+        <ServiceDashboardModal
+          onClose={() => setShowDashboard(false)}
+          serviceName={name}
+          initialFilters={initialFilters}
+        />
+      )}
+    </>
+  );
 };
+
 export default ServiceKpiCard;

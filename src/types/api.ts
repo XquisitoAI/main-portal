@@ -28,7 +28,7 @@ export interface User {
   first_name: string;
   last_name: string;
   age?: number;
-  gender?: 'male' | 'female' | 'non-binary' | 'prefer-not-to-say';
+  gender?: "male" | "female" | "non-binary" | "prefer-not-to-say";
   phone?: string;
   created_at: string;
   updated_at: string;
@@ -54,7 +54,13 @@ export interface UserOrder {
   items: Record<string, any>; // JSONB
   total_items: number;
   total_price: number;
-  status: 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled';
+  status:
+    | "pending"
+    | "confirmed"
+    | "preparing"
+    | "ready"
+    | "delivered"
+    | "cancelled";
   payment_status: string;
   paid_amount: number;
   remaining_amount: number;
@@ -70,8 +76,8 @@ export interface DishOrder {
   item: string;
   quantity: number;
   price: number;
-  status: 'pending' | 'cooking' | 'delivered';
-  payment_status: 'not_paid' | 'paid';
+  status: "pending" | "cooking" | "delivered";
+  payment_status: "not_paid" | "paid";
   images?: string[];
   custom_fields?: Record<string, any>;
   extra_price: number;
@@ -85,8 +91,13 @@ export interface TapOrder {
   customer_phone?: string;
   customer_email?: string;
   total_amount: number;
-  payment_status: 'pending' | 'paid';
-  order_status: 'active' | 'confirmed' | 'preparing' | 'completed' | 'abandoned';
+  payment_status: "pending" | "paid";
+  order_status:
+    | "active"
+    | "confirmed"
+    | "preparing"
+    | "completed"
+    | "abandoned";
   session_data: Record<string, any>;
   created_at: string;
   completed_at?: string;
@@ -180,7 +191,7 @@ export interface SplitPayment {
   guest_name?: string;
   expected_amount: number;
   amount_paid: number;
-  status: 'pending' | 'paid';
+  status: "pending" | "paid";
   original_total: number;
   restaurant_id: number;
   created_at: string;
@@ -217,7 +228,7 @@ export interface MenuSection {
 export interface Table {
   id: string; // UUID
   table_number: number;
-  status: 'available' | 'occupied' | 'reserved' | 'maintenance';
+  status: "available" | "occupied" | "reserved" | "maintenance";
   restaurant_id: number;
   created_at: string;
   updated_at: string;
@@ -244,12 +255,24 @@ export interface DashboardFilters {
   restaurant_id?: number;
   start_date?: string;
   end_date?: string;
-  gender?: 'todos' | 'male' | 'female' | 'non-binary' | 'prefer-not-to-say';
-  age_range?: 'todos' | '14-17' | '18-25' | '26-35' | '36-45' | '46+';
-  granularity?: 'hora' | 'dia' | 'mes' | 'ano';
-  service_type?: 'todos' | 'tap_order_pay' | 'flex_bill' | 'food_hall' | 'pick_go';
-  payment_status?: 'todos' | 'pending' | 'paid';
-  order_status?: 'todos' | 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled';
+  gender?: "todos" | "male" | "female" | "non-binary" | "prefer-not-to-say";
+  age_range?: "todos" | "14-17" | "18-25" | "26-35" | "36-45" | "46+";
+  granularity?: "hora" | "dia" | "mes" | "ano";
+  service_type?:
+    | "todos"
+    | "tap_order_pay"
+    | "flex_bill"
+    | "food_hall"
+    | "pick_go";
+  payment_status?: "todos" | "pending" | "paid";
+  order_status?:
+    | "todos"
+    | "pending"
+    | "confirmed"
+    | "preparing"
+    | "ready"
+    | "delivered"
+    | "cancelled";
 }
 
 // ===== ANÁLISIS Y REPORTES =====
@@ -297,7 +320,7 @@ export interface SuperAdminDashboard {
     monthly_growth: Array<{ month: string; growth_rate: number }>;
   };
   alerts: Array<{
-    type: 'warning' | 'error' | 'info';
+    type: "warning" | "error" | "info";
     message: string;
     restaurant_id?: number;
     created_at: string;
@@ -316,6 +339,24 @@ export interface SuperAdminStats {
     count: number;
   };
   total_transactions: number;
+
+  // Cambios porcentuales
+  transaction_volume_change: number;
+  xquisito_income_change: number;
+  active_diners_change: number;
+  successful_orders_change: number;
+  active_admins_change: number;
+  total_transactions_change: number;
+
+  // Métricas del período anterior
+  previous_period?: {
+    transaction_volume: number;
+    xquisito_income: number;
+    active_diners: number;
+    successful_orders: number;
+    active_admins: number;
+    total_transactions: number;
+  };
 
   // Métricas por servicio
   volume_by_service: Array<{
@@ -336,7 +377,7 @@ export interface SuperAdminFilters {
   start_date?: string;
   end_date?: string;
   restaurant_id?: number | number[]; // Permitir un ID o array de IDs
-  service?: 'todos' | 'flex-bill' | 'tap-order-pay' | string; // Permitir string para múltiples servicios separados por coma
-  gender?: 'todos' | 'male' | 'female' | 'other';
-  age_range?: 'todos' | '18-24' | '25-34' | '35-44' | '45-54' | '55+';
+  service?: "todos" | "flex-bill" | "tap-order-pay" | string; // Permitir string para múltiples servicios separados por coma
+  gender?: "todos" | "male" | "female" | "other";
+  age_range?: "todos" | "18-24" | "25-34" | "35-44" | "45-54" | "55+";
 }

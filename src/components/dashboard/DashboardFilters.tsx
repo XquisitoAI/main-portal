@@ -26,11 +26,20 @@ export interface FilterState {
     max: number;
   };
 }
+
+// Fecha por defecto (últimos 30 días)
+const getDefaultDateRange = () => {
+  const endDate = new Date();
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - 30);
+  return {
+    startDate,
+    endDate,
+  };
+};
+
 const initialFilters: FilterState = {
-  dateRange: {
-    startDate: null,
-    endDate: null,
-  },
+  dateRange: getDefaultDateRange(),
   restaurantIds: [],
   client: "",
   services: [],
@@ -72,11 +81,6 @@ const DashboardFiltersComponent: React.FC<FilterProps> = ({
   const servicesRef = useRef<HTMLDivElement>(null);
   const genderRef = useRef<HTMLDivElement>(null);
   const ageRangeRef = useRef<HTMLDivElement>(null);
-
-  // Debug: Ver cambios en el estado de servicios
-  useEffect(() => {
-    console.log("🔍 Estado actual de filters.services:", filters.services);
-  }, [filters.services]);
 
   // Sincronizar tempDateRange cuando se abre el date picker
   useEffect(() => {
@@ -237,7 +241,9 @@ const DashboardFiltersComponent: React.FC<FilterProps> = ({
   const handleRestaurantToggle = (restaurantId: number) => {
     let updatedRestaurants;
     if (filters.restaurantIds.includes(restaurantId)) {
-      updatedRestaurants = filters.restaurantIds.filter((id) => id !== restaurantId);
+      updatedRestaurants = filters.restaurantIds.filter(
+        (id) => id !== restaurantId
+      );
     } else {
       updatedRestaurants = [...filters.restaurantIds, restaurantId];
     }
@@ -247,6 +253,7 @@ const DashboardFiltersComponent: React.FC<FilterProps> = ({
     };
     setFilters(newFilters);
     onFilterChange(newFilters);
+    setIsRestaurantOpen(false);
   };
 
   const handleSelectAllRestaurants = () => {
@@ -259,6 +266,7 @@ const DashboardFiltersComponent: React.FC<FilterProps> = ({
     };
     setFilters(newFilters);
     onFilterChange(newFilters);
+    setIsRestaurantOpen(false);
   };
 
   const handleServiceToggle = (service: string) => {
@@ -273,6 +281,8 @@ const DashboardFiltersComponent: React.FC<FilterProps> = ({
       services: updatedServices,
     };
     setFilters(newFilters);
+    onFilterChange(newFilters);
+    setIsServicesOpen(false);
   };
 
   const handleSelectAllServices = () => {
@@ -285,6 +295,7 @@ const DashboardFiltersComponent: React.FC<FilterProps> = ({
     };
     setFilters(newFilters);
     onFilterChange(newFilters);
+    setIsServicesOpen(false);
   };
 
   const handleGenderChange = (gender: string) => {
@@ -315,12 +326,77 @@ const DashboardFiltersComponent: React.FC<FilterProps> = ({
     onFilterChange(initialFilters);
   };
 
+  // Verificar el rango de fechas y retornar el texto apropiado
+  const getDateRangeLabel = () => {
+    if (!filters.dateRange.startDate || !filters.dateRange.endDate) {
+      return "Todo el tiempo";
+    }
+
+    const today = new Date();
+    const startDate = filters.dateRange.startDate;
+    const endDate = filters.dateRange.endDate;
+
+    // Comparar las fechas
+    const endDateStr = endDate.toISOString().split("T")[0];
+    const todayStr = today.toISOString().split("T")[0];
+
+    // Calcular diferencia en días
+    const diffTime = endDate.getTime() - startDate.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    // Verificar si el end date es hoy
+    const isToday = endDateStr === todayStr;
+
+    if (isToday) {
+      if (diffDays === 7) {
+        return "Últimos 7 días";
+      } else if (diffDays === 30) {
+        return "Últimos 30 días";
+      } else if (diffDays === 90) {
+        return "Últimos 90 días";
+      } else if (diffDays >= 365 && diffDays <= 366) {
+        return "Último año";
+      }
+    }
+
+    // Si no coincide con ningún preset, mostrar las fechas
+    return `${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}`;
+  };
+
+  // Función helper para determinar qué acceso rápido está activo
+  const getActiveQuickAccess = () => {
+    if (!filters.dateRange.startDate || !filters.dateRange.endDate) {
+      return "allTime";
+    }
+
+    const today = new Date();
+    const startDate = filters.dateRange.startDate;
+    const endDate = filters.dateRange.endDate;
+
+    // Comparar solo las fechas (sin hora)
+    const endDateStr = endDate.toISOString().split("T")[0];
+    const todayStr = today.toISOString().split("T")[0];
+
+    // Calcular diferencia en días
+    const diffTime = endDate.getTime() - startDate.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    // Verificar si el end date es hoy
+    const isToday = endDateStr === todayStr;
+
+    if (isToday) {
+      if (diffDays === 7) return "last7days";
+      if (diffDays === 30) return "last30days";
+      if (diffDays === 90) return "last90days";
+      if (diffDays >= 365 && diffDays <= 366) return "lastYear";
+    }
+
+    return "custom";
+  };
+
   // Formato de fechas para mostrar
   const formatDateRange = () => {
-    if (filters.dateRange.startDate && filters.dateRange.endDate) {
-      return `${filters.dateRange.startDate.toLocaleDateString()} - ${filters.dateRange.endDate.toLocaleDateString()}`;
-    }
-    return "Seleccionar fechas";
+    return getDateRangeLabel();
   };
 
   // Formato para mostrar servicios seleccionados
@@ -334,7 +410,10 @@ const DashboardFiltersComponent: React.FC<FilterProps> = ({
   const formatRestaurants = () => {
     if (filters.restaurantIds.length === 0) return "Todos los Restaurantes";
     if (filters.restaurantIds.length === 1) {
-      return restaurants.find((r) => r.id === filters.restaurantIds[0])?.name || "1 restaurante";
+      return (
+        restaurants.find((r) => r.id === filters.restaurantIds[0])?.name ||
+        "1 restaurante"
+      );
     }
     return `${filters.restaurantIds.length} restaurantes`;
   };
@@ -380,7 +459,7 @@ const DashboardFiltersComponent: React.FC<FilterProps> = ({
                   <input
                     type="date"
                     required
-                    max={new Date().toISOString().split('T')[0]}
+                    max={new Date().toISOString().split("T")[0]}
                     className="w-full text-sm p-1.5 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                     value={dateToInputValue(tempDateRange.startDate)}
                     onChange={(e) =>
@@ -398,8 +477,12 @@ const DashboardFiltersComponent: React.FC<FilterProps> = ({
                   <input
                     type="date"
                     required
-                    max={new Date().toISOString().split('T')[0]}
-                    min={tempDateRange.startDate ? dateToInputValue(tempDateRange.startDate) : undefined}
+                    max={new Date().toISOString().split("T")[0]}
+                    min={
+                      tempDateRange.startDate
+                        ? dateToInputValue(tempDateRange.startDate)
+                        : undefined
+                    }
                     className="w-full text-sm p-1.5 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                     value={dateToInputValue(tempDateRange.endDate)}
                     onChange={(e) =>
@@ -411,6 +494,118 @@ const DashboardFiltersComponent: React.FC<FilterProps> = ({
                   />
                 </div>
               </div>
+
+              {/* Botones de acceso rápido */}
+              <div className="mb-3 pt-2 border-t border-gray-200">
+                <label className="text-xs text-gray-600 block mb-2 font-medium">
+                  Accesos rápidos
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => {
+                      const newFilters = {
+                        ...filters,
+                        dateRange: { startDate: null, endDate: null },
+                      };
+                      setFilters(newFilters);
+                      onFilterChange(newFilters);
+                      setIsDatePickerOpen(false);
+                    }}
+                    className={`px-2 py-1.5 text-xs rounded transition-colors ${
+                      getActiveQuickAccess() === "allTime"
+                        ? "bg-teal-100 border border-teal-300 text-teal-700 font-medium"
+                        : "text-gray-700 bg-gray-50 hover:bg-gray-100"
+                    }`}
+                  >
+                    Todo el tiempo
+                  </button>
+                  <button
+                    onClick={() => {
+                      const endDate = new Date();
+                      const startDate = new Date();
+                      startDate.setDate(startDate.getDate() - 7);
+                      const newFilters = {
+                        ...filters,
+                        dateRange: { startDate, endDate },
+                      };
+                      setFilters(newFilters);
+                      onFilterChange(newFilters);
+                      setIsDatePickerOpen(false);
+                    }}
+                    className={`px-2 py-1.5 text-xs rounded transition-colors ${
+                      getActiveQuickAccess() === "last7days"
+                        ? "bg-teal-100 border border-teal-300 text-teal-700 font-medium"
+                        : "text-gray-700 bg-gray-50 hover:bg-gray-100"
+                    }`}
+                  >
+                    Últimos 7 días
+                  </button>
+                  <button
+                    onClick={() => {
+                      const endDate = new Date();
+                      const startDate = new Date();
+                      startDate.setDate(startDate.getDate() - 30);
+                      const newFilters = {
+                        ...filters,
+                        dateRange: { startDate, endDate },
+                      };
+                      setFilters(newFilters);
+                      onFilterChange(newFilters);
+                      setIsDatePickerOpen(false);
+                    }}
+                    className={`px-2 py-1.5 text-xs rounded transition-colors ${
+                      getActiveQuickAccess() === "last30days"
+                        ? "bg-teal-100 border border-teal-300 text-teal-700 font-medium"
+                        : "text-gray-700 bg-gray-50 hover:bg-gray-100"
+                    }`}
+                  >
+                    Últimos 30 días
+                  </button>
+                  <button
+                    onClick={() => {
+                      const endDate = new Date();
+                      const startDate = new Date();
+                      startDate.setDate(startDate.getDate() - 90);
+                      const newFilters = {
+                        ...filters,
+                        dateRange: { startDate, endDate },
+                      };
+                      setFilters(newFilters);
+                      onFilterChange(newFilters);
+                      setIsDatePickerOpen(false);
+                    }}
+                    className={`px-2 py-1.5 text-xs rounded transition-colors ${
+                      getActiveQuickAccess() === "last90days"
+                        ? "bg-teal-100 border border-teal-300 text-teal-700 font-medium"
+                        : "text-gray-700 bg-gray-50 hover:bg-gray-100"
+                    }`}
+                  >
+                    Últimos 90 días
+                  </button>
+                  <button
+                    onClick={() => {
+                      const endDate = new Date();
+                      const startDate = new Date();
+                      startDate.setMonth(startDate.getMonth() - 12);
+                      const newFilters = {
+                        ...filters,
+                        dateRange: { startDate, endDate },
+                      };
+                      setFilters(newFilters);
+                      onFilterChange(newFilters);
+                      setIsDatePickerOpen(false);
+                    }}
+                    className={`px-2 py-1.5 text-xs rounded transition-colors ${
+                      getActiveQuickAccess() === "lastYear"
+                        ? "bg-teal-100 border border-teal-300 text-teal-700 font-medium"
+                        : "text-gray-700 bg-gray-50 hover:bg-gray-100"
+                    }`}
+                  >
+                    Último año
+                  </button>
+                </div>
+              </div>
+
               <div className="space-y-2 pt-2 border-t border-gray-200">
                 {/* Botón de limpiar fechas */}
                 {(filters.dateRange.startDate || filters.dateRange.endDate) && (
@@ -421,6 +616,7 @@ const DashboardFiltersComponent: React.FC<FilterProps> = ({
                     Limpiar fechas
                   </button>
                 )}
+
                 {/* Botones de acción */}
                 <div className="flex gap-2">
                   <button
@@ -431,7 +627,9 @@ const DashboardFiltersComponent: React.FC<FilterProps> = ({
                   </button>
                   <button
                     onClick={applyDateFilter}
-                    disabled={!tempDateRange.startDate || !tempDateRange.endDate}
+                    disabled={
+                      !tempDateRange.startDate || !tempDateRange.endDate
+                    }
                     className="flex-1 px-3 py-1.5 text-sm text-white bg-teal-600 hover:bg-teal-700 rounded transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
                   >
                     Aplicar
@@ -441,6 +639,7 @@ const DashboardFiltersComponent: React.FC<FilterProps> = ({
             </div>
           )}
         </div>
+
         {/* Filtro de Restaurante */}
         <div className="relative" ref={restaurantRef}>
           <button
@@ -498,6 +697,7 @@ const DashboardFiltersComponent: React.FC<FilterProps> = ({
             </div>
           )}
         </div>
+
         {/* Filtro de Servicio */}
         <div className="relative" ref={servicesRef}>
           <button
@@ -553,6 +753,7 @@ const DashboardFiltersComponent: React.FC<FilterProps> = ({
             </div>
           )}
         </div>
+
         {/* Filtro de Género */}
         <div className="relative" ref={genderRef}>
           <button
@@ -586,6 +787,7 @@ const DashboardFiltersComponent: React.FC<FilterProps> = ({
             </div>
           )}
         </div>
+
         {/* Filtro de Rango de Edad */}
         <div className="relative" ref={ageRangeRef}>
           <button
@@ -611,7 +813,8 @@ const DashboardFiltersComponent: React.FC<FilterProps> = ({
             </div>
           )}
         </div>
-        {/* Botón Limpiar Filtros */}
+
+        {/* Limpiar Filtros */}
         <button
           className="ml-auto flex items-center text-gray-600 hover:text-red-600 px-3 py-1.5 rounded-md text-sm"
           onClick={clearFilters}

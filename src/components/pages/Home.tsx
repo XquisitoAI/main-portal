@@ -1,29 +1,50 @@
-import React, { useState, useMemo, useCallback } from 'react';
-import GlobalKpiCard from '../dashboard/GlobalKpiCard';
-import ServiceKpiCard from '../dashboard/ServiceKpiCard';
-import ServiceDistributionCharts from '../dashboard/ServiceDistributionCharts';
-import LoadingSpinner from '../ui/LoadingSpinner';
-import ErrorMessage from '../ui/ErrorMessage';
-import { useAuth } from '../../hooks/useAuth';
-import { useSuperAdminStats, useRestaurants } from '../../hooks/useApiData';
-import { formatCurrency, formatNumber } from '../../utils/formatters';
-import { CreditCardIcon, UsersIcon, ArrowDownUpIcon, CheckIcon, DollarSignIcon, ReceiptIcon, UserCheckIcon } from 'lucide-react';
-import type { SuperAdminFilters } from '../../types/api';
-import DashboardFilters, { FilterState } from '../dashboard/DashboardFilters';
+import React, { useState, useMemo, useCallback, useEffect } from "react";
+import GlobalKpiCard from "../dashboard/GlobalKpiCard";
+import ServiceKpiCard from "../dashboard/ServiceKpiCard";
+import ServiceDistributionCharts from "../dashboard/ServiceDistributionCharts";
+import LoadingSpinner from "../ui/LoadingSpinner";
+import ErrorMessage from "../ui/ErrorMessage";
+import { useAuth } from "../../hooks/useAuth";
+import { useSuperAdminStats, useRestaurants } from "../../hooks/useApiData";
+import { formatCurrency, formatNumber } from "../../utils/formatters";
+import {
+  CreditCardIcon,
+  UsersIcon,
+  ArrowDownUpIcon,
+  CheckIcon,
+  DollarSignIcon,
+  ReceiptIcon,
+  UserCheckIcon,
+} from "lucide-react";
+import type { SuperAdminFilters } from "../../types/api";
+import DashboardFilters, { FilterState } from "../dashboard/DashboardFilters";
+
+// Función helper para obtener las fechas por defecto (últimos 30 días)
+const getDefaultDateRange = () => {
+  const endDate = new Date();
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - 30);
+  return {
+    startDate,
+    endDate,
+  };
+};
 
 const Home: React.FC = () => {
   // Autenticación habilitada
   const { isSignedIn, isLoaded } = useAuth();
-  const [superAdminFilters, setSuperAdminFilters] = useState<SuperAdminFilters>({});
+  const [superAdminFilters, setSuperAdminFilters] = useState<SuperAdminFilters>(
+    {}
+  );
 
   // Estado de los filtros UI
   const [uiFilters, setUiFilters] = useState<FilterState>({
-    dateRange: { startDate: null, endDate: null },
+    dateRange: getDefaultDateRange(),
     restaurantIds: [],
-    client: '',
+    client: "",
     services: [],
-    gender: '',
-    ageRange: { min: 0, max: 0 }
+    gender: "",
+    ageRange: { min: 0, max: 0 },
   });
 
   // Manejar cambio de filtros desde DashboardFilters
@@ -32,18 +53,18 @@ const Home: React.FC = () => {
     setUiFilters(filters);
 
     // Mapear nombres de servicios de UI a formato del backend
-    let serviceValue: any = 'todos';
+    let serviceValue: any = "todos";
     if (filters.services.length > 0) {
       // Convertir todos los servicios seleccionados a formato backend
-      const mappedServices = filters.services.map(service => {
-        if (service === 'Flex Bill') return 'flex-bill';
-        if (service === 'Tap Order & Pay') return 'tap-order-pay';
+      const mappedServices = filters.services.map((service) => {
+        if (service === "Flex Bill") return "flex-bill";
+        if (service === "Tap Order & Pay") return "tap-order-pay";
         return service;
       });
 
       // Si todos los servicios están seleccionados, enviar 'todos'
       if (mappedServices.length === 2) {
-        serviceValue = 'todos';
+        serviceValue = "todos";
       } else {
         // Si solo hay uno seleccionado, enviar ese
         serviceValue = mappedServices[0];
@@ -51,22 +72,22 @@ const Home: React.FC = () => {
     }
 
     // Mapear rango de edad a formato del backend
-    let ageRangeValue: any = 'todos';
+    let ageRangeValue: any = "todos";
     if (filters.ageRange) {
       const { min, max } = filters.ageRange;
       // Convertir rango numérico a formato esperado por el backend
       if (min === 0 && max === 0) {
-        ageRangeValue = 'todos';
+        ageRangeValue = "todos";
       } else if (min === 18 && max === 24) {
-        ageRangeValue = '18-24';
+        ageRangeValue = "18-24";
       } else if (min === 25 && max === 34) {
-        ageRangeValue = '25-34';
+        ageRangeValue = "25-34";
       } else if (min === 35 && max === 44) {
-        ageRangeValue = '35-44';
+        ageRangeValue = "35-44";
       } else if (min === 45 && max === 54) {
-        ageRangeValue = '45-54';
+        ageRangeValue = "45-54";
       } else if (min === 55) {
-        ageRangeValue = '55+';
+        ageRangeValue = "55+";
       }
     }
 
@@ -79,49 +100,74 @@ const Home: React.FC = () => {
     }
 
     const newFilters: SuperAdminFilters = {
-      start_date: filters.dateRange.startDate?.toISOString().split('T')[0],
-      end_date: filters.dateRange.endDate?.toISOString().split('T')[0],
+      start_date: filters.dateRange.startDate?.toISOString().split("T")[0],
+      end_date: filters.dateRange.endDate?.toISOString().split("T")[0],
       restaurant_id: restaurantIdValue,
       service: serviceValue,
-      gender: filters.gender ? (filters.gender === 'Masculino' ? 'male' : filters.gender === 'Femenino' ? 'female' : 'other') : 'todos',
-      age_range: ageRangeValue
+      gender: filters.gender
+        ? filters.gender === "Masculino"
+          ? "male"
+          : filters.gender === "Femenino"
+            ? "female"
+            : "other"
+        : "todos",
+      age_range: ageRangeValue,
     };
     setSuperAdminFilters(newFilters);
   }, []);
 
+  // Aplicar filtros iniciales al montar el componente
+  useEffect(() => {
+    handleFilterChange(uiFilters);
+  }, []);
+
   // Obtener datos del Super Admin desde el backend
-  const { data: superAdminStats, isLoading: statsLoading, isError: statsError, error, refetch } = useSuperAdminStats(superAdminFilters);
-  const { data: restaurantsList, isLoading: restaurantsLoading } = useRestaurants();
+  const {
+    data: superAdminStats,
+    isLoading: statsLoading,
+    isError: statsError,
+    error,
+    refetch,
+  } = useSuperAdminStats(superAdminFilters);
+  const { data: restaurantsList, isLoading: restaurantsLoading } =
+    useRestaurants();
 
   const isLoading = statsLoading || restaurantsLoading;
   const isError = statsError;
 
   // Calcular métricas de servicios basado en datos reales del Super Admin
   const serviceMetrics = useMemo(() => {
-    if (!superAdminStats?.volume_by_service || !superAdminStats?.orders_by_service) return [];
+    if (
+      !superAdminStats?.volume_by_service ||
+      !superAdminStats?.orders_by_service ||
+      !superAdminStats?.transactions_by_service
+    )
+      return [];
 
     return superAdminStats.volume_by_service.map((volumeData, index) => {
       const ordersData = superAdminStats.orders_by_service[index];
+      const transactionsData = superAdminStats.transactions_by_service[index];
       const totalVolume = superAdminStats.transaction_volume || 1;
+      const totalOrders = superAdminStats.successful_orders || 1;
 
       return {
         id: `service-${index}`,
         name: volumeData.service,
-        status: 'active' as const,
+        status: "active" as const,
         gmv: volumeData.volume,
         gmvPercentage: (volumeData.volume / totalVolume) * 100,
         usage: ordersData?.count || 0,
-        quota: superAdminStats.successful_orders || 0,
+        quota: totalOrders,
         keyMetric: {
-          name: 'Órdenes',
+          name: "Órdenes",
           value: ordersData?.count || 0,
-          unit: 'órdenes'
+          unit: "",
         },
         secondaryMetric: {
-          name: 'Ingresos',
-          value: volumeData.volume,
-          unit: 'CRC'
-        }
+          name: "Transacciones",
+          value: transactionsData?.count || 0,
+          unit: "",
+        },
       };
     });
   }, [superAdminStats]);
@@ -140,10 +186,12 @@ const Home: React.FC = () => {
     return (
       <div className="space-y-4">
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-800">Super Admin Dashboard</h1>
+          <h1 className="text-2xl font-bold text-gray-800">
+            Super Admin Dashboard
+          </h1>
         </div>
         <ErrorMessage
-          message={error?.message || 'Error al cargar los datos del dashboard'}
+          message={error?.message || "Error al cargar los datos del dashboard"}
           onRetry={refetch}
         />
       </div>
@@ -154,9 +202,13 @@ const Home: React.FC = () => {
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-800">Super Admin Dashboard</h1>
-        </div>
+        {/* Fila de filtros */}
+        <DashboardFilters
+          filters={uiFilters}
+          onFilterChange={handleFilterChange}
+          restaurants={restaurantsList || []}
+        />
+        <div className="flex justify-between items-center"></div>
         <LoadingSpinner message="Cargando datos del dashboard..." />
       </div>
     );
@@ -182,28 +234,36 @@ const Home: React.FC = () => {
             <GlobalKpiCard
               title="Volumen transaccionado"
               value={formatCurrency(superAdminStats?.transaction_volume || 0)}
-              previousValue={formatCurrency((superAdminStats?.transaction_volume || 0) * 0.9)}
-              change={10}
+              previousValue={formatCurrency(
+                superAdminStats?.previous_period?.transaction_volume || 0
+              )}
+              change={superAdminStats?.transaction_volume_change || 0}
               trendData={[]}
               tooltip="Suma de pagos aprobados en el rango (SUM de payment_amount donde payment_status='paid')"
               icon={<DollarSignIcon className="w-4 h-4 text-green-500" />}
+              filters={superAdminFilters}
             />
 
             <GlobalKpiCard
               title="Ingresos Xquisito"
               value={formatCurrency(superAdminStats?.xquisito_income || 0)}
-              previousValue={formatCurrency((superAdminStats?.xquisito_income || 0) * 0.85)}
-              change={15}
+              previousValue={formatCurrency(
+                superAdminStats?.previous_period?.xquisito_income || 0
+              )}
+              change={superAdminStats?.xquisito_income_change || 0}
               trendData={[]}
               tooltip="Comisión/fee de Xquisito sobre el volumen (Volumen transaccionado × fee_servicio)"
               icon={<ReceiptIcon className="w-4 h-4 text-blue-500" />}
+              filters={superAdminFilters}
             />
 
             <GlobalKpiCard
               title="Comensales Activos"
               value={formatNumber(superAdminStats?.active_diners || 0)}
-              previousValue={formatNumber((superAdminStats?.active_diners || 0) - 50)}
-              change={5}
+              previousValue={formatNumber(
+                superAdminStats?.previous_period?.active_diners || 0
+              )}
+              change={superAdminStats?.active_diners_change || 0}
               trendData={[]}
               tooltip="Usuarios que han realizado al menos un pedido en el período"
               icon={<UsersIcon className="w-4 h-4 text-indigo-500" />}
@@ -212,45 +272,58 @@ const Home: React.FC = () => {
             <GlobalKpiCard
               title="Órdenes Exitosas"
               value={formatNumber(superAdminStats?.successful_orders || 0)}
-              previousValue={formatNumber((superAdminStats?.successful_orders || 0) * 0.92)}
-              change={8}
+              previousValue={formatNumber(
+                superAdminStats?.previous_period?.successful_orders || 0
+              )}
+              change={superAdminStats?.successful_orders_change || 0}
               trendData={[]}
               tooltip="Número absoluto de órdenes con estado exitoso (payment_status = success)"
               icon={<CheckIcon className="w-4 h-4 text-green-500" />}
+              filters={superAdminFilters}
             />
 
             <GlobalKpiCard
               title="Admins Activos"
               value={formatNumber(superAdminStats?.active_admins || 0)}
-              previousValue={formatNumber((superAdminStats?.active_admins || 0) - 1)}
-              change={5}
+              previousValue={formatNumber(
+                superAdminStats?.previous_period?.active_admins || 0
+              )}
+              change={superAdminStats?.active_admins_change || 0}
               trendData={[]}
               tooltip="Administradores activos en el sistema"
               icon={<UserCheckIcon className="w-4 h-4 text-purple-500" />}
+              hideChange={true}
             />
 
             {/* Métodos de pago */}
             {superAdminStats?.most_used_payment_method && (
               <GlobalKpiCard
                 title="Método de Pago más Usado"
-                value={superAdminStats.most_used_payment_method.method || 'N/A'}
-                previousValue={superAdminStats.most_used_payment_method.method || 'N/A'}
+                value={superAdminStats.most_used_payment_method.method || "N/A"}
+                previousValue={
+                  superAdminStats.most_used_payment_method.method || "N/A"
+                }
                 change={0}
                 trendData={[0, 0, 0, 0, 0, 0]}
                 tooltip={`Método de pago con mayor número de transacciones (${superAdminStats.most_used_payment_method.count || 0} usos)`}
                 icon={<CreditCardIcon className="w-4 h-4 text-blue-500" />}
                 isText={true}
+                hideChange={true}
+                filters={superAdminFilters}
               />
             )}
 
             <GlobalKpiCard
               title="Total de Transacciones"
               value={formatNumber(superAdminStats?.total_transactions || 0)}
-              previousValue={formatNumber((superAdminStats?.total_transactions || 0) * 0.9)}
-              change={10}
+              previousValue={formatNumber(
+                superAdminStats?.previous_period?.total_transactions || 0
+              )}
+              change={superAdminStats?.total_transactions_change || 0}
               trendData={[]}
               tooltip="Total de transacciones procesadas (éxito + fallo)"
               icon={<ArrowDownUpIcon className="w-4 h-4 text-indigo-500" />}
+              filters={superAdminFilters}
             />
           </div>
         </div>
@@ -261,12 +334,14 @@ const Home: React.FC = () => {
             compact={true}
             volumeByService={superAdminStats?.volume_by_service || []}
             ordersByService={superAdminStats?.orders_by_service || []}
-            transactionsByService={superAdminStats?.transactions_by_service || []}
+            transactionsByService={
+              superAdminStats?.transactions_by_service || []
+            }
             filters={{
               restaurant_id: superAdminFilters.restaurant_id,
               service: superAdminFilters.service,
               start_date: superAdminFilters.start_date,
-              end_date: superAdminFilters.end_date
+              end_date: superAdminFilters.end_date,
             }}
           />
         </div>
@@ -279,26 +354,32 @@ const Home: React.FC = () => {
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           {serviceMetrics.length > 0 ? (
-            serviceMetrics.slice(0, 5).map(service => (
-              <ServiceKpiCard
-                key={service.id}
-                name={service.name}
-                status={service.status}
-                gmv={service.gmv}
-                gmvPercentage={service.gmvPercentage}
-                usage={service.usage}
-                quota={service.quota}
-                keyMetric={service.keyMetric}
-                secondaryMetric={service.secondaryMetric}
-              />
-            ))
+            serviceMetrics
+              .slice(0, 5)
+              .map((service) => (
+                <ServiceKpiCard
+                  key={service.id}
+                  name={service.name}
+                  status={service.status}
+                  gmv={service.gmv}
+                  gmvPercentage={service.gmvPercentage}
+                  usage={service.usage}
+                  quota={service.quota}
+                  keyMetric={service.keyMetric}
+                  secondaryMetric={service.secondaryMetric}
+                  initialFilters={superAdminFilters}
+                />
+              ))
           ) : (
             <div className="col-span-full flex items-center justify-center py-8">
               <div className="text-center">
                 <UsersIcon className="mx-auto h-12 w-12 text-gray-400" />
-                <h3 className="mt-2 text-sm font-medium text-gray-900">No hay datos de servicios</h3>
+                <h3 className="mt-2 text-sm font-medium text-gray-900">
+                  No hay datos de servicios
+                </h3>
                 <p className="mt-1 text-sm text-gray-500">
-                  No se encontraron datos de servicios para el período seleccionado.
+                  No se encontraron datos de servicios para el período
+                  seleccionado.
                 </p>
               </div>
             </div>

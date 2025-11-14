@@ -9,6 +9,18 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Main Portal - Xquisito",
   description: "Portal de Super Administrador de Xquisito",
+  icons: {
+    icon: [
+      {
+        url: "/logo-short-green.webp",
+        media: "(prefers-color-scheme: light)",
+      },
+      {
+        url: "/logo-short-white.webp",
+        media: "(prefers-color-scheme: dark)",
+      },
+    ],
+  },
 };
 
 export default function RootLayout({
