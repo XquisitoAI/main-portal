@@ -27,6 +27,7 @@ const convertClientFromBackend = (backendClient: any): Client => ({
   phone: backendClient.phone,
   email: backendClient.email,
   services: backendClient.services,
+  tableCount: backendClient.table_count || 0,
   active: backendClient.active,
   createdAt: backendClient.created_at,
   updatedAt: backendClient.updated_at
@@ -39,6 +40,7 @@ const convertClientToBackend = (frontendClient: ClientFormDataWithInvitation | C
   phone: frontendClient.phone,
   email: frontendClient.email,
   services: frontendClient.services,
+  table_count: frontendClient.tableCount || 0,
   active: frontendClient.active,
   // Solo incluir sendInvitation si está presente
   ...(('sendInvitation' in frontendClient) && { sendInvitation: frontendClient.sendInvitation })

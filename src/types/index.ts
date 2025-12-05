@@ -9,6 +9,7 @@ export interface Client {
   phone: string;                  // Número de teléfono ✅ NUEVO
   email: string;                  // Email ✅ NUEVO
   services: string[];             // Array de servicios activos
+  tableCount?: number;            // Número de mesas (requerido para flex-bill y tap-order-pay) ✅ NUEVO
   active: boolean;                // Estado activo/inactivo
   createdAt: string;             // Fecha de creación
   updatedAt?: string;            // Fecha de última actualización ✅ NUEVO

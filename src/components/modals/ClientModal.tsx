@@ -23,6 +23,7 @@ const ClientModal: React.FC<ClientModalProps> = ({
     phone: '',
     email: '',
     services: [],
+    tableCount: 0,
     active: true
   });
 
@@ -42,6 +43,7 @@ const ClientModal: React.FC<ClientModalProps> = ({
           phone: client.phone,
           email: client.email,
           services: client.services,
+          tableCount: client.tableCount || 0,
           active: client.active
         });
         setSendInvitation(false); // No enviar invitación en modo edición
@@ -53,6 +55,7 @@ const ClientModal: React.FC<ClientModalProps> = ({
           phone: '',
           email: '',
           services: [],
+          tableCount: 0,
           active: true
         });
         setSendInvitation(true); // Por defecto enviar invitación
@@ -128,6 +131,16 @@ const ClientModal: React.FC<ClientModalProps> = ({
       newErrors.services = 'Debe seleccionar al menos un servicio';
     }
 
+    // Validar tableCount solo si se han seleccionado servicios que requieren mesas
+    const requiresTableCount = formData.services.includes('flex-bill') || formData.services.includes('tap-order-pay');
+    if (requiresTableCount) {
+      if (!formData.tableCount || formData.tableCount < 1) {
+        newErrors.tableCount = 'El número de mesas es requerido para los servicios seleccionados';
+      } else if (formData.tableCount > 100) {
+        newErrors.tableCount = 'El número máximo de mesas es 100';
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -144,12 +157,25 @@ const ClientModal: React.FC<ClientModalProps> = ({
 
   // Manejar cambios en servicios
   const handleServiceToggle = (serviceId: string) => {
-    setFormData(prev => ({
-      ...prev,
-      services: prev.services.includes(serviceId)
+    setFormData(prev => {
+      const newServices = prev.services.includes(serviceId)
         ? prev.services.filter(s => s !== serviceId)
-        : [...prev.services, serviceId]
-    }));
+        : [...prev.services, serviceId];
+
+      // Si se deseleccionan todos los servicios que requieren mesas, limpiar tableCount
+      const requiresTableCount = newServices.includes('flex-bill') || newServices.includes('tap-order-pay');
+
+      return {
+        ...prev,
+        services: newServices,
+        tableCount: requiresTableCount ? prev.tableCount : 0
+      };
+    });
+
+    // Limpiar error de tableCount si se deseleccionan servicios que lo requieren
+    if (errors.tableCount) {
+      setErrors(prev => ({ ...prev, tableCount: '' }));
+    }
   };
 
   const title = client ? 'Editar Cliente' : 'Nuevo Cliente';
@@ -244,6 +270,35 @@ const ClientModal: React.FC<ClientModalProps> = ({
             )}
           </div>
         </div>
+
+        {/* Número de mesas - Solo visible si se han seleccionado servicios que requieren mesas */}
+        {(formData.services.includes('flex-bill') || formData.services.includes('tap-order-pay')) && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Número de mesas *
+            </label>
+            <input
+              type="number"
+              min="1"
+              max="500"
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                errors.tableCount ? 'border-red-300' : 'border-gray-300'
+              }`}
+              value={formData.tableCount || ''}
+              onChange={(e) => setFormData(prev => ({
+                ...prev,
+                tableCount: e.target.value ? parseInt(e.target.value) : 0
+              }))}
+              placeholder="Ingresa número de mesas (1-100)"
+            />
+            {errors.tableCount && (
+              <p className="mt-1 text-sm text-red-600">{errors.tableCount}</p>
+            )}
+            <p className="mt-1 text-xs text-yellow-700">
+              <strong>Requerido para Flex Bill y Tap Order & Pay</strong>
+            </p>
+          </div>
+        )}
 
         {/* Servicios Activos */}
         <div>

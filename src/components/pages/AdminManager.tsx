@@ -210,6 +210,9 @@ const AdminManager: React.FC = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Servicios
                   </th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Mesas
+                  </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Estado
                   </th>
@@ -250,6 +253,20 @@ const AdminManager: React.FC = () => {
                             {getServiceLabel(service)}
                           </span>)}
                       </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      {(client.services.includes('flex-bill') || client.services.includes('tap-order-pay')) ? (
+                        <div className="inline-flex items-center">
+                          <span className="text-lg font-semibold text-gray-900">
+                            {client.tableCount || 0}
+                          </span>
+                          <span className="text-xs text-gray-500 ml-1">
+                            mesa{(client.tableCount || 0) !== 1 ? 's' : ''}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-400">—</span>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 py-1 text-xs rounded-full ${client.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
