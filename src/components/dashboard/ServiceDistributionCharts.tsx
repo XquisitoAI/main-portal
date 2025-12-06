@@ -16,6 +16,7 @@ import DetailedServiceChart from "./DetailedServiceChart";
 const SERVICE_COLORS: { [key: string]: string } = {
   "Flex Bill": "#82ca9d",
   "Tap Order & Pay": "#8884d8",
+  "Pick & Go": "#fbbf24",
 };
 
 // Componente para el tooltip personalizado

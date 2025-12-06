@@ -377,7 +377,7 @@ export interface SuperAdminFilters {
   start_date?: string;
   end_date?: string;
   restaurant_id?: number | number[]; // Permitir un ID o array de IDs
-  service?: "todos" | "flex-bill" | "tap-order-pay" | string; // Permitir string para múltiples servicios separados por coma
+  service?: "todos" | "flex-bill" | "tap-order-pay" | "pick-and-go" | string; // Permitir string para múltiples servicios separados por coma
   gender?: "todos" | "male" | "female" | "other";
   age_range?: "todos" | "18-24" | "25-34" | "35-44" | "45-54" | "55+";
 }

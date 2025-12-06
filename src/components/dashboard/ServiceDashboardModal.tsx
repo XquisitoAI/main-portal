@@ -63,7 +63,9 @@ const ServiceDashboardModal: React.FC<ServiceDashboardModalProps> = ({
       ? "flex-bill"
       : serviceName === "Tap Order & Pay"
         ? "tap-order-pay"
-        : "todos";
+        : serviceName === "Pick & Go"
+          ? "pick-and-go"
+          : "todos";
 
   // Obtener datos del backend
   const { data: volumeData, isLoading: volumeLoading } = useVolumeTimeline({

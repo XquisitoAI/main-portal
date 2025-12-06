@@ -59,11 +59,12 @@ const Home: React.FC = () => {
       const mappedServices = filters.services.map((service) => {
         if (service === "Flex Bill") return "flex-bill";
         if (service === "Tap Order & Pay") return "tap-order-pay";
+        if (service === "Pick & Go") return "pick-and-go";
         return service;
       });
 
       // Si todos los servicios están seleccionados, enviar 'todos'
-      if (mappedServices.length === 2) {
+      if (mappedServices.length === 3) {
         serviceValue = "todos";
       } else {
         // Si solo hay uno seleccionado, enviar ese
