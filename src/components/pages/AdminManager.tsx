@@ -405,6 +405,7 @@ const AdminManager: React.FC = () => {
         onSave={handleSaveBranch}
         branch={branchModal.branch}
         clients={clients}
+        branches={branches}
         isLoading={isLoading.saving}
       />
 

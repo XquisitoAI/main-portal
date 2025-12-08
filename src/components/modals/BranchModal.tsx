@@ -8,6 +8,7 @@ interface BranchModalProps {
   onSave: (data: BranchFormData) => void;
   branch?: Branch | null;
   clients: Client[];
+  branches: Branch[];
   isLoading?: boolean;
 }
 
@@ -17,6 +18,7 @@ const BranchModal: React.FC<BranchModalProps> = ({
   onSave,
   branch,
   clients,
+  branches,
   isLoading = false
 }) => {
   const [formData, setFormData] = useState<BranchFormData>({
@@ -81,6 +83,15 @@ const BranchModal: React.FC<BranchModalProps> = ({
       newErrors.tables = 'El número de mesas no puede ser mayor a 1000';
     }
 
+    // Validación estricta: verificar que no exceda las mesas contratadas
+    if (formData.clientId && formData.tables > 0) {
+      const availableTables = calculateAvailableTables(formData.clientId);
+      if (formData.tables > availableTables) {
+        const clientInfo = getClientTableInfo(formData.clientId);
+        newErrors.tables = `Solo hay ${availableTables} mesas disponibles. El cliente tiene ${clientInfo?.totalContracted || 0} mesas contratadas y ${clientInfo?.totalUsed || 0} ya están en uso.`;
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -98,6 +109,41 @@ const BranchModal: React.FC<BranchModalProps> = ({
   const getClientName = (clientId: string) => {
     const client = clients.find(c => c.id === clientId);
     return client ? client.name : 'Cliente no encontrado';
+  };
+
+  // Calcular mesas disponibles para un cliente
+  const calculateAvailableTables = (clientId: string) => {
+    if (!clientId) return 0;
+
+    const client = clients.find(c => c.id === clientId);
+    if (!client || !client.tableCount) return 0;
+
+    // Sumar mesas de todas las sucursales existentes de este cliente
+    // Excluir la sucursal actual si estamos editando
+    const usedTables = branches
+      .filter(b => b.clientId === clientId && b.id !== branch?.id)
+      .reduce((sum, b) => sum + (b.tables || 0), 0);
+
+    return Math.max(0, client.tableCount - usedTables);
+  };
+
+  // Obtener información detallada del cliente seleccionado
+  const getClientTableInfo = (clientId: string) => {
+    if (!clientId) return null;
+
+    const client = clients.find(c => c.id === clientId);
+    if (!client) return null;
+
+    const clientBranches = branches.filter(b => b.clientId === clientId && b.id !== branch?.id);
+    const usedTables = clientBranches.reduce((sum, b) => sum + (b.tables || 0), 0);
+    const availableTables = Math.max(0, (client.tableCount || 0) - usedTables);
+
+    return {
+      totalContracted: client.tableCount || 0,
+      totalUsed: usedTables,
+      totalAvailable: availableTables,
+      branches: clientBranches
+    };
   };
 
   const title = branch ? 'Editar Sucursal' : 'Nueva Sucursal';
@@ -182,11 +228,19 @@ const BranchModal: React.FC<BranchModalProps> = ({
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Número de Mesas *
+              {formData.clientId && (() => {
+                const availableTables = calculateAvailableTables(formData.clientId);
+                return (
+                  <span className="ml-2 text-xs text-gray-500">
+                    (Disponibles: {availableTables})
+                  </span>
+                );
+              })()}
             </label>
             <input
               type="number"
               min="1"
-              max="1000"
+              max={formData.clientId ? calculateAvailableTables(formData.clientId) : 1000}
               className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                 errors.tables ? 'border-red-300' : 'border-gray-300'
               }`}
@@ -214,23 +268,80 @@ const BranchModal: React.FC<BranchModalProps> = ({
 
         {/* Información del cliente seleccionado */}
         {formData.clientId && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h4 className="text-sm font-medium text-blue-900 mb-2">
-              Información del Cliente
-            </h4>
-            <div className="text-sm text-blue-700">
-              <p><strong>Restaurante:</strong> {getClientName(formData.clientId)}</p>
-              {(() => {
-                const client = clients.find(c => c.id === formData.clientId);
-                return client ? (
-                  <>
-                    <p><strong>Dueño:</strong> {client.ownerName}</p>
-                    <p><strong>Email:</strong> {client.email}</p>
-                    <p><strong>Teléfono:</strong> {client.phone}</p>
-                  </>
-                ) : null;
-              })()}
+          <div className="space-y-4">
+            {/* Información básica del cliente */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h4 className="text-sm font-medium text-blue-900 mb-2">
+                Información del Cliente
+              </h4>
+              <div className="text-sm text-blue-700">
+                <p><strong>Restaurante:</strong> {getClientName(formData.clientId)}</p>
+                {(() => {
+                  const client = clients.find(c => c.id === formData.clientId);
+                  return client ? (
+                    <>
+                      <p><strong>Dueño:</strong> {client.ownerName}</p>
+                      <p><strong>Email:</strong> {client.email}</p>
+                      <p><strong>Teléfono:</strong> {client.phone}</p>
+                    </>
+                  ) : null;
+                })()}
+              </div>
             </div>
+
+            {/* Información de mesas */}
+            {(() => {
+              const clientInfo = getClientTableInfo(formData.clientId);
+              if (!clientInfo) return null;
+
+              return (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h4 className="text-sm font-medium text-yellow-900 mb-3">
+                    Control de Mesas
+                  </h4>
+
+                  {/* Resumen de mesas */}
+                  <div className="grid grid-cols-3 gap-4 mb-3">
+                    <div className="text-center">
+                      <div className="text-lg font-bold text-gray-900">{clientInfo.totalContracted}</div>
+                      <div className="text-xs text-gray-600">Contratadas</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-bold text-red-600">{clientInfo.totalUsed}</div>
+                      <div className="text-xs text-gray-600">En Uso</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-lg font-bold text-green-600">{clientInfo.totalAvailable}</div>
+                      <div className="text-xs text-gray-600">Disponibles</div>
+                    </div>
+                  </div>
+
+                  {/* Desglose por sucursales existentes */}
+                  {clientInfo.branches.length > 0 && (
+                    <div>
+                      <h5 className="text-xs font-medium text-yellow-800 mb-2">
+                        Sucursales Existentes:
+                      </h5>
+                      <div className="space-y-1">
+                        {clientInfo.branches.map(branch => (
+                          <div key={branch.id} className="flex justify-between text-xs text-yellow-700">
+                            <span>{branch.name}</span>
+                            <span>{branch.tables} mesas</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Advertencia si no hay mesas disponibles */}
+                  {clientInfo.totalAvailable === 0 && (
+                    <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700">
+                      <strong>⚠️ Sin mesas disponibles:</strong> Este cliente ya ha utilizado todas sus mesas contratadas.
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
           </div>
         )}
 
