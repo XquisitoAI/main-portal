@@ -24,6 +24,7 @@ const ClientModal: React.FC<ClientModalProps> = ({
     email: '',
     services: [],
     tableCount: 0,
+    roomCount: 0,
     active: true
   });
 
@@ -44,6 +45,7 @@ const ClientModal: React.FC<ClientModalProps> = ({
           email: client.email,
           services: client.services,
           tableCount: client.tableCount || 0,
+          roomCount: client.roomCount || 0,
           active: client.active
         });
         setSendInvitation(false); // No enviar invitación en modo edición
@@ -56,6 +58,7 @@ const ClientModal: React.FC<ClientModalProps> = ({
           email: '',
           services: [],
           tableCount: 0,
+          roomCount: 0,
           active: true
         });
         setSendInvitation(true); // Por defecto enviar invitación
@@ -141,6 +144,16 @@ const ClientModal: React.FC<ClientModalProps> = ({
       }
     }
 
+    // Validar roomCount solo si se ha seleccionado room-service
+    const requiresRoomCount = formData.services.includes('room-service');
+    if (requiresRoomCount) {
+      if (!formData.roomCount || formData.roomCount < 1) {
+        newErrors.roomCount = 'El número de habitaciones es requerido para Room Service';
+      } else if (formData.roomCount > 500) {
+        newErrors.roomCount = 'El número máximo de habitaciones es 500';
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -164,17 +177,23 @@ const ClientModal: React.FC<ClientModalProps> = ({
 
       // Si se deseleccionan todos los servicios que requieren mesas, limpiar tableCount
       const requiresTableCount = newServices.includes('flex-bill') || newServices.includes('tap-order-pay');
+      // Si se deselecciona room-service, limpiar roomCount
+      const requiresRoomCount = newServices.includes('room-service');
 
       return {
         ...prev,
         services: newServices,
-        tableCount: requiresTableCount ? prev.tableCount : 0
+        tableCount: requiresTableCount ? prev.tableCount : 0,
+        roomCount: requiresRoomCount ? prev.roomCount : 0
       };
     });
 
-    // Limpiar error de tableCount si se deseleccionan servicios que lo requieren
+    // Limpiar errores si se deseleccionan servicios que los requieren
     if (errors.tableCount) {
       setErrors(prev => ({ ...prev, tableCount: '' }));
+    }
+    if (errors.roomCount) {
+      setErrors(prev => ({ ...prev, roomCount: '' }));
     }
   };
 
@@ -191,7 +210,7 @@ const ClientModal: React.FC<ClientModalProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Nombre del Restaurante *
+              Nombre del Establecimiento *
             </label>
             <input
               type="text"
@@ -200,7 +219,7 @@ const ClientModal: React.FC<ClientModalProps> = ({
               }`}
               value={formData.name}
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              placeholder="Ej: Restaurante El Dorado"
+              placeholder="Ej: Restaurante El Dorado / Hotel Plaza"
             />
             {errors.name && (
               <p className="mt-1 text-sm text-red-600">{errors.name}</p>
@@ -296,6 +315,35 @@ const ClientModal: React.FC<ClientModalProps> = ({
             )}
             <p className="mt-1 text-xs text-yellow-700">
               <strong>Requerido para Flex Bill y Tap Order & Pay</strong>
+            </p>
+          </div>
+        )}
+
+        {/* Número de habitaciones - Solo visible si se ha seleccionado room-service */}
+        {formData.services.includes('room-service') && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Número de habitaciones *
+            </label>
+            <input
+              type="number"
+              min="1"
+              max="500"
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                errors.roomCount ? 'border-red-300' : 'border-gray-300'
+              }`}
+              value={formData.roomCount || ''}
+              onChange={(e) => setFormData(prev => ({
+                ...prev,
+                roomCount: e.target.value ? parseInt(e.target.value) : 0
+              }))}
+              placeholder="Ingresa número de habitaciones (1-500)"
+            />
+            {errors.roomCount && (
+              <p className="mt-1 text-sm text-red-600">{errors.roomCount}</p>
+            )}
+            <p className="mt-1 text-xs text-yellow-700">
+              <strong>Requerido para Room Service - Servicio a la habitación</strong>
             </p>
           </div>
         )}

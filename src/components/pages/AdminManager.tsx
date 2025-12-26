@@ -199,7 +199,7 @@ const AdminManager: React.FC = () => {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Restaurante
+                    Establecimiento
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Dueño
@@ -212,6 +212,9 @@ const AdminManager: React.FC = () => {
                   </th>
                   <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Mesas
+                  </th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Habitaciones
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Estado
@@ -262,6 +265,20 @@ const AdminManager: React.FC = () => {
                           </span>
                           <span className="text-xs text-gray-500 ml-1">
                             mesa{(client.tableCount || 0) !== 1 ? 's' : ''}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-400">—</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      {client.services.includes('room-service') ? (
+                        <div className="inline-flex items-center">
+                          <span className="text-lg font-semibold text-blue-900">
+                            {client.roomCount || 0}
+                          </span>
+                          <span className="text-xs text-blue-600 ml-1">
+                            hab{(client.roomCount || 0) !== 1 ? 's' : ''}
                           </span>
                         </div>
                       ) : (
@@ -345,8 +362,8 @@ const AdminManager: React.FC = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredBranches.map(branch => {
-              const client = clients.find(c => c.id === branch.clientId);
-              return <tr key={branch.id} className="hover:bg-gray-50">
+                const client = clients.find(c => c.id === branch.clientId);
+                return <tr key={branch.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="font-medium text-gray-900">
                           {client?.name || 'Desconocido'}
@@ -383,7 +400,7 @@ const AdminManager: React.FC = () => {
                         </button>
                       </td>
                     </tr>;
-            })}
+                })}
               </tbody>
             </table>
           </div>

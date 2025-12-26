@@ -10,6 +10,7 @@ export interface Client {
   email: string;                  // Email ✅ NUEVO
   services: string[];             // Array de servicios activos
   tableCount?: number;            // Número de mesas (requerido para flex-bill y tap-order-pay) ✅ NUEVO
+  roomCount?: number;             // Número de habitaciones (requerido para room-service) ✅ NUEVO
   active: boolean;                // Estado activo/inactivo
   createdAt: string;             // Fecha de creación
   updatedAt?: string;            // Fecha de última actualización ✅ NUEVO
@@ -97,6 +98,11 @@ export const AVAILABLE_SERVICES: ServiceOption[] = [
     id: 'pick-n-go',
     label: 'Pick N Go',
     description: 'Sistema de recogida express'
+  },
+  {
+    id: 'room-service',
+    label: 'Room Service',
+    description: 'Servicio a la habitación para hoteles'
   }
 ];
 
