@@ -596,6 +596,10 @@ export function useMainPortalApi() {
       makeAuthenticatedRequest((token) =>
         mainPortalApiService.getMainPortalStats(token)
       ),
+    getInvitationStatuses: () =>
+      makeAuthenticatedRequest((token) =>
+        mainPortalApiService.getInvitationStatuses(token)
+      ),
 
     // Métodos de QR Codes
     getAllQRCodes: (filters?: {
