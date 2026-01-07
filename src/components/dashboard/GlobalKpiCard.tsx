@@ -3,6 +3,8 @@ import { formatChange } from '../../utils/formatters';
 import DetailedVolumeChart from './DetailedVolumeChart';
 import DetailedMetricChart from './DetailedMetricChart';
 import DetailedPaymentMethodsChart from './DetailedPaymentMethodsChart';
+import type { SuperAdminFilters } from '../../types/api';
+
 interface GlobalKpiCardProps {
   title: string;
   value: string;
@@ -17,6 +19,8 @@ interface GlobalKpiCardProps {
   icon?: React.ReactNode;
   onClick?: () => void;
   isText?: boolean;
+  hideChange?: boolean;
+  filters?: SuperAdminFilters;
 }
 const GlobalKpiCard: React.FC<GlobalKpiCardProps> = ({
   title,
@@ -28,7 +32,9 @@ const GlobalKpiCard: React.FC<GlobalKpiCardProps> = ({
   thresholds,
   icon,
   onClick,
-  isText = false
+  isText = false,
+  hideChange = false,
+  filters
 }) => {
   const [showDetailedChart, setShowDetailedChart] = useState(false);
   // Determinar el tipo de tarjeta para mostrar la gráfica adecuada
@@ -94,16 +100,18 @@ const GlobalKpiCard: React.FC<GlobalKpiCardProps> = ({
             {icon && <span className="mr-1.5">{icon}</span>}
             <h3 className="text-sm font-medium text-gray-700">{title}</h3>
           </div>
-          <div className={`text-xs font-medium px-1.5 py-0.5 rounded ${getChangeColor()}`}>
-            {formatChange(change)}
-          </div>
+          {!hideChange && (
+            <div className={`text-xs font-medium px-1.5 py-0.5 rounded ${getChangeColor()}`}>
+              {formatChange(change)}
+            </div>
+          )}
         </div>
         <div className="mt-2">
           <div className="text-xl font-semibold text-gray-800">{value}</div>
         </div>
       </div>
       {/* Mostrar gráfica detallada cuando showDetailedChart es true */}
-      {showDetailedChart && (getCardType() === 'volume' ? <DetailedVolumeChart onClose={() => setShowDetailedChart(false)} /> : getCardType() === 'paymentMethod' ? <DetailedPaymentMethodsChart onClose={() => setShowDetailedChart(false)} /> : <DetailedMetricChart onClose={() => setShowDetailedChart(false)} title={title} metricType={getMetricType()} metricLabel={title} color={getChartColor()} />)}
+      {showDetailedChart && (getCardType() === 'volume' ? <DetailedVolumeChart onClose={() => setShowDetailedChart(false)} initialFilters={filters} /> : getCardType() === 'paymentMethod' ? <DetailedPaymentMethodsChart onClose={() => setShowDetailedChart(false)} initialFilters={filters} /> : <DetailedMetricChart onClose={() => setShowDetailedChart(false)} title={title} metricType={getMetricType()} metricLabel={title} color={getChartColor()} initialFilters={filters} />)}
     </>;
 };
 export default GlobalKpiCard;
