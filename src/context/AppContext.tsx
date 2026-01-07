@@ -1,5 +1,5 @@
 import React, { useState, createContext, useContext, useEffect } from 'react';
-import { Client, Branch, QrCode, ClientFormData, BranchFormData, LoadingState } from '../types';
+import { Client, Branch, QrCode, ClientFormData, BranchFormData, LoadingState, QrCodeBatchFormData, QrCodeUpdateData } from '../types';
 import { useMainPortalApi } from '../services/mainPortalApi';
 interface AppContextType {
   selectedClient: string | null;
@@ -13,13 +13,17 @@ interface AppContextType {
   setSelectedBranch: (id: string | null) => void;
   loadClients: () => Promise<void>;
   loadBranches: () => Promise<void>;
+  loadQrCodes: (filters?: { clientId?: string; branchId?: string }) => Promise<void>;
   addClient: (client: ClientFormData) => Promise<void>;
   updateClient: (id: string, client: Partial<ClientFormData>) => Promise<void>;
   deleteClient: (id: string) => Promise<void>;
   addBranch: (branch: BranchFormData) => Promise<void>;
   updateBranch: (id: string, branch: Partial<BranchFormData>) => Promise<void>;
   deleteBranch: (id: string) => Promise<void>;
-  generateQrCode: (branchId: string, tableNumber: number) => void;
+  createBatchQrCodes: (data: QrCodeBatchFormData) => Promise<void>;
+  updateQrCode: (id: string, data: QrCodeUpdateData) => Promise<void>;
+  deleteQrCode: (id: string) => Promise<void>;
+  toggleQrCodeStatus: (id: string) => Promise<void>;
   clearError: () => void;
 }
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -176,15 +180,79 @@ export const AppContextProvider: React.FC<{
       setLoading(prev => ({ ...prev, isDeleting: false }));
     }
   };
-  const generateQrCode = (branchId: string, tableNumber: number) => {
-    const newQrCode = {
-      id: `qr-${Date.now()}`,
-      branchId,
-      tableNumber,
-      url: `https://xquisito.com/qr/${branchId}/${tableNumber}`,
-      createdAt: new Date().toISOString()
-    };
-    setQrCodes([...qrCodes, newQrCode]);
+
+  // Cargar códigos QR desde la API
+  const loadQrCodes = async (filters?: { clientId?: string; branchId?: string }) => {
+    try {
+      setLoading(prev => ({ ...prev, isLoading: true }));
+      clearError();
+      const data = await mainPortalApi.getAllQRCodes(filters);
+      setQrCodes(data);
+    } catch (error) {
+      handleError(error);
+    } finally {
+      setLoading(prev => ({ ...prev, isLoading: false }));
+    }
+  };
+
+  // Crear múltiples códigos QR en lote
+  const createBatchQrCodes = async (data: QrCodeBatchFormData) => {
+    try {
+      setLoading(prev => ({ ...prev, isSaving: true }));
+      clearError();
+      const newQrCodes = await mainPortalApi.createBatchQRCodes(data);
+      setQrCodes(prev => [...prev, ...newQrCodes]);
+    } catch (error) {
+      handleError(error);
+      throw error;
+    } finally {
+      setLoading(prev => ({ ...prev, isSaving: false }));
+    }
+  };
+
+  // Actualizar código QR
+  const updateQrCode = async (id: string, data: QrCodeUpdateData) => {
+    try {
+      setLoading(prev => ({ ...prev, isSaving: true }));
+      clearError();
+      const updatedQrCode = await mainPortalApi.updateQRCode(id, data);
+      setQrCodes(prev => prev.map(qr => qr.id === id ? updatedQrCode : qr));
+    } catch (error) {
+      handleError(error);
+      throw error;
+    } finally {
+      setLoading(prev => ({ ...prev, isSaving: false }));
+    }
+  };
+
+  // Eliminar código QR
+  const deleteQrCode = async (id: string) => {
+    try {
+      setLoading(prev => ({ ...prev, isDeleting: true }));
+      clearError();
+      await mainPortalApi.deleteQRCode(id);
+      setQrCodes(prev => prev.filter(qr => qr.id !== id));
+    } catch (error) {
+      handleError(error);
+      throw error;
+    } finally {
+      setLoading(prev => ({ ...prev, isDeleting: false }));
+    }
+  };
+
+  // Cambiar estado activo/inactivo de un código QR
+  const toggleQrCodeStatus = async (id: string) => {
+    try {
+      setLoading(prev => ({ ...prev, isSaving: true }));
+      clearError();
+      const updatedQrCode = await mainPortalApi.toggleQRCodeStatus(id);
+      setQrCodes(prev => prev.map(qr => qr.id === id ? updatedQrCode : qr));
+    } catch (error) {
+      handleError(error);
+      throw error;
+    } finally {
+      setLoading(prev => ({ ...prev, isSaving: false }));
+    }
   };
   return <AppContext.Provider value={{
     selectedClient,
@@ -198,13 +266,17 @@ export const AppContextProvider: React.FC<{
     setSelectedBranch,
     loadClients,
     loadBranches,
+    loadQrCodes,
     addClient,
     updateClient,
     deleteClient,
     addBranch,
     updateBranch,
     deleteBranch,
-    generateQrCode,
+    createBatchQrCodes,
+    updateQrCode,
+    deleteQrCode,
+    toggleQrCodeStatus,
     clearError
   }}>
       {children}

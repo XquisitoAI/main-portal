@@ -2,8 +2,12 @@ import { useAuth } from "@clerk/nextjs";
 import type {
   Client,
   Branch,
+  QrCode,
   ClientFormData,
   BranchFormData,
+  QrCodeFormData,
+  QrCodeBatchFormData,
+  QrCodeUpdateData,
   ApiResponse,
 } from "../types";
 
@@ -30,6 +34,8 @@ const convertClientFromBackend = (backendClient: any): Client => ({
   active: backendClient.active,
   createdAt: backendClient.created_at,
   updatedAt: backendClient.updated_at,
+  tableCount: backendClient.table_count,
+  roomCount: backendClient.room_count,
 });
 
 // Función para convertir datos del frontend a formato backend
@@ -48,9 +54,11 @@ const convertClientToBackend = (
 const convertBranchFromBackend = (backendBranch: any): Branch => ({
   id: backendBranch.id,
   clientId: backendBranch.client_id,
+  restaurantId: backendBranch.restaurant_id,
   name: backendBranch.name,
   address: backendBranch.address,
   tables: backendBranch.tables,
+  branchNumber: backendBranch.branch_number,
   active: backendBranch.active,
   createdAt: backendBranch.created_at,
   updatedAt: backendBranch.updated_at,
@@ -66,6 +74,58 @@ const convertBranchToBackend = (
   tables: frontendBranch.tables,
   active: frontendBranch.active,
 });
+
+// Función para convertir QR codes del backend a formato frontend
+const convertQrCodeFromBackend = (backendQrCode: any): QrCode => ({
+  id: backendQrCode.id,
+  code: backendQrCode.code,
+  clientId: backendQrCode.client_id,
+  restaurantId: backendQrCode.restaurant_id,
+  branchId: backendQrCode.branch_id,
+  branchNumber: backendQrCode.branch_number,
+  service: backendQrCode.service,
+  qrType: backendQrCode.qr_type,
+  tableNumber: backendQrCode.table_number,
+  roomNumber: backendQrCode.room_number,
+  isActive: backendQrCode.is_active,
+  createdAt: backendQrCode.created_at,
+  updatedAt: backendQrCode.updated_at,
+  clients: backendQrCode.clients,
+  restaurants: backendQrCode.restaurants,
+  branches: backendQrCode.branches,
+});
+
+// Función para convertir QR codes del frontend a formato backend
+const convertQrCodeToBackend = (
+  frontendQrCode: QrCodeFormData | QrCodeBatchFormData | QrCodeUpdateData
+) => {
+  const backendData: any = {};
+
+  if ('clientId' in frontendQrCode && frontendQrCode.clientId !== undefined)
+    backendData.client_id = frontendQrCode.clientId;
+  if ('restaurantId' in frontendQrCode && frontendQrCode.restaurantId !== undefined)
+    backendData.restaurant_id = frontendQrCode.restaurantId;
+  if ('branchId' in frontendQrCode && frontendQrCode.branchId !== undefined)
+    backendData.branch_id = frontendQrCode.branchId;
+  if ('branchNumber' in frontendQrCode && frontendQrCode.branchNumber !== undefined)
+    backendData.branch_number = frontendQrCode.branchNumber;
+  if ('service' in frontendQrCode && frontendQrCode.service !== undefined)
+    backendData.service = frontendQrCode.service;
+  if ('qrType' in frontendQrCode && frontendQrCode.qrType !== undefined)
+    backendData.qr_type = frontendQrCode.qrType;
+  if ('tableNumber' in frontendQrCode && frontendQrCode.tableNumber !== undefined)
+    backendData.table_number = frontendQrCode.tableNumber;
+  if ('roomNumber' in frontendQrCode && frontendQrCode.roomNumber !== undefined)
+    backendData.room_number = frontendQrCode.roomNumber;
+  if ('count' in frontendQrCode && frontendQrCode.count !== undefined)
+    backendData.count = frontendQrCode.count;
+  if ('startNumber' in frontendQrCode && frontendQrCode.startNumber !== undefined)
+    backendData.start_number = frontendQrCode.startNumber;
+  if ('isActive' in frontendQrCode && frontendQrCode.isActive !== undefined)
+    backendData.is_active = frontendQrCode.isActive;
+
+  return backendData;
+};
 
 // ===============================================
 // ESTADÍSTICAS
@@ -299,6 +359,125 @@ class MainPortalApiService {
       token
     );
   }
+
+  // ===============================================
+  // MÉTODOS DE QR CODES
+  // ===============================================
+
+  async getAllQRCodes(
+    token: string,
+    filters?: {
+      clientId?: string;
+      restaurantId?: number;
+      branchId?: string;
+      service?: string;
+      isActive?: boolean;
+    }
+  ): Promise<QrCode[]> {
+    let endpoint = "/qr-codes";
+
+    if (filters) {
+      const params = new URLSearchParams();
+      if (filters.clientId) params.append("client_id", filters.clientId);
+      if (filters.restaurantId) params.append("restaurant_id", filters.restaurantId.toString());
+      if (filters.branchId) params.append("branch_id", filters.branchId);
+      if (filters.service) params.append("service", filters.service);
+      if (filters.isActive !== undefined) params.append("is_active", filters.isActive.toString());
+
+      const queryString = params.toString();
+      if (queryString) endpoint += `?${queryString}`;
+    }
+
+    const backendQrCodes = await this.makeRequest<any[]>(
+      endpoint,
+      {
+        method: "GET",
+      },
+      token
+    );
+    return (backendQrCodes || []).map(convertQrCodeFromBackend);
+  }
+
+  async getQRCodeById(id: string, token: string): Promise<QrCode> {
+    const backendQrCode = await this.makeRequest<any>(
+      `/qr-codes/${id}`,
+      {
+        method: "GET",
+      },
+      token
+    );
+    return convertQrCodeFromBackend(backendQrCode);
+  }
+
+  async createQRCode(
+    qrCodeData: QrCodeFormData,
+    token: string
+  ): Promise<QrCode> {
+    const backendData = convertQrCodeToBackend(qrCodeData);
+    const backendQrCode = await this.makeRequest<any>(
+      "/qr-codes",
+      {
+        method: "POST",
+        body: JSON.stringify(backendData),
+      },
+      token
+    );
+    return convertQrCodeFromBackend(backendQrCode);
+  }
+
+  async createBatchQRCodes(
+    batchData: QrCodeBatchFormData,
+    token: string
+  ): Promise<QrCode[]> {
+    const backendData = convertQrCodeToBackend(batchData);
+    const backendQrCodes = await this.makeRequest<any[]>(
+      "/qr-codes/batch",
+      {
+        method: "POST",
+        body: JSON.stringify(backendData),
+      },
+      token
+    );
+    return (backendQrCodes || []).map(convertQrCodeFromBackend);
+  }
+
+  async updateQRCode(
+    id: string,
+    updateData: QrCodeUpdateData,
+    token: string
+  ): Promise<QrCode> {
+    const backendData = convertQrCodeToBackend(updateData);
+    const backendQrCode = await this.makeRequest<any>(
+      `/qr-codes/${id}`,
+      {
+        method: "PUT",
+        body: JSON.stringify(backendData),
+      },
+      token
+    );
+    return convertQrCodeFromBackend(backendQrCode);
+  }
+
+  async toggleQRCodeStatus(id: string, token: string): Promise<QrCode> {
+    const backendQrCode = await this.makeRequest<any>(
+      `/qr-codes/${id}/toggle`,
+      {
+        method: "PATCH",
+      },
+      token
+    );
+    return convertQrCodeFromBackend(backendQrCode);
+  }
+
+  async deleteQRCode(id: string, token: string): Promise<void> {
+    await this.makeRequest<void>(
+      `/qr-codes/${id}`,
+      {
+        method: "DELETE",
+      },
+      token
+    );
+  }
 }
 
 // ===============================================
@@ -397,6 +576,42 @@ export function useMainPortalApi() {
     getMainPortalStats: () =>
       makeAuthenticatedRequest((token) =>
         mainPortalApiService.getMainPortalStats(token)
+      ),
+
+    // Métodos de QR Codes
+    getAllQRCodes: (filters?: {
+      clientId?: string;
+      restaurantId?: number;
+      branchId?: string;
+      service?: string;
+      isActive?: boolean;
+    }) =>
+      makeAuthenticatedRequest((token) =>
+        mainPortalApiService.getAllQRCodes(token, filters)
+      ),
+    getQRCodeById: (id: string) =>
+      makeAuthenticatedRequest((token) =>
+        mainPortalApiService.getQRCodeById(id, token)
+      ),
+    createQRCode: (data: QrCodeFormData) =>
+      makeAuthenticatedRequest((token) =>
+        mainPortalApiService.createQRCode(data, token)
+      ),
+    createBatchQRCodes: (data: QrCodeBatchFormData) =>
+      makeAuthenticatedRequest((token) =>
+        mainPortalApiService.createBatchQRCodes(data, token)
+      ),
+    updateQRCode: (id: string, data: QrCodeUpdateData) =>
+      makeAuthenticatedRequest((token) =>
+        mainPortalApiService.updateQRCode(id, data, token)
+      ),
+    toggleQRCodeStatus: (id: string) =>
+      makeAuthenticatedRequest((token) =>
+        mainPortalApiService.toggleQRCodeStatus(id, token)
+      ),
+    deleteQRCode: (id: string) =>
+      makeAuthenticatedRequest((token) =>
+        mainPortalApiService.deleteQRCode(id, token)
       ),
   };
 }
