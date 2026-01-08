@@ -69,6 +69,12 @@ const QrManager: React.FC = () => {
     if (detectedType && detectedType !== qrType) {
       setQrType(detectedType);
     }
+
+    // Para Pick & Go, siempre setear count a 1
+    if (service === "pick-n-go") {
+      setCount(1);
+      setStartNumber(1);
+    }
   }, [service]);
 
   // Reset service if client changes and service is no longer available
@@ -87,6 +93,13 @@ const QrManager: React.FC = () => {
     loadQrCodes(filters);
   }, [selectedClientId, selectedBranchId]);
 
+  // Verificar si ya existe un QR de Pick & Go para la sucursal seleccionada
+  const existingPickAndGoQr = service === "pick-n-go" && selectedBranchId
+    ? qrCodes.find(
+        (qr) => qr.branchId === selectedBranchId && qr.service === "pick-n-go"
+      )
+    : null;
+
   // Validar que el número de QR codes solicitado no exceda la capacidad
   const validateQrCodeCount = (): boolean => {
     setValidationError(null);
@@ -94,6 +107,21 @@ const QrManager: React.FC = () => {
     if (!selectedBranch) {
       setValidationError("Por favor selecciona una sucursal");
       return false;
+    }
+
+    // Validación especial para Pick & Go: solo 1 QR por sucursal
+    if (service === "pick-n-go") {
+      const existingPickAndGoQr = qrCodes.find(
+        (qr) => qr.branchId === selectedBranchId && qr.service === "pick-n-go"
+      );
+
+      if (existingPickAndGoQr) {
+        setValidationError(
+          "Ya existe un código QR de Pick & Go para esta sucursal. Solo se permite 1 QR de Pick & Go por sucursal."
+        );
+        return false;
+      }
+      return true;
     }
 
     const maxAllowed =
@@ -155,8 +183,8 @@ const QrManager: React.FC = () => {
         branchNumber: selectedBranch!.branchNumber || 1,
         service,
         qrType,
-        count,
-        startNumber,
+        count: service === "pick-n-go" ? 1 : count,
+        startNumber: service === "pick-n-go" ? 1 : startNumber,
         ...(qrType === "table" && { tableNumber: startNumber }),
         ...(qrType === "room" && { roomNumber: startNumber }),
       };
@@ -302,6 +330,11 @@ const QrManager: React.FC = () => {
     if (!service) return "Debes seleccionar un servicio";
     if (loading.isSaving) return "Generando códigos QR...";
 
+    // Validación especial para Pick & Go
+    if (service === "pick-n-go" && existingPickAndGoQr) {
+      return "Ya existe un código QR de Pick & Go para esta sucursal";
+    }
+
     // Validar que la cantidad no exceda la capacidad
     if (selectedBranch) {
       const endNumber = startNumber + count - 1;
@@ -417,46 +450,70 @@ const QrManager: React.FC = () => {
               </select>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Número Inicial
-              </label>
-              <input
-                type="number"
-                min="1"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={startNumber}
-                onChange={(e) => setStartNumber(parseInt(e.target.value) || 1)}
-                disabled={!selectedBranchId}
-              />
-              <p className="mt-1 text-xs text-gray-500">
-                Número de{" "}
-                {qrType === "table"
-                  ? "mesa"
-                  : qrType === "room"
-                    ? "habitación"
-                    : "pickup"}{" "}
-                inicial
-              </p>
-            </div>
+            {service !== "pick-n-go" && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Número Inicial
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={startNumber}
+                  onChange={(e) => setStartNumber(parseInt(e.target.value) || 1)}
+                  disabled={!selectedBranchId}
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  Número de{" "}
+                  {qrType === "table"
+                    ? "mesa"
+                    : qrType === "room"
+                      ? "habitación"
+                      : "pickup"}{" "}
+                  inicial
+                </p>
+              </div>
+            )}
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Cantidad
-              </label>
-              <input
-                type="number"
-                min="1"
-                max="500"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={count}
-                onChange={(e) => setCount(parseInt(e.target.value) || 1)}
-                disabled={!selectedBranchId}
-              />
-              <p className="mt-1 text-xs text-gray-500">
-                Del {startNumber} al {startNumber + count - 1} (máx. 500)
-              </p>
-            </div>
+            {service !== "pick-n-go" && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Cantidad
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={count}
+                  onChange={(e) => setCount(parseInt(e.target.value) || 1)}
+                  disabled={!selectedBranchId}
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  Del {startNumber} al {startNumber + count - 1} (máx. 500)
+                </p>
+              </div>
+            )}
+
+            {service === "pick-n-go" && !existingPickAndGoQr && (
+              <div className="col-span-2">
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-blue-800">
+                    <strong>Pick & Go:</strong> Solo se permite 1 QR por sucursal. Este QR será válido para toda la sucursal.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {service === "pick-n-go" && existingPickAndGoQr && (
+              <div className="col-span-2">
+                <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-800">
+                    <strong>⚠️ Ya existe un código QR de Pick & Go para esta sucursal.</strong> Solo se permite 1 QR de Pick & Go por sucursal. No puedes crear otro.
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
           {validationError && (
@@ -575,7 +632,17 @@ const QrManager: React.FC = () => {
                       >
                         {qrCode.isActive ? "Activo" : "Inactivo"}
                       </span>
-                      <span className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-full">
+                      <span
+                        className={`px-2 py-1 text-xs rounded-full ${
+                          qrCode.service === "flex-bill"
+                            ? "bg-purple-100 text-purple-700"
+                            : qrCode.service === "tap-order-pay"
+                              ? "bg-blue-100 text-blue-700"
+                              : qrCode.service === "room-service"
+                                ? "bg-green-100 text-green-700"
+                                : "bg-orange-100 text-orange-700"
+                        }`}
+                      >
                         {qrCode.service
                           .split("-")
                           .map(
