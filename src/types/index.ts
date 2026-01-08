@@ -16,6 +16,11 @@ export interface Client {
   updatedAt?: string; // Fecha de última actualización ✅ NUEVO
 }
 
+export interface RoomRange {
+  start: number;
+  end: number;
+}
+
 export interface Branch {
   id: string;
   clientId: string; // FK hacia Client
@@ -23,6 +28,8 @@ export interface Branch {
   name: string; // Nombre de la sucursal
   address: string; // Dirección completa
   tables: number; // Número de mesas
+  rooms?: number; // Número total de habitaciones (para room-service) - DEPRECATED, usar roomRanges
+  roomRanges?: RoomRange[]; // Rangos de habitaciones (ej: [{start: 100, end: 129}, {start: 200, end: 229}])
   branchNumber?: number; // Número de sucursal para URLs
   active: boolean; // Estado activo/inactivo
   createdAt?: string; // Fecha de creación ✅ NUEVO

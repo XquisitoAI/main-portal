@@ -1,16 +1,10 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useAppContext } from "../../context/AppContext";
 import {
   PlusIcon,
   TrashIcon,
   PencilIcon,
   SearchIcon,
-  TrendingUpIcon,
-  DollarSignIcon,
-  UsersIcon,
-  ShoppingCartIcon,
-  UserCheckIcon,
-  CreditCardIcon,
 } from "lucide-react";
 import { formatDate } from "../../utils/formatters";
 import {
@@ -18,31 +12,22 @@ import {
   Branch,
   ClientFormDataWithInvitation,
   AVAILABLE_SERVICES,
+  RoomRange,
 } from "../../types";
 import ClientModal from "../modals/ClientModal";
 import BranchModal from "../modals/BranchModal";
 import ConfirmDeleteModal from "../modals/ConfirmDeleteModal";
 import InvitationStatus from "../ui/InvitationStatus";
-import { useSuperAdminStats, useRestaurants } from "../../hooks/useApiData";
-import type { SuperAdminFilters } from "../../types/api";
-import SuperAdminFiltersComponent from "../dashboard/SuperAdminFilters";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-  Legend,
-  Tooltip,
-} from "recharts";
+import { useMainPortalApi } from "../../services/mainPortalApi";
 
 interface AdminManagerProps {
-  defaultTab?: "clientes" | "sucursales" | "super-admin";
-  showTabs?: ("clientes" | "sucursales" | "super-admin")[];
+  defaultTab?: "clientes" | "sucursales";
+  showTabs?: ("clientes" | "sucursales")[];
 }
 
 const AdminManager: React.FC<AdminManagerProps> = ({
-  defaultTab = "super-admin",
-  showTabs = ["clientes", "sucursales", "super-admin"],
+  defaultTab = "clientes",
+  showTabs = ["clientes", "sucursales"],
 }) => {
   const {
     clients,
@@ -53,24 +38,38 @@ const AdminManager: React.FC<AdminManagerProps> = ({
     addBranch,
     updateBranch,
     deleteBranch,
+    loading,
   } = useAppContext();
 
   const [activeTab, setActiveTab] = useState(defaultTab);
-  const [superAdminFilters, setSuperAdminFilters] = useState<SuperAdminFilters>(
-    {}
-  );
-
-  // Fetch super admin stats y restaurantes
-  const {
-    data: superAdminStats,
-    isLoading: statsLoading,
-    isError: statsError,
-  } = useSuperAdminStats(superAdminFilters);
-  const { data: restaurantsList, isLoading: restaurantsLoading } =
-    useRestaurants();
-
   const [searchTerm, setSearchTerm] = useState("");
   const [branchSearchTerm, setBranchSearchTerm] = useState("");
+
+  // Estado para almacenar los estados de invitación
+  const [invitationStatuses, setInvitationStatuses] = useState<Record<string, any>>({});
+  const [invitationStatusesLoading, setInvitationStatusesLoading] = useState(true);
+
+  // Hook para la API
+  const mainPortalApi = useMainPortalApi();
+
+  // Cargar estados de invitación una sola vez
+  useEffect(() => {
+    const fetchInvitationStatuses = async () => {
+      try {
+        setInvitationStatusesLoading(true);
+        const statuses = await mainPortalApi.getInvitationStatuses();
+        setInvitationStatuses(statuses);
+      } catch (error) {
+        console.error('Error fetching invitation statuses:', error);
+        setInvitationStatuses({});
+      } finally {
+        setInvitationStatusesLoading(false);
+      }
+    };
+
+    fetchInvitationStatuses();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Solo cargar una vez al montar el componente
 
   // Estados para modales
   const [clientModal, setClientModal] = useState({
@@ -157,6 +156,16 @@ const AdminManager: React.FC<AdminManagerProps> = ({
     });
   }, [branches, branchSearchTerm]);
 
+  // Función para refrescar estados de invitación
+  const refreshInvitationStatuses = async () => {
+    try {
+      const statuses = await mainPortalApi.getInvitationStatuses();
+      setInvitationStatuses(statuses);
+    } catch (error) {
+      console.error('Error refreshing invitation statuses:', error);
+    }
+  };
+
   // Manejar guardado de clientes
   const handleSaveClient = async (clientData: ClientFormDataWithInvitation) => {
     setIsLoading((prev) => ({ ...prev, saving: true }));
@@ -165,7 +174,7 @@ const AdminManager: React.FC<AdminManagerProps> = ({
       if (clientModal.client) {
         // Editar cliente existente - no se envía invitación
         const { sendInvitation, ...clientDataForUpdate } = clientData;
-        updateClient(clientModal.client.id, clientDataForUpdate);
+        await updateClient(clientModal.client.id, clientDataForUpdate);
       } else {
         // Crear nuevo cliente - enviar invitación si está marcado
         const { sendInvitation, ...clientDataForCreation } = clientData;
@@ -176,8 +185,15 @@ const AdminManager: React.FC<AdminManagerProps> = ({
           console.log("🆕 Creando cliente sin enviar invitación por email");
         }
 
-        addClient(clientDataForCreation);
+        await addClient(clientDataForCreation);
       }
+
+      // Refrescar estados de invitación después de crear/actualizar
+      await refreshInvitationStatuses();
+
+      // Pequeño delay para mostrar el feedback de "Guardado"
+      await new Promise(resolve => setTimeout(resolve, 500));
+
       closeClientModal();
     } catch (error) {
       console.error("Error al guardar cliente:", error);
@@ -188,16 +204,22 @@ const AdminManager: React.FC<AdminManagerProps> = ({
 
   // Manejar guardado de sucursales
   const handleSaveBranch = async (branchData: any) => {
+    console.log('📤 Datos de sucursal a guardar:', branchData);
+    console.log('📤 room_ranges:', branchData.roomRanges);
     setIsLoading((prev) => ({ ...prev, saving: true }));
 
     try {
       if (branchModal.branch) {
         // Editar sucursal existente
-        updateBranch(branchModal.branch.id, branchData);
+        await updateBranch(branchModal.branch.id, branchData);
       } else {
         // Crear nueva sucursal
-        addBranch(branchData);
+        await addBranch(branchData);
       }
+
+      // Pequeño delay para mostrar el feedback de "Guardado"
+      await new Promise(resolve => setTimeout(resolve, 500));
+
       closeBranchModal();
     } catch (error) {
       console.error("Error al guardar sucursal:", error);
@@ -214,10 +236,14 @@ const AdminManager: React.FC<AdminManagerProps> = ({
 
     try {
       if (deleteModal.type === "client") {
-        deleteClient(deleteModal.item.id);
+        await deleteClient(deleteModal.item.id);
       } else {
-        deleteBranch(deleteModal.item.id);
+        await deleteBranch(deleteModal.item.id);
       }
+
+      // Pequeño delay para mostrar el feedback de "Eliminado"
+      await new Promise(resolve => setTimeout(resolve, 500));
+
       closeDeleteModal();
     } catch (error) {
       console.error("Error al eliminar:", error);
@@ -243,19 +269,18 @@ const AdminManager: React.FC<AdminManagerProps> = ({
   // Colores para los gráficos
   const COLORS = ["#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6"];
 
+  // Calcular total de habitaciones desde los rangos
+  const calculateTotalRoomsFromRanges = (ranges: RoomRange[]): number => {
+    return ranges.reduce((total, range) => {
+      return total + (range.end - range.start + 1);
+    }, 0);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-800">Admin Manager</h1>
         <div className="flex space-x-2">
-          {showTabs.includes("super-admin") && (
-            <button
-              className={`px-4 py-2 rounded-lg ${activeTab === "super-admin" ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700"}`}
-              onClick={() => setActiveTab("super-admin")}
-            >
-              Super Admin
-            </button>
-          )}
           {showTabs.includes("clientes") && (
             <button
               className={`px-4 py-2 rounded-lg ${activeTab === "clientes" ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700"}`}
@@ -274,282 +299,6 @@ const AdminManager: React.FC<AdminManagerProps> = ({
           )}
         </div>
       </div>
-
-      {/* SUPER ADMIN TAB */}
-      {activeTab === "super-admin" && (
-        <div className="space-y-6">
-          {/* Filtros */}
-          <SuperAdminFiltersComponent
-            restaurants={(restaurantsList || []).map((r: any) => ({
-              id: r.id,
-              name: r.name,
-            }))}
-            onFilterChange={setSuperAdminFilters}
-          />
-
-          {/* Loading y Error States */}
-          {statsLoading && restaurantsLoading && (
-            <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="mt-4 text-gray-600">Cargando estadísticas...</p>
-            </div>
-          )}
-
-          {statsError && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <p className="text-red-800">
-                Error al cargar las estadísticas. Por favor, intenta de nuevo.
-              </p>
-            </div>
-          )}
-
-          {/* Stats Cards */}
-          {!statsLoading && !statsError && superAdminStats && (
-            <>
-              {/* Métricas principales - Grid de 4 columnas */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {/* Volumen Transaccionado */}
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-sm font-medium text-gray-600">
-                      Volumen Transaccionado
-                    </h3>
-                    <TrendingUpIcon className="h-5 w-5 text-blue-600" />
-                  </div>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {formatCurrency(superAdminStats.transaction_volume)}
-                  </p>
-                </div>
-
-                {/* Ingresos Xquisito */}
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-sm font-medium text-gray-600">
-                      Ingresos Xquisito
-                    </h3>
-                    <DollarSignIcon className="h-5 w-5 text-green-600" />
-                  </div>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {formatCurrency(superAdminStats.xquisito_income)}
-                  </p>
-                </div>
-
-                {/* Diners Activos */}
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-sm font-medium text-gray-600">
-                      Diners Activos
-                    </h3>
-                    <UsersIcon className="h-5 w-5 text-purple-600" />
-                  </div>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {superAdminStats.active_diners.toLocaleString()}
-                  </p>
-                </div>
-
-                {/* Órdenes Exitosas */}
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-sm font-medium text-gray-600">
-                      Órdenes Exitosas
-                    </h3>
-                    <ShoppingCartIcon className="h-5 w-5 text-orange-600" />
-                  </div>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {superAdminStats.successful_orders.toLocaleString()}
-                  </p>
-                </div>
-              </div>
-
-              {/* Segunda fila de métricas */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Administradores Activos */}
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-sm font-medium text-gray-600">
-                      Administradores Activos
-                    </h3>
-                    <UserCheckIcon className="h-5 w-5 text-indigo-600" />
-                  </div>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {superAdminStats.active_admins.toLocaleString()}
-                  </p>
-                </div>
-
-                {/* Método de Pago Más Usado */}
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-sm font-medium text-gray-600">
-                      Método de Pago Más Usado
-                    </h3>
-                    <CreditCardIcon className="h-5 w-5 text-pink-600" />
-                  </div>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {superAdminStats.most_used_payment_method.method}
-                  </p>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {superAdminStats.most_used_payment_method.count.toLocaleString()}{" "}
-                    transacciones
-                  </p>
-                </div>
-
-                {/* Total de Transacciones */}
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-sm font-medium text-gray-600">
-                      Total de Transacciones
-                    </h3>
-                    <CreditCardIcon className="h-5 w-5 text-teal-600" />
-                  </div>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {superAdminStats.total_transactions.toLocaleString()}
-                  </p>
-                </div>
-              </div>
-
-              {/* Gráficos por Servicio */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Volumen por Servicio */}
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                  <h3 className="text-lg font-medium text-gray-800 mb-4">
-                    Volumen por Servicio
-                  </h3>
-                  {superAdminStats.volume_by_service.length > 0 ? (
-                    <ResponsiveContainer width="100%" height={250}>
-                      <PieChart>
-                        <Pie
-                          data={superAdminStats.volume_by_service.map(
-                            (item: any) => ({
-                              name: item.service,
-                              value: item.volume,
-                            })
-                          )}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          label={(entry: any) =>
-                            `${entry.name}: ${formatCurrency(entry.value)}`
-                          }
-                          outerRadius={80}
-                          fill="#8884d8"
-                          dataKey="value"
-                        >
-                          {superAdminStats.volume_by_service.map(
-                            (_: any, index: number) => (
-                              <Cell
-                                key={`cell-${index}`}
-                                fill={COLORS[index % COLORS.length]}
-                              />
-                            )
-                          )}
-                        </Pie>
-                        <Tooltip
-                          formatter={(value: number) => formatCurrency(value)}
-                        />
-                        <Legend />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <p className="text-gray-500 text-center py-8">
-                      No hay datos disponibles
-                    </p>
-                  )}
-                </div>
-
-                {/* Órdenes por Servicio */}
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                  <h3 className="text-lg font-medium text-gray-800 mb-4">
-                    Órdenes por Servicio
-                  </h3>
-                  {superAdminStats.orders_by_service.length > 0 ? (
-                    <ResponsiveContainer width="100%" height={250}>
-                      <PieChart>
-                        <Pie
-                          data={superAdminStats.orders_by_service.map(
-                            (item: any) => ({
-                              name: item.service,
-                              value: item.count,
-                            })
-                          )}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          label={(entry: any) =>
-                            `${entry.name}: ${entry.value}`
-                          }
-                          outerRadius={80}
-                          fill="#8884d8"
-                          dataKey="value"
-                        >
-                          {superAdminStats.orders_by_service.map(
-                            (_: any, index: number) => (
-                              <Cell
-                                key={`cell-${index}`}
-                                fill={COLORS[index % COLORS.length]}
-                              />
-                            )
-                          )}
-                        </Pie>
-                        <Tooltip />
-                        <Legend />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <p className="text-gray-500 text-center py-8">
-                      No hay datos disponibles
-                    </p>
-                  )}
-                </div>
-
-                {/* Transacciones por Servicio */}
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                  <h3 className="text-lg font-medium text-gray-800 mb-4">
-                    Transacciones por Servicio
-                  </h3>
-                  {superAdminStats.transactions_by_service.length > 0 ? (
-                    <ResponsiveContainer width="100%" height={250}>
-                      <PieChart>
-                        <Pie
-                          data={superAdminStats.transactions_by_service.map(
-                            (item: any) => ({
-                              name: item.service,
-                              value: item.count,
-                            })
-                          )}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          label={(entry: any) =>
-                            `${entry.name}: ${entry.value}`
-                          }
-                          outerRadius={80}
-                          fill="#8884d8"
-                          dataKey="value"
-                        >
-                          {superAdminStats.transactions_by_service.map(
-                            (_: any, index: number) => (
-                              <Cell
-                                key={`cell-${index}`}
-                                fill={COLORS[index % COLORS.length]}
-                              />
-                            )
-                          )}
-                        </Pie>
-                        <Tooltip />
-                        <Legend />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <p className="text-gray-500 text-center py-8">
-                      No hay datos disponibles
-                    </p>
-                  )}
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-      )}
 
       {activeTab === "clientes" && (
         <div className="bg-white rounded-lg shadow-sm">
@@ -579,6 +328,14 @@ const AdminManager: React.FC<AdminManagerProps> = ({
               </button>
             </div>
           </div>
+
+          {/* Loading State */}
+          {loading.isLoading ? (
+            <div className="p-12 text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="mt-4 text-gray-600">Cargando clientes...</p>
+            </div>
+          ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
@@ -688,6 +445,8 @@ const AdminManager: React.FC<AdminManagerProps> = ({
                       <InvitationStatus
                         clientId={client.id}
                         clientEmail={client.email}
+                        invitationInfo={invitationStatuses[client.id]}
+                        isLoading={invitationStatusesLoading}
                       />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -711,6 +470,7 @@ const AdminManager: React.FC<AdminManagerProps> = ({
               </tbody>
             </table>
           </div>
+          )}
         </div>
       )}
       {activeTab === "sucursales" && (
@@ -741,6 +501,14 @@ const AdminManager: React.FC<AdminManagerProps> = ({
               </button>
             </div>
           </div>
+
+          {/* Loading State */}
+          {loading.isLoading ? (
+            <div className="p-12 text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="mt-4 text-gray-600">Cargando sucursales...</p>
+            </div>
+          ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
@@ -756,6 +524,9 @@ const AdminManager: React.FC<AdminManagerProps> = ({
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Mesas
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Habitaciones
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Estado
@@ -783,6 +554,23 @@ const AdminManager: React.FC<AdminManagerProps> = ({
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {branch.tables}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {(() => {
+                          const client = clients.find((c) => c.id === branch.clientId);
+                          if (!client || !client.services.includes('room-service')) {
+                            return '—';
+                          }
+
+                          // Priorizar roomRanges si existen
+                          if (branch.roomRanges && branch.roomRanges.length > 0) {
+                            const total = calculateTotalRoomsFromRanges(branch.roomRanges);
+                            return total;
+                          }
+
+                          // Fallback a rooms legacy
+                          return branch.rooms || '—';
+                        })()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
@@ -813,6 +601,7 @@ const AdminManager: React.FC<AdminManagerProps> = ({
               </tbody>
             </table>
           </div>
+          )}
         </div>
       )}
 
@@ -822,7 +611,7 @@ const AdminManager: React.FC<AdminManagerProps> = ({
         onClose={closeClientModal}
         onSave={handleSaveClient}
         client={clientModal.client}
-        isLoading={isLoading.saving}
+        isLoading={loading.isSaving || isLoading.saving}
       />
 
       <BranchModal
@@ -832,7 +621,7 @@ const AdminManager: React.FC<AdminManagerProps> = ({
         branch={branchModal.branch}
         clients={clients}
         branches={branches}
-        isLoading={isLoading.saving}
+        isLoading={loading.isSaving || isLoading.saving}
       />
 
       <ConfirmDeleteModal
@@ -847,7 +636,7 @@ const AdminManager: React.FC<AdminManagerProps> = ({
             ? `También se eliminarán ${branches.filter((b) => b.clientId === deleteModal.item?.id).length} sucursal(es) asociada(s).`
             : undefined
         }
-        isLoading={isLoading.deleting}
+        isLoading={loading.isDeleting || isLoading.deleting}
       />
     </div>
   );

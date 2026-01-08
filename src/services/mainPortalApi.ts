@@ -67,6 +67,8 @@ const convertBranchFromBackend = (backendBranch: any): Branch => ({
   name: backendBranch.name,
   address: backendBranch.address,
   tables: backendBranch.tables,
+  rooms: backendBranch.rooms,
+  roomRanges: backendBranch.room_ranges,
   branchNumber: backendBranch.branch_number,
   active: backendBranch.active,
   createdAt: backendBranch.created_at,
@@ -81,6 +83,8 @@ const convertBranchToBackend = (
   name: frontendBranch.name,
   address: frontendBranch.address,
   tables: frontendBranch.tables,
+  rooms: frontendBranch.rooms,
+  room_ranges: frontendBranch.roomRanges,
   active: frontendBranch.active,
 });
 

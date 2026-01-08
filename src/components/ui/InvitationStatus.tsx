@@ -1,34 +1,34 @@
-import React, { useState, useEffect } from 'react';
-import { useMainPortalApi } from '../../services/mainPortalApi';
+import React from 'react';
 
 interface InvitationStatusProps {
   clientId: string;
   clientEmail: string;
+  invitationInfo?: {
+    status: string;
+    email: string;
+    invitedAt?: string;
+    usedAt?: string;
+  };
+  isLoading?: boolean;
 }
 
-const InvitationStatus: React.FC<InvitationStatusProps> = ({ clientId, clientEmail }) => {
-  const [status, setStatus] = useState<'loading' | 'pending' | 'registered' | 'no-invitation'>('loading');
-  const mainPortalApi = useMainPortalApi();
+const InvitationStatus: React.FC<InvitationStatusProps> = ({
+  clientId,
+  clientEmail,
+  invitationInfo,
+  isLoading = false
+}) => {
+  const getStatus = (): 'loading' | 'pending' | 'registered' | 'no-invitation' => {
+    if (isLoading) return 'loading';
 
-  useEffect(() => {
-    const fetchInvitationStatus = async () => {
-      try {
-        const response = await mainPortalApi.getInvitationStatuses();
-        const invitationInfo = response[clientId];
+    if (invitationInfo) {
+      return invitationInfo.status === 'registered' ? 'registered' : 'pending';
+    }
 
-        if (invitationInfo) {
-          setStatus(invitationInfo.status === 'registered' ? 'registered' : 'pending');
-        } else {
-          setStatus('no-invitation');
-        }
-      } catch (error) {
-        console.error('Error fetching invitation status:', error);
-        setStatus('no-invitation');
-      }
-    };
+    return 'no-invitation';
+  };
 
-    fetchInvitationStatus();
-  }, [clientId, mainPortalApi]);
+  const status = getStatus();
 
   const getStatusDisplay = () => {
     switch (status) {

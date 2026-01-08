@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Client, ClientFormData, ClientFormDataWithInvitation, AVAILABLE_SERVICES } from '../../types';
 import Modal from '../ui/Modal';
+import { Loader2 } from 'lucide-react';
 
 interface ClientModalProps {
   isOpen: boolean;
@@ -206,7 +207,16 @@ const ClientModal: React.FC<ClientModalProps> = ({
       title={title}
       size="lg"
     >
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6 relative">
+        {/* Overlay de carga */}
+        {isLoading && (
+          <div className="absolute inset-0 bg-white bg-opacity-75 z-10 flex items-center justify-center rounded-lg">
+            <div className="text-center">
+              <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-2" />
+              <p className="text-sm text-gray-600 font-medium">Guardando...</p>
+            </div>
+          </div>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -429,9 +439,10 @@ const ClientModal: React.FC<ClientModalProps> = ({
           </button>
           <button
             type="submit"
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             disabled={isLoading}
           >
+            {isLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
             {isLoading ? 'Guardando...' : (client ? 'Actualizar' : 'Crear Cliente')}
           </button>
         </div>
