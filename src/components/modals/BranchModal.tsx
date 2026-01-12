@@ -26,7 +26,7 @@ const BranchModal: React.FC<BranchModalProps> = ({
     clientId: "",
     name: "",
     address: "",
-    tables: 1,
+    tables: 0,
     rooms: 0,
     roomRanges: [],
     active: true,
@@ -45,7 +45,7 @@ const BranchModal: React.FC<BranchModalProps> = ({
           clientId: branch.clientId,
           name: branch.name,
           address: branch.address,
-          tables: branch.tables,
+          tables: branch.tables || 0,
           rooms: branch.rooms || 0,
           roomRanges: branch.roomRanges || [],
           active: branch.active,
@@ -56,7 +56,7 @@ const BranchModal: React.FC<BranchModalProps> = ({
           clientId: "",
           name: "",
           address: "",
-          tables: 1,
+          tables: 0,
           rooms: 0,
           roomRanges: [],
           active: true,
@@ -151,18 +151,18 @@ const BranchModal: React.FC<BranchModalProps> = ({
       newErrors.address = "La dirección debe tener al menos 10 caracteres";
     }
 
-    if (formData.tables < 1) {
+    /*if (formData.tables < 1) {
       newErrors.tables = "Debe tener al menos 1 mesa";
     } else if (formData.tables > 1000) {
       newErrors.tables = "El número de mesas no puede ser mayor a 1000";
-    }
+    }*/
 
     // Validación estricta: verificar que no exceda las mesas contratadas
     if (formData.clientId && formData.tables > 0) {
       const availableTables = calculateAvailableTables(formData.clientId);
       if (formData.tables > availableTables) {
         const clientInfo = getClientTableInfo(formData.clientId);
-        newErrors.tables = `Solo hay ${availableTables} mesas disponibles. El cliente tiene ${clientInfo?.totalContracted || 0} mesas contratadas y ${clientInfo?.totalUsed || 0} ya están en uso.`;
+        //newErrors.tables = `Solo hay ${availableTables} mesas disponibles. El cliente tiene ${clientInfo?.totalContracted || 0} mesas contratadas y ${clientInfo?.totalUsed || 0} ya están en uso.`;
       }
     }
 
@@ -172,6 +172,20 @@ const BranchModal: React.FC<BranchModalProps> = ({
       const totalRooms = calculateTotalRoomsFromRanges(
         formData.roomRanges || []
       );
+
+      // Verificar si el cliente SOLO tiene room-service (sin otros servicios)
+      const hasOnlyRoomService =
+        client?.services.includes("room-service") &&
+        !client?.services.includes("flex-bill") &&
+        !client?.services.includes("tap-pay") &&
+        !client?.services.includes("tap-order-pay") &&
+        !client?.services.includes("pick-n-go");
+
+      // Si el cliente SOLO tiene room-service, debe tener al menos 1 habitación
+      if (hasOnlyRoomService && totalRooms === 0) {
+        newErrors.roomRanges =
+          "Debe agregar al menos un rango de habitaciones para un cliente de Room Service";
+      }
 
       if (totalRooms > 0) {
         // Verificar que el cliente tenga room-service activo
@@ -396,44 +410,55 @@ const BranchModal: React.FC<BranchModalProps> = ({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Número de Mesas */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Número de Mesas *
-              {formData.clientId &&
-                (() => {
-                  const availableTables = calculateAvailableTables(
-                    formData.clientId
-                  );
-                  return (
+          {formData.clientId &&
+            (() => {
+              const client = clients.find((c) => c.id === formData.clientId);
+
+              if (
+                client?.services.includes("room-service") &&
+                !client?.services.includes("flex-bill") &&
+                !client?.services.includes("tap-pay") &&
+                !client?.services.includes("tap-order-pay") &&
+                !client?.services.includes("pick-n-go")
+              ) {
+                return null;
+              }
+
+              const availableTables = calculateAvailableTables(
+                formData.clientId
+              );
+
+              return (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Número de Mesas *
                     <span className="ml-2 text-xs text-gray-500">
                       (Disponibles: {availableTables})
                     </span>
-                  );
-                })()}
-            </label>
-            <input
-              type="number"
-              min="1"
-              max={
-                formData.clientId
-                  ? calculateAvailableTables(formData.clientId)
-                  : 1000
-              }
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                errors.tables ? "border-red-300" : "border-gray-300"
-              }`}
-              value={formData.tables}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  tables: parseInt(e.target.value) || 1,
-                }))
-              }
-            />
-            {errors.tables && (
-              <p className="mt-1 text-sm text-red-600">{errors.tables}</p>
-            )}
-          </div>
+                  </label>
+
+                  <input
+                    type="number"
+                    min="0"
+                    max={availableTables}
+                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                      errors.tables ? "border-red-300" : "border-gray-300"
+                    }`}
+                    value={formData.tables}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        tables: parseInt(e.target.value) || 0,
+                      }))
+                    }
+                  />
+
+                  {errors.tables && (
+                    <p className="mt-1 text-sm text-red-600">{errors.tables}</p>
+                  )}
+                </div>
+              );
+            })()}
 
           {/* Habitaciones - Solo si el cliente tiene room-service */}
           {formData.clientId &&
@@ -597,6 +622,15 @@ const BranchModal: React.FC<BranchModalProps> = ({
             {(() => {
               const clientInfo = getClientTableInfo(formData.clientId);
               if (!clientInfo) return null;
+              const client = clients.find((c) => c.id === formData.clientId);
+              if (
+                client &&
+                !client.services.includes("tap-pay") &&
+                !client.services.includes("flex-bill") &&
+                !client.services.includes("tap-order-pay") &&
+                !client.services.includes("pick-n-go")
+              )
+                return null;
 
               return (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
