@@ -263,7 +263,8 @@ export interface DashboardFilters {
     | "tap_order_pay"
     | "flex_bill"
     | "food_hall"
-    | "pick_go";
+    | "pick_go"
+    | "room_service";
   payment_status?: "todos" | "pending" | "paid";
   order_status?:
     | "todos"
@@ -377,7 +378,13 @@ export interface SuperAdminFilters {
   start_date?: string;
   end_date?: string;
   restaurant_id?: number | number[]; // Permitir un ID o array de IDs
-  service?: "todos" | "flex-bill" | "tap-order-pay" | "pick-and-go" | string; // Permitir string para múltiples servicios separados por coma
+  service?:
+    | "todos"
+    | "flex-bill"
+    | "tap-order-pay"
+    | "pick-and-go"
+    | "room-service"
+    | string; // Permitir string para múltiples servicios separados por coma
   gender?: "todos" | "male" | "female" | "other";
   age_range?: "todos" | "18-24" | "25-34" | "35-44" | "45-54" | "55+";
 }

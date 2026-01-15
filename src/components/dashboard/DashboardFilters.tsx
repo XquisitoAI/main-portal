@@ -143,7 +143,12 @@ const DashboardFiltersComponent: React.FC<FilterProps> = ({
   }, []);
 
   // Lista de servicios para Super Admin
-  const serviceOptions = ["Flex Bill", "Tap Order & Pay", "Pick & Go"];
+  const serviceOptions = [
+    "Flex Bill",
+    "Tap Order & Pay",
+    "Pick & Go",
+    "Room Service",
+  ];
   // Rangos de edad predefinidos
   const ageRangeOptions = [
     {

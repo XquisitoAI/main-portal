@@ -60,6 +60,8 @@ const Home: React.FC = () => {
         if (service === "Flex Bill") return "flex-bill";
         if (service === "Tap Order & Pay") return "tap-order-pay";
         if (service === "Pick & Go") return "pick-and-go";
+        if (service === "Room Service") return "room-service";
+
         return service;
       });
 
@@ -259,7 +261,7 @@ const Home: React.FC = () => {
             />
 
             <GlobalKpiCard
-              title="Comensales Activos"
+              title="Comensales"
               value={formatNumber(superAdminStats?.active_diners || 0)}
               previousValue={formatNumber(
                 superAdminStats?.previous_period?.active_diners || 0
