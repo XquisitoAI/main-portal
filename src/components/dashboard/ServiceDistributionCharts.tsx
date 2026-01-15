@@ -18,6 +18,7 @@ const SERVICE_COLORS: { [key: string]: string } = {
   "Tap Order & Pay": "#8884d8",
   "Pick & Go": "#fbbf24",
   "Room Service": "#d92926",
+  "Tap & Pay": "#3B82F6",
 };
 
 // Componente para el tooltip personalizado

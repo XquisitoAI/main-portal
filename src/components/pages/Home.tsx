@@ -61,6 +61,7 @@ const Home: React.FC = () => {
         if (service === "Tap Order & Pay") return "tap-order-pay";
         if (service === "Pick & Go") return "pick-and-go";
         if (service === "Room Service") return "room-service";
+        if (service === "Tap & Pay") return "tap-and-pay";
 
         return service;
       });

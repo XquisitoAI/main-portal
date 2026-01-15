@@ -39,6 +39,7 @@ interface TimelineDataItem {
   "Tap Order & Pay"?: number;
   "Pick & Go"?: number;
   "Room Service"?: number;
+  "Tap & Pay"?: number;
 }
 
 // Calcular el cambio porcentual entre primer y último valor
@@ -48,17 +49,19 @@ const calculatePercentChange = (
 ) => {
   if (data.length < 2) return 0;
 
-  // Sumar Flex Bill, Tap Order & Pay, Pick & Go & Room Service para cada período
+  // Sumar Flex Bill, Tap Order & Pay, Pick & Go, Room Service & Tap & Pay para cada período
   const firstTotal =
     (data[0]["Flex Bill"] || 0) +
     (data[0]["Tap Order & Pay"] || 0) +
     (data[0]["Pick & Go"] || 0) +
-    (data[0]["Room Service"] || 0);
+    (data[0]["Room Service"] || 0) +
+    (data[0]["Tap & Pay"] || 0);
   const lastTotal =
     (data[data.length - 1]["Flex Bill"] || 0) +
     (data[data.length - 1]["Tap Order & Pay"] || 0) +
     (data[data.length - 1]["Pick & Go"] || 0) +
-    (data[data.length - 1]["Room Service"] || 0);
+    (data[data.length - 1]["Room Service"] || 0) +
+    (data[data.length - 1]["Tap & Pay"] || 0);
 
   if (firstTotal === 0) return lastTotal > 0 ? 100 : 0;
 
@@ -132,6 +135,7 @@ const DetailedMetricChart: React.FC<DetailedMetricChartProps> = ({
         "Tap Order & Pay": (item["Tap Order & Pay"] || 0) * 0.03,
         "Pick & Go": (item["Pick & Go"] || 0) * 0.03,
         "Room Service": (item["Room Service"] || 0) * 0.03,
+        "Tap & Pay": (item["Tap & Pay"] || 0) * 0.03,
       }));
 
       console.log("=== FRONTEND: DetailedMetricChart (Ingresos Xquisito) ===");
@@ -142,7 +146,8 @@ const DetailedMetricChart: React.FC<DetailedMetricChartProps> = ({
           (item["Flex Bill"] || 0) +
           (item["Tap Order & Pay"] || 0) +
           (item["Pick & Go"] || 0) +
-          (item["Room Service"] || 0),
+          (item["Room Service"] || 0) +
+          (item["Tap & Pay"] || 0),
         0
       );
       console.log("  Total:", rawTotal);
@@ -153,7 +158,8 @@ const DetailedMetricChart: React.FC<DetailedMetricChartProps> = ({
           (item["Flex Bill"] || 0) +
           (item["Tap Order & Pay"] || 0) +
           (item["Pick & Go"] || 0) +
-          (item["Room Service"] || 0),
+          (item["Room Service"] || 0) +
+          (item["Tap & Pay"] || 0),
         0
       );
       console.log("Total after 3% fee:", processedTotal);
@@ -172,7 +178,8 @@ const DetailedMetricChart: React.FC<DetailedMetricChartProps> = ({
           (item["Flex Bill"] || 0) +
           (item["Tap Order & Pay"] || 0) +
           (item["Pick & Go"] || 0) +
-          (item["Room Service"] || 0),
+          (item["Room Service"] || 0) +
+          (item["Tap & Pay"] || 0),
         0
       );
       console.log("Grand Total:", total);
@@ -449,6 +456,14 @@ const DetailedMetricChart: React.FC<DetailedMetricChartProps> = ({
                   type="monotone"
                   dataKey="Room Service"
                   stroke="#d92926"
+                  strokeWidth={2}
+                  dot={{ r: 3 }}
+                  activeDot={{ r: 5 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="Tap & Pay"
+                  stroke="#3B82F6"
                   strokeWidth={2}
                   dot={{ r: 3 }}
                   activeDot={{ r: 5 }}

@@ -148,6 +148,7 @@ const DashboardFiltersComponent: React.FC<FilterProps> = ({
     "Tap Order & Pay",
     "Pick & Go",
     "Room Service",
+    "Tap & Pay",
   ];
   // Rangos de edad predefinidos
   const ageRangeOptions = [

@@ -67,7 +67,9 @@ const ServiceDashboardModal: React.FC<ServiceDashboardModalProps> = ({
           ? "pick-and-go"
           : serviceName === "Room Service"
             ? "room-service"
-            : "todos";
+            : serviceName === "Tap & Pay"
+              ? "tap-and-pay"
+              : "todos";
 
   // Obtener datos del backend
   const { data: volumeData, isLoading: volumeLoading } = useVolumeTimeline({
@@ -110,6 +112,7 @@ const ServiceDashboardModal: React.FC<ServiceDashboardModalProps> = ({
     "Tap Order & Pay"?: number;
     "Pick & Go"?: number;
     "Room Service"?: number;
+    "Tap & Pay"?: number;
   }
 
   // Calcular métricas actuales del servicio desde los datos reales
@@ -134,7 +137,8 @@ const ServiceDashboardModal: React.FC<ServiceDashboardModalProps> = ({
         const tapOrder = item["Tap Order & Pay"] || 0;
         const pickAndGo = item["Pick & Go"] || 0;
         const roomService = item["Room Service"] || 0;
-        return sum + flexBill + tapOrder + pickAndGo + roomService;
+        const tapAndPay = item["Tap & Pay"] || 0;
+        return sum + flexBill + tapOrder + pickAndGo + roomService + tapAndPay;
       },
       0
     );
@@ -145,7 +149,8 @@ const ServiceDashboardModal: React.FC<ServiceDashboardModalProps> = ({
         const tapOrder = item["Tap Order & Pay"] || 0;
         const pickAndGo = item["Pick & Go"] || 0;
         const roomService = item["Room Service"] || 0;
-        return sum + flexBill + tapOrder + pickAndGo + roomService;
+        const tapAndPay = item["Tap & Pay"] || 0;
+        return sum + flexBill + tapOrder + pickAndGo + roomService + tapAndPay;
       },
       0
     );
@@ -156,7 +161,8 @@ const ServiceDashboardModal: React.FC<ServiceDashboardModalProps> = ({
         const tapOrder = item["Tap Order & Pay"] || 0;
         const pickAndGo = item["Pick & Go"] || 0;
         const roomService = item["Room Service"] || 0;
-        return sum + flexBill + tapOrder + pickAndGo + roomService;
+        const tapAndPay = item["Tap & Pay"] || 0;
+        return sum + flexBill + tapOrder + pickAndGo + roomService + tapAndPay;
       },
       0
     );
@@ -169,14 +175,16 @@ const ServiceDashboardModal: React.FC<ServiceDashboardModalProps> = ({
         ? (volumeData[0]["Flex Bill"] || 0) +
           (volumeData[0]["Tap Order & Pay"] || 0) +
           (volumeData[0]["Pick & Go"] || 0) +
-          (volumeData[0]["Room Service"] || 0)
+          (volumeData[0]["Room Service"] || 0) +
+          (volumeData[0]["Tap & Pay"] || 0)
         : 0;
     const lastGmv =
       volumeData.length > 0
         ? (volumeData[volumeData.length - 1]["Flex Bill"] || 0) +
           (volumeData[volumeData.length - 1]["Tap Order & Pay"] || 0) +
           (volumeData[volumeData.length - 1]["Pick & Go"] || 0) +
-          (volumeData[volumeData.length - 1]["Room Service"] || 0)
+          (volumeData[volumeData.length - 1]["Room Service"] || 0) +
+          (volumeData[volumeData.length - 1]["Tap & Pay"] || 0)
         : 0;
     const gmvChange =
       firstGmv > 0 ? ((lastGmv - firstGmv) / firstGmv) * 100 : 0;
@@ -186,14 +194,16 @@ const ServiceDashboardModal: React.FC<ServiceDashboardModalProps> = ({
         ? (ordersData[0]["Flex Bill"] || 0) +
           (ordersData[0]["Tap Order & Pay"] || 0) +
           (ordersData[0]["Pick & Go"] || 0) +
-          (ordersData[0]["Room Service"] || 0)
+          (ordersData[0]["Room Service"] || 0) +
+          (ordersData[0]["Tao & Pay"] || 0)
         : 0;
     const lastOrders =
       ordersData.length > 0
         ? (ordersData[ordersData.length - 1]["Flex Bill"] || 0) +
           (ordersData[ordersData.length - 1]["Tap Order & Pay"] || 0) +
           (ordersData[ordersData.length - 1]["Pick & Go"] || 0) +
-          (ordersData[ordersData.length - 1]["Room Service"] || 0)
+          (ordersData[ordersData.length - 1]["Room Service"] || 0) +
+          (ordersData[ordersData.length - 1]["Tap & Pay"] || 0)
         : 0;
     const ordersChange =
       firstOrders > 0 ? ((lastOrders - firstOrders) / firstOrders) * 100 : 0;
@@ -203,7 +213,8 @@ const ServiceDashboardModal: React.FC<ServiceDashboardModalProps> = ({
         ? (transactionsData[0]["Flex Bill"] || 0) +
           (transactionsData[0]["Tap Order & Pay"] || 0) +
           (transactionsData[0]["Pick & Go"] || 0) +
-          (transactionsData[0]["Room Service"] || 0)
+          (transactionsData[0]["Room Service"] || 0) +
+          (transactionsData[0]["Tap & Pay"] || 0)
         : 0;
     const lastTransactions =
       transactionsData.length > 0
@@ -211,7 +222,8 @@ const ServiceDashboardModal: React.FC<ServiceDashboardModalProps> = ({
           (transactionsData[transactionsData.length - 1]["Tap Order & Pay"] ||
             0) +
           (transactionsData[transactionsData.length - 1]["Pick & Go"] || 0) +
-          (transactionsData[transactionsData.length - 1]["Room Service"] || 0)
+          (transactionsData[transactionsData.length - 1]["Room Service"] || 0) +
+          (transactionsData[transactionsData.length - 1]["Tap & Pay"] || 0)
         : 0;
     const transactionsChange =
       firstTransactions > 0
@@ -273,23 +285,27 @@ const ServiceDashboardModal: React.FC<ServiceDashboardModalProps> = ({
         "Tap Order & Pay": 0,
         "Pick & Go": 0,
         "Room Service": 0,
+        "Tap & Pay": 0,
       };
 
       const totalGmv =
         (volumeItem["Flex Bill"] || 0) +
         (volumeItem["Tap Order & Pay"] || 0) +
         +(volumeItem["Pick & Go"] || 0) +
-        +(volumeItem["Room Service"] || 0);
+        +(volumeItem["Room Service"] || 0) +
+        +(volumeItem["Tap & Pay"] || 0);
       const totalOrders =
         (ordersItem["Flex Bill"] || 0) +
         (ordersItem["Tap Order & Pay"] || 0) +
         (ordersItem["Pick & Go"] || 0) +
-        (ordersItem["Room Service"] || 0);
+        (ordersItem["Room Service"] || 0) +
+        (ordersItem["Tap & Pay"] || 0);
       const totalTransactions =
         (transactionsItem["Flex Bill"] || 0) +
         (transactionsItem["Tap Order & Pay"] || 0) +
         (transactionsItem["Pick & Go"] || 0) +
-        (transactionsItem["Room Service"] || 0);
+        (transactionsItem["Room Service"] || 0) +
+        (transactionsItem["Tap & Pay"] || 0);
       const avgTicket = totalOrders > 0 ? totalGmv / totalOrders : 0;
 
       return {

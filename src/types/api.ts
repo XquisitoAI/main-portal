@@ -264,7 +264,8 @@ export interface DashboardFilters {
     | "flex_bill"
     | "food_hall"
     | "pick_go"
-    | "room_service";
+    | "room_service"
+    | "tap_pay";
   payment_status?: "todos" | "pending" | "paid";
   order_status?:
     | "todos"
@@ -384,6 +385,7 @@ export interface SuperAdminFilters {
     | "tap-order-pay"
     | "pick-and-go"
     | "room-service"
+    | "tap-and-pay"
     | string; // Permitir string para múltiples servicios separados por coma
   gender?: "todos" | "male" | "female" | "other";
   age_range?: "todos" | "18-24" | "25-34" | "35-44" | "45-54" | "55+";
