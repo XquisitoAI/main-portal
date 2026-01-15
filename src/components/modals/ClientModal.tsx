@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Client, ClientFormData, ClientFormDataWithInvitation, AVAILABLE_SERVICES } from '../../types';
 import Modal from '../ui/Modal';
 import { Loader2 } from 'lucide-react';
+import { useMainPortalApi } from '../../services/mainPortalApi';
 
 interface ClientModalProps {
   isOpen: boolean;
@@ -33,6 +34,23 @@ const ClientModal: React.FC<ClientModalProps> = ({
   const [sendInvitation, setSendInvitation] = useState(true);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Estados para validación de cambio de email
+  const [emailChangeWarning, setEmailChangeWarning] = useState<{
+    show: boolean;
+    oldEmail: string;
+    newEmail: string;
+    hasAdminAccount: boolean;
+    adminUserName?: string;
+  } | null>(null);
+  const [checkingAdminStatus, setCheckingAdminStatus] = useState(false);
+  const [syncResult, setSyncResult] = useState<{
+    show: boolean;
+    success: boolean;
+    message: string;
+  } | null>(null);
+
+  const api = useMainPortalApi();
 
   // Resetear formulario cuando cambia el cliente o se abre/cierra
   useEffect(() => {
@@ -66,7 +84,43 @@ const ClientModal: React.FC<ClientModalProps> = ({
       }
       setErrors({});
     }
+    setEmailChangeWarning(null);
   }, [isOpen, client]);
+
+  // Función para verificar si el email cambió y si tiene cuenta en admin-portal
+  const checkEmailChange = async (newEmail: string) => {
+    if (!client || !client.email || client.email === newEmail) {
+      setEmailChangeWarning(null);
+      return;
+    }
+
+    setCheckingAdminStatus(true);
+    try {
+      const status = await api.checkClientAdminPortalStatus(client.email);
+
+      if (status.hasAdminPortalAccount) {
+        setEmailChangeWarning({
+          show: true,
+          oldEmail: client.email,
+          newEmail: newEmail,
+          hasAdminAccount: true,
+          adminUserName: status.adminUserName
+        });
+      } else {
+        setEmailChangeWarning(null);
+      }
+    } catch (error) {
+      console.error('Error checking admin portal status:', error);
+      // En caso de error, mostramos un warning genérico
+      setEmailChangeWarning({
+        show: true,
+        oldEmail: client.email,
+        newEmail: newEmail,
+        hasAdminAccount: false
+      });
+    }
+    setCheckingAdminStatus(false);
+  };
 
   // Función para validar teléfono
   const validatePhone = (phone: string): string | null => {
@@ -291,11 +345,42 @@ const ClientModal: React.FC<ClientModalProps> = ({
                 errors.email ? 'border-red-300' : 'border-gray-300'
               }`}
               value={formData.email}
-              onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+              onChange={(e) => {
+                const newEmail = e.target.value;
+                setFormData(prev => ({ ...prev, email: newEmail }));
+
+                // Si estamos en modo edición, verificar cambio de email
+                if (client) {
+                  checkEmailChange(newEmail);
+                }
+              }}
               placeholder="Ej: cliente@ejemplo.com"
             />
             {errors.email && (
               <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+            )}
+
+            {/* Warning de cambio de email */}
+            {checkingAdminStatus && (
+              <div className="mt-2 flex items-center text-sm text-blue-600">
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Verificando cuenta en Admin Portal...
+              </div>
+            )}
+
+            {emailChangeWarning?.show && (
+              <div className="mt-2 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                <div className="flex items-start">
+                  <div className="text-sm">
+                    <p className="font-medium text-yellow-800 mb-1">
+                      Cambio de email detectado
+                    </p>
+                    <p className="text-yellow-700 mb-2">
+                      {emailChangeWarning.oldEmail} → {emailChangeWarning.newEmail}
+                    </p>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         </div>

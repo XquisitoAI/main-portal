@@ -276,6 +276,21 @@ class MainPortalApiService {
     );
   }
 
+  async checkClientAdminPortalStatus(email: string, token: string): Promise<{
+    hasAdminPortalAccount: boolean;
+    clerkUserId?: string;
+    adminUserEmail?: string;
+    adminUserName?: string;
+  }> {
+    return await this.makeRequest(
+      `/clients/${encodeURIComponent(email)}/admin-portal-status`,
+      {
+        method: "GET",
+      },
+      token
+    );
+  }
+
   // ===============================================
   // MÉTODOS DE SUCURSALES
   // ===============================================
@@ -567,6 +582,10 @@ export function useMainPortalApi() {
     deleteClient: (id: string) =>
       makeAuthenticatedRequest((token) =>
         mainPortalApiService.deleteClient(id, token)
+      ),
+    checkClientAdminPortalStatus: (email: string) =>
+      makeAuthenticatedRequest((token) =>
+        mainPortalApiService.checkClientAdminPortalStatus(email, token)
       ),
 
     // Métodos de sucursales
