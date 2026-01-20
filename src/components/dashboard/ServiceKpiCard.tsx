@@ -72,13 +72,13 @@ const ServiceKpiCard: React.FC<ServiceKpiCardProps> = ({
   return (
     <>
       <div
-        className="bg-gray-50 rounded-lg border border-gray-100 p-3 cursor-pointer transition-all hover:shadow-sm hover:bg-gray-50"
+        className="bg-gray-50 rounded-lg border border-gray-100 p-2.5 sm:p-3 cursor-pointer transition-all hover:shadow-sm hover:bg-gray-50"
         onClick={handleCardClick}
       >
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="font-medium text-gray-800 text-sm">{name}</h3>
+        <div className="flex items-center justify-between mb-1.5 sm:mb-2 gap-1">
+          <h3 className="font-medium text-gray-800 text-xs sm:text-sm truncate">{name}</h3>
           <span
-            className={`text-xs px-1.5 py-0.5 rounded-full ${getStatusStyle()}`}
+            className={`text-[10px] sm:text-xs px-1 sm:px-1.5 py-0.5 rounded-full flex-shrink-0 ${getStatusStyle()}`}
           >
             {status === "active"
               ? "activo"
@@ -89,25 +89,25 @@ const ServiceKpiCard: React.FC<ServiceKpiCardProps> = ({
                   : "prueba"}
           </span>
         </div>
-        <div className="mb-2">
+        <div className="mb-1.5 sm:mb-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-500">GMV</span>
-            <span className="text-xs font-medium">
+            <span className="text-[10px] sm:text-xs text-gray-500">GMV</span>
+            <span className="text-[10px] sm:text-xs font-medium">
               {formatCompactNumber(gmv)}
             </span>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-2">
-          <div>
-            <p className="text-xs text-gray-500">{keyMetric.name}</p>
-            <p className={`text-xs font-medium ${getMetricStyle()}`}>
+        <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
+          <div className="min-w-0">
+            <p className="text-[10px] sm:text-xs text-gray-500 truncate">{keyMetric.name}</p>
+            <p className={`text-[10px] sm:text-xs font-medium ${getMetricStyle()}`}>
               {keyMetric.value}
               {keyMetric.unit}
             </p>
           </div>
-          <div>
-            <p className="text-xs text-gray-500">{secondaryMetric.name}</p>
-            <p className="text-xs font-medium">
+          <div className="min-w-0">
+            <p className="text-[10px] sm:text-xs text-gray-500 truncate">{secondaryMetric.name}</p>
+            <p className="text-[10px] sm:text-xs font-medium">
               {secondaryMetric.value}
               {secondaryMetric.unit}
             </p>
