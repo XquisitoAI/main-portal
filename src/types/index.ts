@@ -43,7 +43,7 @@ export interface QrCode {
   restaurantId: number; // FK hacia Restaurant
   branchId: string; // FK hacia Branch
   branchNumber: number; // Número de sucursal para URLs
-  service: "flex-bill" | "tap-order-pay" | "room-service" | "pick-n-go";
+  service: "flex-bill" | "tap-order-pay" | "room-service" | "pick-n-go" | "tap-pay";
   qrType: "table" | "room" | "pickup";
   tableNumber?: number | null; // Número de mesa (para table)
   roomNumber?: number | null; // Número de habitación (para room)
@@ -71,7 +71,7 @@ export interface QrCodeFormData {
   restaurantId: number;
   branchId: string;
   branchNumber: number;
-  service: "flex-bill" | "tap-order-pay" | "room-service" | "pick-n-go";
+  service: "flex-bill" | "tap-order-pay" | "room-service" | "pick-n-go" | "tap-pay";
   qrType: "table" | "room" | "pickup";
   tableNumber?: number;
   roomNumber?: number;
@@ -83,11 +83,13 @@ export interface QrCodeBatchFormData extends QrCodeFormData {
 }
 
 export interface QrCodeUpdateData {
-  service?: "flex-bill" | "tap-order-pay" | "room-service" | "pick-n-go";
+  service?: "flex-bill" | "tap-order-pay" | "room-service" | "pick-n-go" |"tap-pay";
   qrType?: "table" | "room" | "pickup";
   tableNumber?: number | null;
   roomNumber?: number | null;
   isActive?: boolean;
+  branchId?: string;
+  branchNumber?: number;
 }
 
 // ============================================

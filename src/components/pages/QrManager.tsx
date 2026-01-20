@@ -29,7 +29,7 @@ const QrManager: React.FC = () => {
     number | null
   >(null);
   const [service, setService] = useState<
-    "flex-bill" | "tap-order-pay" | "room-service" | "pick-n-go"
+    "flex-bill" | "tap-order-pay" | "room-service" | "pick-n-go" | "tap-pay"
   >("flex-bill");
   const [qrType, setQrType] = useState<"table" | "room" | "pickup">("table");
   const [count, setCount] = useState(1);
@@ -61,6 +61,7 @@ const QrManager: React.FC = () => {
     "tap-order-pay": "table",
     "room-service": "room",
     "pick-n-go": "pickup",
+    "tap-pay":"table"
   };
 
   // Auto-detectar tipo de QR cuando cambia el servicio
@@ -290,11 +291,16 @@ const QrManager: React.FC = () => {
     if (!editingQrCode) return;
 
     try {
+      // Obtener el branch_number de la sucursal seleccionada
+      const selectedBranch = branches.find(b => b.id === editingQrCode.branchId);
+
       await updateQrCode(editingQrCode.id, {
         service: editingQrCode.service,
         qrType: editingQrCode.qrType,
         tableNumber: editingQrCode.tableNumber,
         roomNumber: editingQrCode.roomNumber,
+        branchId: editingQrCode.branchId,
+        branchNumber: selectedBranch?.branchNumber,
       });
       setShowEditModal(false);
       setEditingQrCode(null);
@@ -446,6 +452,9 @@ const QrManager: React.FC = () => {
                 )}
                 {availableServices.includes("pick-n-go") && (
                   <option value="pick-n-go">Pick & Go</option>
+                )}
+                {availableServices.includes("tap-pay") && (
+                  <option value="tap-pay">Tap & Pay</option>
                 )}
               </select>
             </div>
@@ -640,6 +649,8 @@ const QrManager: React.FC = () => {
                               ? "bg-blue-100 text-blue-700"
                               : qrCode.service === "room-service"
                                 ? "bg-green-100 text-green-700"
+                                : qrCode.service === "tap-pay"
+                                ? "bg-red-100 text-red-700"
                                 : "bg-orange-100 text-orange-700"
                         }`}
                       >
@@ -820,6 +831,7 @@ const QrManager: React.FC = () => {
                       "tap-order-pay": "Tap Order & Pay",
                       "room-service": "Room Service",
                       "pick-n-go": "Pick & Go",
+                      "tap-pay": "Tap & Pay",
                     };
                     return clientServices.map((serviceId) => (
                       <option key={serviceId} value={serviceId}>
