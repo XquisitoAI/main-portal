@@ -216,7 +216,7 @@ const Home: React.FC = () => {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       {/* Fila de filtros */}
       <DashboardFilters
         filters={uiFilters}
@@ -225,13 +225,13 @@ const Home: React.FC = () => {
       />
 
       {/* Primera fila: Indicadores Clave y Distribución por Servicio */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Contenedor 1: Indicadores Clave */}
-        <div className="bg-white rounded-lg shadow-sm p-4">
-          <h2 className="text-lg font-medium text-gray-800 mb-4">
+        <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4">
+          <h2 className="text-base sm:text-lg font-medium text-gray-800 mb-3 sm:mb-4">
             Indicadores Clave
           </h2>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
             <GlobalKpiCard
               title="Volumen transaccionado"
               value={formatCurrency(superAdminStats?.transaction_volume || 0)}
@@ -330,7 +330,7 @@ const Home: React.FC = () => {
         </div>
 
         {/* Contenedor 2: Distribución por Servicio */}
-        <div className="bg-white rounded-lg shadow-sm p-4">
+        <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4">
           <ServiceDistributionCharts
             compact={true}
             volumeByService={superAdminStats?.volume_by_service || []}
@@ -349,11 +349,11 @@ const Home: React.FC = () => {
       </div>
 
       {/* Segunda fila: Indicadores por Servicio (horizontal) */}
-      <div className="bg-white rounded-lg shadow-sm p-4">
-        <h2 className="text-lg font-medium text-gray-800 mb-4">
+      <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4">
+        <h2 className="text-base sm:text-lg font-medium text-gray-800 mb-3 sm:mb-4">
           Indicadores Por Servicio
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
           {serviceMetrics.length > 0 ? (
             serviceMetrics
               .slice(0, 5)

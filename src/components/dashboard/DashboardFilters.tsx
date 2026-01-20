@@ -6,6 +6,8 @@ import {
   UsersIcon,
   FilterIcon,
   XIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
 } from "lucide-react";
 interface FilterProps {
   filters?: FilterState; // Prop opcional para hacer el componente controlado
@@ -65,6 +67,7 @@ const DashboardFiltersComponent: React.FC<FilterProps> = ({
   const [isGenderOpen, setIsGenderOpen] = useState(false);
   const [isAgeRangeOpen, setIsAgeRangeOpen] = useState(false);
   const [isRestaurantOpen, setIsRestaurantOpen] = useState(false);
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
 
   // Estado temporal para las fechas antes de aplicar
   const [tempDateRange, setTempDateRange] = useState<{
@@ -435,22 +438,57 @@ const DashboardFiltersComponent: React.FC<FilterProps> = ({
     filters.ageRange.min === 0 && filters.ageRange.max === 0
   );
 
+  // Contar filtros activos para mostrar badge en móvil
+  const activeFiltersCount = [
+    isDateActive,
+    isRestaurantActive,
+    isServiceActive,
+    isGenderActive,
+    isAgeRangeActive,
+  ].filter(Boolean).length;
+
   return (
     <div className="bg-white rounded-lg shadow-sm p-3 mb-6 sticky top-0 z-10">
-      <div className="flex flex-wrap items-center gap-2">
+      {/* Botón de filtros para móvil */}
+      <div className="md:hidden flex items-center justify-between mb-2">
+        <button
+          className="flex items-center px-3 py-2 rounded-md text-sm bg-gray-50 hover:bg-gray-100 text-gray-700 w-full justify-between"
+          onClick={() => setIsMobileFiltersOpen(!isMobileFiltersOpen)}
+        >
+          <span className="flex items-center">
+            <FilterIcon className="w-4 h-4 mr-2 text-gray-500" />
+            Filtros
+            {activeFiltersCount > 0 && (
+              <span className="ml-2 bg-teal-500 text-white text-xs px-2 py-0.5 rounded-full">
+                {activeFiltersCount}
+              </span>
+            )}
+          </span>
+          {isMobileFiltersOpen ? (
+            <ChevronUpIcon className="w-4 h-4 text-gray-500" />
+          ) : (
+            <ChevronDownIcon className="w-4 h-4 text-gray-500" />
+          )}
+        </button>
+      </div>
+
+      {/* Contenedor de filtros - visible en desktop, colapsable en móvil */}
+      <div className={`${isMobileFiltersOpen ? "flex" : "hidden"} md:flex flex-wrap items-center gap-2`}>
         {/* Filtro de Rango de Fechas */}
-        <div className="relative" ref={datePickerRef}>
+        <div className="relative w-full sm:w-auto" ref={datePickerRef}>
           <button
-            className={`flex items-center px-3 py-1.5 rounded-md text-sm ${isDateActive ? "bg-teal-100 border border-teal-300 text-teal-700 hover:bg-teal-200" : "bg-gray-50 hover:bg-gray-100 text-gray-700"}`}
+            className={`flex items-center px-3 py-1.5 rounded-md text-sm w-full sm:w-auto justify-between sm:justify-start ${isDateActive ? "bg-teal-100 border border-teal-300 text-teal-700 hover:bg-teal-200" : "bg-gray-50 hover:bg-gray-100 text-gray-700"}`}
             onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
           >
-            <CalendarIcon
-              className={`w-4 h-4 mr-1.5 ${isDateActive ? "text-teal-500" : "text-gray-500"}`}
-            />
-            <span className="whitespace-nowrap">{formatDateRange()}</span>
+            <span className="flex items-center">
+              <CalendarIcon
+                className={`w-4 h-4 mr-1.5 ${isDateActive ? "text-teal-500" : "text-gray-500"}`}
+              />
+              <span className="whitespace-nowrap">{formatDateRange()}</span>
+            </span>
           </button>
           {isDatePickerOpen && (
-            <div className="absolute left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-3 z-20 w-72">
+            <div className="absolute left-0 right-0 sm:right-auto mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-3 z-20 w-full sm:w-72">
               <div className="grid grid-cols-2 gap-2 mb-3">
                 <div>
                   <label className="text-xs text-gray-600 block mb-1 font-medium">
@@ -641,18 +679,20 @@ const DashboardFiltersComponent: React.FC<FilterProps> = ({
         </div>
 
         {/* Filtro de Restaurante */}
-        <div className="relative" ref={restaurantRef}>
+        <div className="relative w-full sm:w-auto" ref={restaurantRef}>
           <button
-            className={`flex items-center px-3 py-1.5 rounded-md text-sm ${isRestaurantActive ? "bg-teal-100 border border-teal-300 text-teal-700 hover:bg-teal-200" : "bg-gray-50 hover:bg-gray-100 text-gray-700"}`}
+            className={`flex items-center px-3 py-1.5 rounded-md text-sm w-full sm:w-auto justify-between sm:justify-start ${isRestaurantActive ? "bg-teal-100 border border-teal-300 text-teal-700 hover:bg-teal-200" : "bg-gray-50 hover:bg-gray-100 text-gray-700"}`}
             onClick={() => setIsRestaurantOpen(!isRestaurantOpen)}
           >
-            <UserIcon
-              className={`w-4 h-4 mr-1.5 ${isRestaurantActive ? "text-teal-500" : "text-gray-500"}`}
-            />
-            <span className="whitespace-nowrap">{formatRestaurants()}</span>
+            <span className="flex items-center">
+              <UserIcon
+                className={`w-4 h-4 mr-1.5 ${isRestaurantActive ? "text-teal-500" : "text-gray-500"}`}
+              />
+              <span className="whitespace-nowrap">{formatRestaurants()}</span>
+            </span>
           </button>
           {isRestaurantOpen && (
-            <div className="absolute left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-2 z-20 w-64">
+            <div className="absolute left-0 right-0 sm:right-auto mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-2 z-20 w-full sm:w-64">
               <div
                 className="flex items-center px-2 py-1.5 hover:bg-gray-100 rounded cursor-pointer border-b border-gray-200 mb-1"
                 onClick={(e) => {
@@ -699,18 +739,20 @@ const DashboardFiltersComponent: React.FC<FilterProps> = ({
         </div>
 
         {/* Filtro de Servicio */}
-        <div className="relative" ref={servicesRef}>
+        <div className="relative w-full sm:w-auto" ref={servicesRef}>
           <button
-            className={`flex items-center px-3 py-1.5 rounded-md text-sm ${isServiceActive ? "bg-teal-100 border border-teal-300 text-teal-700 hover:bg-teal-200" : "bg-gray-50 hover:bg-gray-100 text-gray-700"}`}
+            className={`flex items-center px-3 py-1.5 rounded-md text-sm w-full sm:w-auto justify-between sm:justify-start ${isServiceActive ? "bg-teal-100 border border-teal-300 text-teal-700 hover:bg-teal-200" : "bg-gray-50 hover:bg-gray-100 text-gray-700"}`}
             onClick={() => setIsServicesOpen(!isServicesOpen)}
           >
-            <LayersIcon
-              className={`w-4 h-4 mr-1.5 ${isServiceActive ? "text-teal-500" : "text-gray-500"}`}
-            />
-            <span className="whitespace-nowrap">{formatServices()}</span>
+            <span className="flex items-center">
+              <LayersIcon
+                className={`w-4 h-4 mr-1.5 ${isServiceActive ? "text-teal-500" : "text-gray-500"}`}
+              />
+              <span className="whitespace-nowrap">{formatServices()}</span>
+            </span>
           </button>
           {isServicesOpen && (
-            <div className="absolute left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-2 z-20 w-64">
+            <div className="absolute left-0 right-0 sm:right-auto mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-2 z-20 w-full sm:w-64">
               <div
                 className="flex items-center px-2 py-1.5 hover:bg-gray-100 rounded cursor-pointer border-b border-gray-200 mb-1"
                 onClick={(e) => {
@@ -755,20 +797,22 @@ const DashboardFiltersComponent: React.FC<FilterProps> = ({
         </div>
 
         {/* Filtro de Género */}
-        <div className="relative" ref={genderRef}>
+        <div className="relative w-full sm:w-auto" ref={genderRef}>
           <button
-            className={`flex items-center px-3 py-1.5 rounded-md text-sm ${isGenderActive ? "bg-teal-100 border border-teal-300 text-teal-700 hover:bg-teal-200" : "bg-gray-50 hover:bg-gray-100 text-gray-700"}`}
+            className={`flex items-center px-3 py-1.5 rounded-md text-sm w-full sm:w-auto justify-between sm:justify-start ${isGenderActive ? "bg-teal-100 border border-teal-300 text-teal-700 hover:bg-teal-200" : "bg-gray-50 hover:bg-gray-100 text-gray-700"}`}
             onClick={() => setIsGenderOpen(!isGenderOpen)}
           >
-            <UsersIcon
-              className={`w-4 h-4 mr-1.5 ${isGenderActive ? "text-teal-500" : "text-gray-500"}`}
-            />
-            <span className="whitespace-nowrap">
-              {filters.gender || "Todos los Diners"}
+            <span className="flex items-center">
+              <UsersIcon
+                className={`w-4 h-4 mr-1.5 ${isGenderActive ? "text-teal-500" : "text-gray-500"}`}
+              />
+              <span className="whitespace-nowrap">
+                {filters.gender || "Todos los Diners"}
+              </span>
             </span>
           </button>
           {isGenderOpen && (
-            <div className="absolute left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-2 z-20 w-48">
+            <div className="absolute left-0 right-0 sm:right-auto mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-2 z-20 w-full sm:w-48">
               <div
                 className="px-2 py-1.5 hover:bg-gray-100 rounded cursor-pointer text-sm"
                 onClick={() => handleGenderChange("")}
@@ -789,18 +833,20 @@ const DashboardFiltersComponent: React.FC<FilterProps> = ({
         </div>
 
         {/* Filtro de Rango de Edad */}
-        <div className="relative" ref={ageRangeRef}>
+        <div className="relative w-full sm:w-auto" ref={ageRangeRef}>
           <button
-            className={`flex items-center px-3 py-1.5 rounded-md text-sm ${isAgeRangeActive ? "bg-teal-100 border border-teal-300 text-teal-700 hover:bg-teal-200" : "bg-gray-50 hover:bg-gray-100 text-gray-700"}`}
+            className={`flex items-center px-3 py-1.5 rounded-md text-sm w-full sm:w-auto justify-between sm:justify-start ${isAgeRangeActive ? "bg-teal-100 border border-teal-300 text-teal-700 hover:bg-teal-200" : "bg-gray-50 hover:bg-gray-100 text-gray-700"}`}
             onClick={() => setIsAgeRangeOpen(!isAgeRangeOpen)}
           >
-            <FilterIcon
-              className={`w-4 h-4 mr-1.5 ${isAgeRangeActive ? "text-teal-500" : "text-gray-500"}`}
-            />
-            <span className="whitespace-nowrap">{formatAgeRange()}</span>
+            <span className="flex items-center">
+              <FilterIcon
+                className={`w-4 h-4 mr-1.5 ${isAgeRangeActive ? "text-teal-500" : "text-gray-500"}`}
+              />
+              <span className="whitespace-nowrap">{formatAgeRange()}</span>
+            </span>
           </button>
           {isAgeRangeOpen && (
-            <div className="absolute left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-2 z-20 w-48">
+            <div className="absolute left-0 right-0 sm:right-auto mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-2 z-20 w-full sm:w-48">
               {ageRangeOptions.map((range) => (
                 <div
                   key={range.label}
@@ -816,7 +862,7 @@ const DashboardFiltersComponent: React.FC<FilterProps> = ({
 
         {/* Limpiar Filtros */}
         <button
-          className="ml-auto flex items-center text-gray-600 hover:text-red-600 px-3 py-1.5 rounded-md text-sm"
+          className="w-full sm:w-auto sm:ml-auto flex items-center justify-center text-gray-600 hover:text-red-600 px-3 py-1.5 rounded-md text-sm mt-2 sm:mt-0 border border-gray-200 sm:border-0"
           onClick={clearFilters}
         >
           <XIcon className="w-4 h-4 mr-1" />

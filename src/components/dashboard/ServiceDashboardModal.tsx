@@ -369,128 +369,128 @@ const ServiceDashboardModal: React.FC<ServiceDashboardModalProps> = ({
   }, []);
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-5xl p-6 mx-4 relative overflow-y-auto max-h-[90vh]">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-5xl p-3 sm:p-6 relative overflow-y-auto max-h-[95vh] sm:max-h-[90vh]">
         {/* Botón de cierre */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+          className="absolute top-2 right-2 sm:top-4 sm:right-4 text-gray-500 hover:text-gray-700"
         >
-          <XIcon className="w-5 h-5" />
+          <XIcon className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
         {/* Encabezado */}
-        <div className="mb-6">
-          <h2 className="text-2xl font-semibold text-gray-800">
+        <div className="mb-4 sm:mb-6 pr-6">
+          <h2 className="text-lg sm:text-2xl font-semibold text-gray-800">
             Dashboard: {serviceName}
           </h2>
         </div>
         {/* Filtros */}
-        <div className="flex flex-wrap gap-4 mb-6 items-center bg-gray-50 p-3 rounded-lg">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 mb-4 sm:mb-6 items-start sm:items-center bg-gray-50 p-2 sm:p-3 rounded-lg">
           {/* Selector de rango de fechas */}
-          <div className="flex gap-2 items-center">
-            <div>
-              <label className="text-xs text-gray-500 block mb-1">Inicio</label>
+          <div className="flex gap-2 items-center w-full sm:w-auto">
+            <div className="flex-1 sm:flex-none">
+              <label className="text-[10px] sm:text-xs text-gray-500 block mb-1">Inicio</label>
               <input
                 type="date"
                 value={formatDateForInput(dateRange.startDate)}
                 onChange={handleStartDateChange}
-                className="text-sm p-1.5 border border-gray-200 rounded"
+                className="text-xs sm:text-sm p-1 sm:p-1.5 border border-gray-200 rounded w-full"
               />
             </div>
-            <div>
-              <label className="text-xs text-gray-500 block mb-1">Fin</label>
+            <div className="flex-1 sm:flex-none">
+              <label className="text-[10px] sm:text-xs text-gray-500 block mb-1">Fin</label>
               <input
                 type="date"
                 value={formatDateForInput(dateRange.endDate)}
                 onChange={handleEndDateChange}
-                className="text-sm p-1.5 border border-gray-200 rounded"
+                className="text-xs sm:text-sm p-1 sm:p-1.5 border border-gray-200 rounded w-full"
               />
             </div>
           </div>
           {/* Toggle de visualización */}
-          <div className="flex bg-white rounded-md p-1 ml-auto shadow-sm">
+          <div className="flex bg-white rounded-md p-0.5 sm:p-1 sm:ml-auto shadow-sm w-full sm:w-auto justify-center">
             <button
               onClick={() => setViewType("daily")}
-              className={`px-3 py-1 text-sm rounded-md ${viewType === "daily" ? "bg-purple-100 text-purple-700 font-medium" : "text-gray-600"}`}
+              className={`px-2 sm:px-3 py-1 text-xs sm:text-sm rounded-md flex-1 sm:flex-none ${viewType === "daily" ? "bg-purple-100 text-purple-700 font-medium" : "text-gray-600"}`}
             >
               Diario
             </button>
             <button
               onClick={() => setViewType("weekly")}
-              className={`px-3 py-1 text-sm rounded-md ${viewType === "weekly" ? "bg-purple-100 text-purple-700 font-medium" : "text-gray-600"}`}
+              className={`px-2 sm:px-3 py-1 text-xs sm:text-sm rounded-md flex-1 sm:flex-none ${viewType === "weekly" ? "bg-purple-100 text-purple-700 font-medium" : "text-gray-600"}`}
             >
               Semanal
             </button>
             <button
               onClick={() => setViewType("monthly")}
-              className={`px-3 py-1 text-sm rounded-md ${viewType === "monthly" ? "bg-purple-100 text-purple-700 font-medium" : "text-gray-600"}`}
+              className={`px-2 sm:px-3 py-1 text-xs sm:text-sm rounded-md flex-1 sm:flex-none ${viewType === "monthly" ? "bg-purple-100 text-purple-700 font-medium" : "text-gray-600"}`}
             >
               Mensual
             </button>
           </div>
         </div>
         {isLoading ? (
-          <div className="flex items-center justify-center h-64">
+          <div className="flex items-center justify-center h-48 sm:h-64">
             <LoadingSpinner message="Cargando datos..." />
           </div>
         ) : (
           <>
             {/* Indicadores clave (grid 2x2) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6">
               {/* GMV total */}
-              <div className="bg-white rounded-lg p-4 border border-gray-100 shadow-sm">
-                <h3 className="text-sm font-medium text-gray-700 mb-2">
+              <div className="bg-white rounded-lg p-2 sm:p-4 border border-gray-100 shadow-sm">
+                <h3 className="text-[10px] sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                   GMV total
                 </h3>
-                <p className="text-2xl font-semibold">
+                <p className="text-base sm:text-2xl font-semibold">
                   {formatCurrency(serviceMetrics.gmv)}
                 </p>
                 <div
-                  className={`text-xs mt-1 ${serviceMetrics.gmvChange >= 0 ? "text-green-600" : "text-red-600"}`}
+                  className={`text-[10px] sm:text-xs mt-1 ${serviceMetrics.gmvChange >= 0 ? "text-green-600" : "text-red-600"}`}
                 >
                   {formatChange(serviceMetrics.gmvChange)} vs. período anterior
                 </div>
               </div>
               {/* Total de órdenes */}
-              <div className="bg-white rounded-lg p-4 border border-gray-100 shadow-sm">
-                <h3 className="text-sm font-medium text-gray-700 mb-2">
+              <div className="bg-white rounded-lg p-2 sm:p-4 border border-gray-100 shadow-sm">
+                <h3 className="text-[10px] sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                   Total de órdenes
                 </h3>
-                <p className="text-2xl font-semibold">
+                <p className="text-base sm:text-2xl font-semibold">
                   {formatNumber(serviceMetrics.orders)}
                 </p>
                 <div
-                  className={`text-xs mt-1 ${serviceMetrics.ordersChange >= 0 ? "text-green-600" : "text-red-600"}`}
+                  className={`text-[10px] sm:text-xs mt-1 ${serviceMetrics.ordersChange >= 0 ? "text-green-600" : "text-red-600"}`}
                 >
                   {formatChange(serviceMetrics.ordersChange)} vs. período
                   anterior
                 </div>
               </div>
               {/* Total de transacciones */}
-              <div className="bg-white rounded-lg p-4 border border-gray-100 shadow-sm">
-                <h3 className="text-sm font-medium text-gray-700 mb-2">
+              <div className="bg-white rounded-lg p-2 sm:p-4 border border-gray-100 shadow-sm">
+                <h3 className="text-[10px] sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                   Total de transacciones
                 </h3>
-                <p className="text-2xl font-semibold">
+                <p className="text-base sm:text-2xl font-semibold">
                   {formatNumber(serviceMetrics.transactions)}
                 </p>
                 <div
-                  className={`text-xs mt-1 ${serviceMetrics.transactionsChange >= 0 ? "text-green-600" : "text-red-600"}`}
+                  className={`text-[10px] sm:text-xs mt-1 ${serviceMetrics.transactionsChange >= 0 ? "text-green-600" : "text-red-600"}`}
                 >
                   {formatChange(serviceMetrics.transactionsChange)} vs. período
                   anterior
                 </div>
               </div>
               {/* Ticket promedio */}
-              <div className="bg-white rounded-lg p-4 border border-gray-100 shadow-sm">
-                <h3 className="text-sm font-medium text-gray-700 mb-2">
+              <div className="bg-white rounded-lg p-2 sm:p-4 border border-gray-100 shadow-sm">
+                <h3 className="text-[10px] sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                   Ticket promedio por orden
                 </h3>
-                <p className="text-2xl font-semibold">
+                <p className="text-base sm:text-2xl font-semibold">
                   {formatCurrency(serviceMetrics.avgTicket)}
                 </p>
                 <div
-                  className={`text-xs mt-1 ${serviceMetrics.avgTicketChange >= 0 ? "text-green-600" : "text-red-600"}`}
+                  className={`text-[10px] sm:text-xs mt-1 ${serviceMetrics.avgTicketChange >= 0 ? "text-green-600" : "text-red-600"}`}
                 >
                   {formatChange(serviceMetrics.avgTicketChange)} vs. período
                   anterior
@@ -499,28 +499,28 @@ const ServiceDashboardModal: React.FC<ServiceDashboardModalProps> = ({
             </div>
 
             {/* Gráfica de líneas */}
-            <div className="bg-white rounded-lg p-4 border border-gray-100 shadow-sm mb-6">
+            <div className="bg-white rounded-lg p-2 sm:p-4 border border-gray-100 shadow-sm mb-4 sm:mb-6">
               {/* Dropdown de selección de métrica */}
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3 sm:mb-4">
                 <div className="relative metric-dropdown">
-                  <label className="text-sm font-medium text-gray-700 mr-2">
+                  <label className="text-xs sm:text-sm font-medium text-gray-700 mr-2">
                     Visualizar:
                   </label>
                   <button
-                    className="flex items-center text-sm bg-white border border-gray-200 rounded-md px-3 py-1.5 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50"
+                    className="flex items-center text-xs sm:text-sm bg-white border border-gray-200 rounded-md px-2 sm:px-3 py-1 sm:py-1.5 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50"
                     onClick={() =>
                       setIsMetricDropdownOpen(!isMetricDropdownOpen)
                     }
                   >
                     <span className="font-medium">{getMetricLabel()}</span>
-                    <ChevronDownIcon className="w-4 h-4 ml-1.5" />
+                    <ChevronDownIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 ml-1 sm:ml-1.5" />
                   </button>
                   {isMetricDropdownOpen && (
-                    <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-md shadow-md z-10 w-60">
+                    <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-md shadow-md z-10 w-48 sm:w-60">
                       {metricOptions.map((option) => (
                         <button
                           key={option.value}
-                          className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-50 ${selectedMetric === option.value ? "bg-purple-50 text-purple-700 font-medium" : ""}`}
+                          className={`w-full text-left px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm hover:bg-gray-50 ${selectedMetric === option.value ? "bg-purple-50 text-purple-700 font-medium" : ""}`}
                           onClick={() => {
                             setSelectedMetric(option.value as any);
                             setIsMetricDropdownOpen(false);
@@ -533,31 +533,35 @@ const ServiceDashboardModal: React.FC<ServiceDashboardModalProps> = ({
                   )}
                 </div>
               </div>
-              <div className="h-72">
+              <div className="h-56 sm:h-72">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart
                     data={chartData}
                     margin={{
-                      top: 10,
-                      right: 30,
-                      left: 20,
-                      bottom: 30,
+                      top: 5,
+                      right: 10,
+                      left: 0,
+                      bottom: 20,
                     }}
                   >
                     <CartesianGrid strokeDasharray="3 3" vertical={false} />
                     <XAxis
                       dataKey="date"
                       tickFormatter={formatDateLabel}
-                      tick={{ fontSize: 12 }}
-                      tickMargin={10}
+                      tick={{ fontSize: 10 }}
+                      tickMargin={8}
                       axisLine={{ stroke: "#E5E7EB" }}
                       tickLine={false}
+                      angle={viewType === "daily" ? -45 : 0}
+                      textAnchor={viewType === "daily" ? "end" : "middle"}
+                      height={viewType === "daily" ? 50 : 25}
                     />
                     <YAxis
                       tickFormatter={formatYAxisTick}
-                      tick={{ fontSize: 12 }}
+                      tick={{ fontSize: 10 }}
                       axisLine={false}
                       tickLine={false}
+                      width={50}
                     />
                     <Tooltip
                       formatter={(value) => [
@@ -573,8 +577,8 @@ const ServiceDashboardModal: React.FC<ServiceDashboardModalProps> = ({
                       dataKey={selectedMetric}
                       stroke="#8884d8"
                       strokeWidth={2}
-                      dot={{ r: 4, fill: "#8884d8" }}
-                      activeDot={{ r: 6 }}
+                      dot={{ r: 2, fill: "#8884d8" }}
+                      activeDot={{ r: 4 }}
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -582,12 +586,12 @@ const ServiceDashboardModal: React.FC<ServiceDashboardModalProps> = ({
             </div>
 
             {/* Botón de limpiar filtros */}
-            <div className="flex justify-end mt-4">
+            <div className="flex justify-end mt-3 sm:mt-4">
               <button
                 onClick={resetFilters}
-                className="flex items-center text-sm text-gray-600 hover:text-purple-600 bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded transition-colors"
+                className="flex items-center text-xs sm:text-sm text-gray-600 hover:text-purple-600 bg-gray-100 hover:bg-gray-200 px-2 sm:px-3 py-1 sm:py-1.5 rounded transition-colors"
               >
-                <RefreshCwIcon className="w-4 h-4 mr-1.5" />
+                <RefreshCwIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-1.5" />
                 Limpiar filtros
               </button>
             </div>

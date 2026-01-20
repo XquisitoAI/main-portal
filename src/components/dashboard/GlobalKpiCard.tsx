@@ -94,20 +94,20 @@ const GlobalKpiCard: React.FC<GlobalKpiCardProps> = ({
     return '#8884d8'; // default
   };
   return <>
-      <div className={`bg-white rounded-lg p-4 border border-gray-100 hover:shadow-md transition-shadow ${shouldShowDetailedChart() ? 'cursor-pointer' : ''}`} onClick={handleCardClick} title={tooltip}>
-        <div className="flex justify-between items-start">
-          <div className="flex items-center">
-            {icon && <span className="mr-1.5">{icon}</span>}
-            <h3 className="text-sm font-medium text-gray-700">{title}</h3>
+      <div className={`bg-white rounded-lg p-3 sm:p-4 border border-gray-100 hover:shadow-md transition-shadow ${shouldShowDetailedChart() ? 'cursor-pointer' : ''}`} onClick={handleCardClick} title={tooltip}>
+        <div className="flex justify-between items-start gap-1">
+          <div className="flex items-center min-w-0 flex-1">
+            {icon && <span className="mr-1 sm:mr-1.5 flex-shrink-0">{icon}</span>}
+            <h3 className="text-xs sm:text-sm font-medium text-gray-700 truncate">{title}</h3>
           </div>
           {!hideChange && (
-            <div className={`text-xs font-medium px-1.5 py-0.5 rounded ${getChangeColor()}`}>
+            <div className={`text-[10px] sm:text-xs font-medium px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0 ${getChangeColor()}`}>
               {formatChange(change)}
             </div>
           )}
         </div>
-        <div className="mt-2">
-          <div className="text-xl font-semibold text-gray-800">{value}</div>
+        <div className="mt-1.5 sm:mt-2">
+          <div className="text-lg sm:text-xl font-semibold text-gray-800 truncate">{value}</div>
         </div>
       </div>
       {/* Mostrar gráfica detallada cuando showDetailedChart es true */}
