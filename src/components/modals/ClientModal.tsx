@@ -261,24 +261,24 @@ const ClientModal: React.FC<ClientModalProps> = ({
       title={title}
       size="lg"
     >
-      <form onSubmit={handleSubmit} className="space-y-6 relative">
+      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6 relative">
         {/* Overlay de carga */}
         {isLoading && (
           <div className="absolute inset-0 bg-white bg-opacity-75 z-10 flex items-center justify-center rounded-lg">
             <div className="text-center">
-              <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-2" />
-              <p className="text-sm text-gray-600 font-medium">Guardando...</p>
+              <Loader2 className="h-6 w-6 sm:h-8 sm:w-8 animate-spin text-blue-600 mx-auto mb-2" />
+              <p className="text-xs sm:text-sm text-gray-600 font-medium">Guardando...</p>
             </div>
           </div>
         )}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
               Nombre del Establecimiento *
             </label>
             <input
               type="text"
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              className={`w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                 errors.name ? 'border-red-300' : 'border-gray-300'
               }`}
               value={formData.name}
@@ -286,18 +286,18 @@ const ClientModal: React.FC<ClientModalProps> = ({
               placeholder="Ej: Restaurante El Dorado / Hotel Plaza"
             />
             {errors.name && (
-              <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+              <p className="mt-1 text-xs sm:text-sm text-red-600">{errors.name}</p>
             )}
           </div>
 
           {/* Nombre del Dueño */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
               Nombre del Dueño *
             </label>
             <input
               type="text"
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              className={`w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                 errors.ownerName ? 'border-red-300' : 'border-gray-300'
               }`}
               value={formData.ownerName}
@@ -305,18 +305,18 @@ const ClientModal: React.FC<ClientModalProps> = ({
               placeholder="Ej: Carlos Mendoza"
             />
             {errors.ownerName && (
-              <p className="mt-1 text-sm text-red-600">{errors.ownerName}</p>
+              <p className="mt-1 text-xs sm:text-sm text-red-600">{errors.ownerName}</p>
             )}
           </div>
 
           {/* Teléfono */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
               Número de Teléfono *
             </label>
             <input
               type="tel"
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              className={`w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                 errors.phone ? 'border-red-300' : 'border-gray-300'
               }`}
               value={formData.phone}
@@ -325,10 +325,10 @@ const ClientModal: React.FC<ClientModalProps> = ({
               maxLength={15}
             />
             {errors.phone && (
-              <p className="mt-1 text-sm text-red-600">{errors.phone}</p>
+              <p className="mt-1 text-xs sm:text-sm text-red-600">{errors.phone}</p>
             )}
             {!errors.phone && (
-              <p className="mt-1 text-xs text-gray-500">
+              <p className="mt-1 text-[10px] sm:text-xs text-gray-500">
                 Solo números. Mínimo 10 dígitos.
               </p>
             )}
@@ -336,12 +336,12 @@ const ClientModal: React.FC<ClientModalProps> = ({
 
           {/* Email */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
               Email *
             </label>
             <input
               type="email"
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              className={`w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                 errors.email ? 'border-red-300' : 'border-gray-300'
               }`}
               value={formData.email}
@@ -357,25 +357,25 @@ const ClientModal: React.FC<ClientModalProps> = ({
               placeholder="Ej: cliente@ejemplo.com"
             />
             {errors.email && (
-              <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+              <p className="mt-1 text-xs sm:text-sm text-red-600">{errors.email}</p>
             )}
 
             {/* Warning de cambio de email */}
             {checkingAdminStatus && (
-              <div className="mt-2 flex items-center text-sm text-blue-600">
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              <div className="mt-2 flex items-center text-xs sm:text-sm text-blue-600">
+                <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 animate-spin" />
                 Verificando cuenta en Admin Portal...
               </div>
             )}
 
             {emailChangeWarning?.show && (
-              <div className="mt-2 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+              <div className="mt-2 bg-yellow-50 border border-yellow-200 rounded-lg p-2 sm:p-3">
                 <div className="flex items-start">
-                  <div className="text-sm">
+                  <div className="text-xs sm:text-sm">
                     <p className="font-medium text-yellow-800 mb-1">
                       Cambio de email detectado
                     </p>
-                    <p className="text-yellow-700 mb-2">
+                    <p className="text-yellow-700 mb-2 text-[10px] sm:text-sm break-all">
                       {emailChangeWarning.oldEmail} → {emailChangeWarning.newEmail}
                     </p>
                   </div>
@@ -388,14 +388,14 @@ const ClientModal: React.FC<ClientModalProps> = ({
         {/* Número de mesas - Solo visible si se han seleccionado servicios que requieren mesas */}
         {(formData.services.includes('flex-bill') || formData.services.includes('tap-order-pay')) && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
               Número de mesas *
             </label>
             <input
               type="number"
               min="1"
               max="500"
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              className={`w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                 errors.tableCount ? 'border-red-300' : 'border-gray-300'
               }`}
               value={formData.tableCount || ''}
@@ -406,9 +406,9 @@ const ClientModal: React.FC<ClientModalProps> = ({
               placeholder="Ingresa número de mesas (1-100)"
             />
             {errors.tableCount && (
-              <p className="mt-1 text-sm text-red-600">{errors.tableCount}</p>
+              <p className="mt-1 text-xs sm:text-sm text-red-600">{errors.tableCount}</p>
             )}
-            <p className="mt-1 text-xs text-yellow-700">
+            <p className="mt-1 text-[10px] sm:text-xs text-yellow-700">
               <strong>Requerido para Flex Bill y Tap Order & Pay</strong>
             </p>
           </div>
@@ -417,14 +417,14 @@ const ClientModal: React.FC<ClientModalProps> = ({
         {/* Número de habitaciones - Solo visible si se ha seleccionado room-service */}
         {formData.services.includes('room-service') && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
               Número de habitaciones *
             </label>
             <input
               type="number"
               min="1"
               max="500"
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              className={`w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                 errors.roomCount ? 'border-red-300' : 'border-gray-300'
               }`}
               value={formData.roomCount || ''}
@@ -435,9 +435,9 @@ const ClientModal: React.FC<ClientModalProps> = ({
               placeholder="Ingresa número de habitaciones (1-500)"
             />
             {errors.roomCount && (
-              <p className="mt-1 text-sm text-red-600">{errors.roomCount}</p>
+              <p className="mt-1 text-xs sm:text-sm text-red-600">{errors.roomCount}</p>
             )}
-            <p className="mt-1 text-xs text-yellow-700">
+            <p className="mt-1 text-[10px] sm:text-xs text-yellow-700">
               <strong>Requerido para Room Service - Servicio a la habitación</strong>
             </p>
           </div>
@@ -445,24 +445,24 @@ const ClientModal: React.FC<ClientModalProps> = ({
 
         {/* Servicios Activos */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
             Servicios Activos *
           </label>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
             {AVAILABLE_SERVICES.map(service => (
-              <label key={service.id} className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
+              <label key={service.id} className="flex items-start space-x-2 sm:space-x-3 p-2 sm:p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
                 <input
                   type="checkbox"
-                  className="h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500 mt-0.5"
+                  className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500 mt-0.5"
                   checked={formData.services.includes(service.id)}
                   onChange={() => handleServiceToggle(service.id)}
                 />
                 <div>
-                  <div className="text-sm font-medium text-gray-900">
+                  <div className="text-xs sm:text-sm font-medium text-gray-900">
                     {service.label}
                   </div>
                   {service.description && (
-                    <div className="text-xs text-gray-500">
+                    <div className="text-[10px] sm:text-xs text-gray-500">
                       {service.description}
                     </div>
                   )}
@@ -471,38 +471,38 @@ const ClientModal: React.FC<ClientModalProps> = ({
             ))}
           </div>
           {errors.services && (
-            <p className="mt-1 text-sm text-red-600">{errors.services}</p>
+            <p className="mt-1 text-xs sm:text-sm text-red-600">{errors.services}</p>
           )}
         </div>
 
         {/* Estado */}
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           <label className="flex items-center">
             <input
               type="checkbox"
-              className="h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+              className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
               checked={formData.active}
               onChange={(e) => setFormData(prev => ({ ...prev, active: e.target.checked }))}
             />
-            <span className="ml-2 text-sm text-gray-700">Cliente activo</span>
+            <span className="ml-2 text-xs sm:text-sm text-gray-700">Cliente activo</span>
           </label>
 
           {/* Información de invitación - solo mostrar en modo creación */}
           {!client && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
               <div className="flex items-start">
                 <input
                   type="checkbox"
-                  className="h-5 w-5 text-blue-600 rounded border-gray-300 mt-0.5"
+                  className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 rounded border-gray-300 mt-0.5"
                   checked={sendInvitation}
                   readOnly
                   disabled
                 />
-                <div className="ml-3">
-                  <span className="text-sm font-medium text-blue-900">
-                    📧 Invitación automática por email
+                <div className="ml-2 sm:ml-3">
+                  <span className="text-xs sm:text-sm font-medium text-blue-900">
+                    Invitación automática por email
                   </span>
-                  <p className="text-xs text-blue-700 mt-1">
+                  <p className="text-[10px] sm:text-xs text-blue-700 mt-1">
                     Se enviará automáticamente un email de invitación al cliente
                     para que pueda registrarse en el Admin Portal.
                   </p>
@@ -513,21 +513,21 @@ const ClientModal: React.FC<ClientModalProps> = ({
         </div>
 
         {/* Botones */}
-        <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+        <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:space-x-3 pt-4 sm:pt-6 border-t border-gray-200">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500"
+            className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 text-sm"
             disabled={isLoading}
           >
             Cancelar
           </button>
           <button
             type="submit"
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+            className="px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm"
             disabled={isLoading}
           >
-            {isLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            {isLoading && <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 animate-spin" />}
             {isLoading ? 'Guardando...' : (client ? 'Actualizar' : 'Crear Cliente')}
           </button>
         </div>
