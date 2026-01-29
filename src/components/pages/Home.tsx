@@ -15,6 +15,8 @@ import {
   DollarSignIcon,
   ReceiptIcon,
   UserCheckIcon,
+  MegaphoneIcon,
+  RadioIcon,
 } from "lucide-react";
 import type { SuperAdminFilters } from "../../types/api";
 import DashboardFilters, { FilterState } from "../dashboard/DashboardFilters";
@@ -328,6 +330,31 @@ const Home: React.FC = () => {
               tooltip="Total de transacciones procesadas (éxito + fallo)"
               icon={<ArrowDownUpIcon className="w-4 h-4 text-indigo-500" />}
               filters={superAdminFilters}
+            />
+
+            <GlobalKpiCard
+              title="Campañas Creadas"
+              value={formatNumber(superAdminStats?.total_campaigns || 0)}
+              previousValue={formatNumber(
+                superAdminStats?.previous_period?.total_campaigns || 0
+              )}
+              change={superAdminStats?.total_campaigns_change || 0}
+              trendData={[]}
+              tooltip="Total de campañas creadas por usuarios del admin-portal"
+              icon={<MegaphoneIcon className="w-4 h-4 text-purple-500" />}
+              filters={superAdminFilters}
+            />
+
+            <GlobalKpiCard
+              title="Campañas Activas"
+              value={formatNumber(superAdminStats?.active_campaigns || 0)}
+              previousValue={formatNumber(superAdminStats?.active_campaigns || 0)}
+              change={0}
+              trendData={[]}
+              tooltip="Campañas actualmente activas o en ejecución"
+              icon={<RadioIcon className="w-4 h-4 text-green-500" />}
+              filters={superAdminFilters}
+              hideChange={true}
             />
           </div>
         </div>
