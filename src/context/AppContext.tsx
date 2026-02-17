@@ -11,6 +11,7 @@ import {
   QrCodeUpdateData,
 } from "../types";
 import { useMainPortalApi } from "../services/mainPortalApi";
+import { useAuth } from "@clerk/nextjs";
 interface AppContextType {
   selectedClient: string | null;
   selectedBranch: string | null;
@@ -57,6 +58,7 @@ export const AppContextProvider: React.FC<{
 
   // Use the new authenticated API hook
   const mainPortalApi = useMainPortalApi();
+  const { isSignedIn, isLoaded } = useAuth();
 
   // Función utilitaria para manejar errores
   const handleError = (error: any) => {
@@ -97,11 +99,13 @@ export const AppContextProvider: React.FC<{
     }
   };
 
-  // Efecto para cargar datos iniciales
+  // Efecto para cargar datos iniciales - esperar a que Clerk esté listo y autenticado
   useEffect(() => {
-    loadClients();
-    loadBranches();
-  }, []);
+    if (isLoaded && isSignedIn) {
+      loadClients();
+      loadBranches();
+    }
+  }, [isLoaded, isSignedIn]);
 
   const addClient = async (client: ClientFormDataWithInvitation) => {
     try {

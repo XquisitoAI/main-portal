@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import GlobalKpiCard from "../dashboard/GlobalKpiCard";
 import ServiceKpiCard from "../dashboard/ServiceKpiCard";
 import ServiceDistributionCharts from "../dashboard/ServiceDistributionCharts";
@@ -35,8 +35,19 @@ const getDefaultDateRange = () => {
 const Home: React.FC = () => {
   // Autenticación habilitada
   const { isSignedIn, isLoaded } = useAuth();
+
+  // Inicializar filtros con valores por defecto para evitar query vacía en primer render
   const [superAdminFilters, setSuperAdminFilters] = useState<SuperAdminFilters>(
-    {}
+    () => {
+      const { startDate, endDate } = getDefaultDateRange();
+      return {
+        start_date: startDate.toISOString().split("T")[0],
+        end_date: endDate.toISOString().split("T")[0],
+        service: "todos",
+        gender: "todos",
+        age_range: "todos",
+      };
+    }
   );
 
   // Estado de los filtros UI
@@ -120,11 +131,6 @@ const Home: React.FC = () => {
       age_range: ageRangeValue,
     };
     setSuperAdminFilters(newFilters);
-  }, []);
-
-  // Aplicar filtros iniciales al montar el componente
-  useEffect(() => {
-    handleFilterChange(uiFilters);
   }, []);
 
   // Obtener datos del Super Admin desde el backend
