@@ -341,6 +341,8 @@ export interface SuperAdminStats {
     count: number;
   };
   total_transactions: number;
+  total_campaigns: number;
+  active_campaigns: number;
 
   // Cambios porcentuales
   transaction_volume_change: number;
@@ -349,6 +351,7 @@ export interface SuperAdminStats {
   successful_orders_change: number;
   active_admins_change: number;
   total_transactions_change: number;
+  total_campaigns_change: number;
 
   // Métricas del período anterior
   previous_period?: {
@@ -358,6 +361,7 @@ export interface SuperAdminStats {
     successful_orders: number;
     active_admins: number;
     total_transactions: number;
+    total_campaigns: number;
   };
 
   // Métricas por servicio

@@ -364,30 +364,30 @@ const QrManager: React.FC = () => {
   const disabledReason = getDisabledReason();
   const isButtonDisabled = !!disabledReason;
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-800">QR Manager</h1>
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-800">QR Manager</h1>
         <button
-          className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          className="flex items-center px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm sm:text-base w-full sm:w-auto justify-center sm:justify-start"
           onClick={() => setShowQrForm(true)}
         >
-          <PlusIcon className="h-5 w-5 mr-2" />
+          <PlusIcon className="h-4 w-4 sm:h-5 sm:w-5 mr-1.5 sm:mr-2" />
           Generar Nuevos QR
         </button>
       </div>
       {showQrForm && (
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h2 className="text-lg font-medium text-gray-800 mb-4">
+        <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
+          <h2 className="text-base sm:text-lg font-medium text-gray-800 mb-3 sm:mb-4">
             Generar Códigos QR en Lote
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
                 Cliente
               </label>
               <select
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={selectedClientId}
                 onChange={(e) => {
                   setSelectedClientId(e.target.value);
@@ -405,11 +405,11 @@ const QrManager: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
                 Sucursal
               </label>
               <select
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={selectedBranchId}
                 onChange={(e) => {
                   const branchId = e.target.value;
@@ -431,11 +431,11 @@ const QrManager: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
                 Servicio
               </label>
               <select
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={service}
                 onChange={(e) => setService(e.target.value as any)}
                 disabled={!selectedClientId}
@@ -461,18 +461,18 @@ const QrManager: React.FC = () => {
 
             {service !== "pick-n-go" && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
                   Número Inicial
                 </label>
                 <input
                   type="number"
                   min="1"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={startNumber}
                   onChange={(e) => setStartNumber(parseInt(e.target.value) || 1)}
                   disabled={!selectedBranchId}
                 />
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-1 text-[10px] sm:text-xs text-gray-500">
                   Número de{" "}
                   {qrType === "table"
                     ? "mesa"
@@ -486,28 +486,28 @@ const QrManager: React.FC = () => {
 
             {service !== "pick-n-go" && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
                   Cantidad
                 </label>
                 <input
                   type="number"
                   min="1"
                   max="500"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={count}
                   onChange={(e) => setCount(parseInt(e.target.value) || 1)}
                   disabled={!selectedBranchId}
                 />
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-1 text-[10px] sm:text-xs text-gray-500">
                   Del {startNumber} al {startNumber + count - 1} (máx. 500)
                 </p>
               </div>
             )}
 
             {service === "pick-n-go" && !existingPickAndGoQr && (
-              <div className="col-span-2">
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <p className="text-sm text-blue-800">
+              <div className="col-span-1 sm:col-span-2">
+                <div className="p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-xs sm:text-sm text-blue-800">
                     <strong>Pick & Go:</strong> Solo se permite 1 QR por sucursal. Este QR será válido para toda la sucursal.
                   </p>
                 </div>
@@ -515,10 +515,10 @@ const QrManager: React.FC = () => {
             )}
 
             {service === "pick-n-go" && existingPickAndGoQr && (
-              <div className="col-span-2">
-                <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-sm text-red-800">
-                    <strong>⚠️ Ya existe un código QR de Pick & Go para esta sucursal.</strong> Solo se permite 1 QR de Pick & Go por sucursal. No puedes crear otro.
+              <div className="col-span-1 sm:col-span-2">
+                <div className="p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-xs sm:text-sm text-red-800">
+                    <strong>Ya existe un código QR de Pick & Go para esta sucursal.</strong> Solo se permite 1 QR de Pick & Go por sucursal. No puedes crear otro.
                   </p>
                 </div>
               </div>
@@ -526,21 +526,21 @@ const QrManager: React.FC = () => {
           </div>
 
           {validationError && (
-            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+            <div className="mt-3 sm:mt-4 p-2 sm:p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-xs sm:text-sm">
               {validationError}
             </div>
           )}
 
           {!validationError && disabledReason && (
-            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-700 text-sm">
-              ⚠️ {disabledReason}
+            <div className="mt-3 sm:mt-4 p-2 sm:p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-700 text-xs sm:text-sm">
+              {disabledReason}
             </div>
           )}
 
-          <div className="mt-6 flex justify-end space-x-3">
+          <div className="mt-4 sm:mt-6 flex flex-col-reverse sm:flex-row justify-end gap-2 sm:space-x-3">
             <button
               type="button"
-              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50"
+              className="px-3 sm:px-4 py-1.5 sm:py-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 text-sm"
               onClick={() => {
                 setShowQrForm(false);
                 setValidationError(null);
@@ -550,7 +550,7 @@ const QrManager: React.FC = () => {
             </button>
             <button
               type="button"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed"
+              className="px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed text-sm"
               onClick={handleGenerateQrCodes}
               disabled={isButtonDisabled}
               title={disabledReason || ""}
@@ -563,24 +563,24 @@ const QrManager: React.FC = () => {
         </div>
       )}
       <div className="bg-white rounded-lg shadow-sm">
-        <div className="p-6 border-b border-gray-100">
-          <h2 className="text-lg font-medium text-gray-800">
+        <div className="p-4 sm:p-6 border-b border-gray-100">
+          <h2 className="text-base sm:text-lg font-medium text-gray-800">
             Códigos QR Generados
           </h2>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-xs sm:text-sm text-gray-500 mt-1">
             {selectedBranchId
               ? `Mostrando códigos QR para ${clientName} - ${selectedBranch?.name}`
               : "Selecciona un cliente y sucursal para ver los códigos QR"}
           </p>
         </div>
-        <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="p-4 sm:p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
                 Cliente
               </label>
               <select
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={selectedClientId}
                 onChange={(e) => {
                   setSelectedClientId(e.target.value);
@@ -596,11 +596,11 @@ const QrManager: React.FC = () => {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
                 Sucursal
               </label>
               <select
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={selectedBranchId}
                 onChange={(e) => setSelectedBranchId(e.target.value)}
                 disabled={!selectedClientId}
@@ -616,12 +616,12 @@ const QrManager: React.FC = () => {
           </div>
         </div>
         {loading.isLoading ? (
-          <div className="p-12 text-center">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <p className="mt-4 text-gray-500">Cargando códigos QR...</p>
+          <div className="p-8 sm:p-12 text-center">
+            <div className="inline-block animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-blue-600"></div>
+            <p className="mt-3 sm:mt-4 text-sm sm:text-base text-gray-500">Cargando códigos QR...</p>
           </div>
         ) : filteredQrCodes.length > 0 ? (
-          <div className="p-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div className="p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             {filteredQrCodes.map((qrCode) => {
               const branch = branches.find((b) => b.id === qrCode.branchId);
               const client = branch
@@ -632,17 +632,17 @@ const QrManager: React.FC = () => {
               return (
                 <div
                   key={qrCode.id}
-                  className={`border rounded-lg p-4 flex flex-col items-center ${qrCode.isActive ? "border-gray-200 bg-white" : "border-gray-300 bg-gray-50 opacity-60"}`}
+                  className={`border rounded-lg p-3 sm:p-4 flex flex-col items-center ${qrCode.isActive ? "border-gray-200 bg-white" : "border-gray-300 bg-gray-50 opacity-60"}`}
                 >
-                  <div className="mb-3 text-center w-full">
+                  <div className="mb-2 sm:mb-3 text-center w-full">
                     <div className="flex items-center justify-between mb-2">
                       <span
-                        className={`px-2 py-1 text-xs rounded-full ${qrCode.isActive ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-600"}`}
+                        className={`px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs rounded-full ${qrCode.isActive ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-600"}`}
                       >
                         {qrCode.isActive ? "Activo" : "Inactivo"}
                       </span>
                       <span
-                        className={`px-2 py-1 text-xs rounded-full ${
+                        className={`px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs rounded-full ${
                           qrCode.service === "flex-bill"
                             ? "bg-purple-100 text-purple-700"
                             : qrCode.service === "tap-order-pay"
@@ -663,65 +663,51 @@ const QrManager: React.FC = () => {
                           .join(" ")}
                       </span>
                     </div>
-                    <h3 className="font-medium text-sm">{client?.name}</h3>
-                    <p className="text-xs text-gray-500">{branch?.name}</p>
-                    <p className="text-sm font-semibold text-gray-700 mt-1">
+                    <h3 className="font-medium text-xs sm:text-sm">{client?.name}</h3>
+                    <p className="text-[10px] sm:text-xs text-gray-500">{branch?.name}</p>
+                    <p className="text-xs sm:text-sm font-semibold text-gray-700 mt-1">
                       {qrCode.qrType === "table" &&
                         `Mesa #${qrCode.tableNumber}`}
                       {qrCode.qrType === "room" &&
                         `Habitación #${qrCode.roomNumber}`}
                       {qrCode.qrType === "pickup" && "Pickup"}
                     </p>
-                    <p className="text-xs text-gray-400 mt-1 font-mono">
+                    <p className="text-[10px] sm:text-xs text-gray-400 mt-1 font-mono truncate max-w-full">
                       {qrCode.code}
                     </p>
                   </div>
                   <div
                     id={`qr-${qrCode.id}`}
-                    className="bg-white p-2 border border-gray-200 rounded-lg mb-3"
+                    className="bg-white p-1.5 sm:p-2 border border-gray-200 rounded-lg mb-2 sm:mb-3"
                   >
                     <QRCodeSVG
                       value={qrUrl}
-                      size={120}
+                      size={100}
                       level="H"
                       includeMargin={true}
+                      className="sm:w-[120px] sm:h-[120px]"
                     />
                   </div>
-                  <div className="flex flex-col space-y-2 w-full mt-2">
-                    <div className="flex space-x-2">
+                  <div className="flex flex-col space-y-1.5 sm:space-y-2 w-full mt-1 sm:mt-2">
+                    <div className="flex space-x-1.5 sm:space-x-2">
                       <button
-                        className="flex-1 flex items-center justify-center px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200"
+                        className="flex-1 flex items-center justify-center px-2 sm:px-3 py-1 text-[10px] sm:text-xs bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200"
                         onClick={() => handleDownloadQrCode(qrCode)}
                       >
                         <DownloadIcon className="h-3 w-3 mr-1" />
                         Descargar
                       </button>
-                      {/* <button
-                        className="flex-1 flex items-center justify-center px-3 py-1 text-xs bg-green-100 text-green-700 rounded-lg hover:bg-green-200"
-                        onClick={() => window.print()}
-                      >
-                        <PrinterIcon className="h-3 w-3 mr-1" />
-                        Imprimir
-                      </button> */}
                     </div>
-                    <div className="flex space-x-2">
+                    <div className="flex space-x-1.5 sm:space-x-2">
                       <button
-                        className="flex-1 flex items-center justify-center px-3 py-1 text-xs bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200"
+                        className="flex-1 flex items-center justify-center px-2 sm:px-3 py-1 text-[10px] sm:text-xs bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200"
                         onClick={() => handleEditQrCode(qrCode)}
                       >
                         <EditIcon className="h-3 w-3 mr-1" />
                         Editar
                       </button>
-                      {/* <button
-                        className={`flex-1 flex items-center justify-center px-3 py-1 text-xs rounded-lg ${qrCode.isActive ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}
-                        onClick={() => handleToggleStatus(qrCode.id)}
-                        disabled={loading.isSaving}
-                      >
-                        {qrCode.isActive ? <PowerOffIcon className="h-3 w-3 mr-1" /> : <PowerIcon className="h-3 w-3 mr-1" />}
-                        {qrCode.isActive ? 'Desactivar' : 'Activar'}
-                      </button> */}
                       <button
-                        className="flex items-center justify-center px-3 py-1 text-xs bg-red-100 text-red-700 rounded-lg hover:bg-red-200"
+                        className="flex items-center justify-center px-2 sm:px-3 py-1 text-[10px] sm:text-xs bg-red-100 text-red-700 rounded-lg hover:bg-red-200"
                         onClick={() => handleDeleteQrCode(qrCode.id)}
                         disabled={loading.isDeleting}
                       >
@@ -734,18 +720,18 @@ const QrManager: React.FC = () => {
             })}
           </div>
         ) : (
-          <div className="p-6 text-center">
-            <div className="inline-flex items-center justify-center p-6 bg-gray-100 rounded-full mb-4">
-              <QrCodeIcon className="h-12 w-12 text-gray-400" />
+          <div className="p-4 sm:p-6 text-center">
+            <div className="inline-flex items-center justify-center p-4 sm:p-6 bg-gray-100 rounded-full mb-3 sm:mb-4">
+              <QrCodeIcon className="h-8 w-8 sm:h-12 sm:w-12 text-gray-400" />
             </div>
-            <h3 className="text-lg font-medium text-gray-800 mb-1">
+            <h3 className="text-base sm:text-lg font-medium text-gray-800 mb-1">
               No hay códigos QR generados
             </h3>
-            <p className="text-gray-500 mb-4">
+            <p className="text-xs sm:text-sm text-gray-500 mb-3 sm:mb-4">
               Selecciona una sucursal y genera códigos QR para sus mesas
             </p>
             <button
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
               onClick={() => setShowQrForm(true)}
             >
               Generar QR
@@ -756,20 +742,20 @@ const QrManager: React.FC = () => {
 
       {/* Modal de Edición */}
       {showEditModal && editingQrCode && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+          <div className="bg-white rounded-lg p-4 sm:p-6 max-w-md w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+            <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-3 sm:mb-4">
               Editar Código QR
             </h2>
 
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
                   Cliente
                 </label>
                 <input
                   type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed"
+                  className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm border border-gray-300 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed"
                   value={
                     clients.find((c) => c.id === editingQrCode.clientId)
                       ?.name || ""
@@ -780,11 +766,11 @@ const QrManager: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
                   Sucursal
                 </label>
                 <select
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={editingQrCode.branchId}
                   onChange={(e) =>
                     setEditingQrCode({
@@ -807,11 +793,11 @@ const QrManager: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
                   Servicio
                 </label>
                 <select
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={editingQrCode.service}
                   onChange={(e) =>
                     setEditingQrCode({
@@ -844,13 +830,13 @@ const QrManager: React.FC = () => {
 
               {editingQrCode.qrType === "table" && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
                     Número de Mesa
                   </label>
                   <input
                     type="number"
                     min="1"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={editingQrCode.tableNumber || ""}
                     onChange={(e) =>
                       setEditingQrCode({
@@ -864,13 +850,13 @@ const QrManager: React.FC = () => {
 
               {editingQrCode.qrType === "room" && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
                     Número de Habitación
                   </label>
                   <input
                     type="number"
                     min="1"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={editingQrCode.roomNumber || ""}
                     onChange={(e) =>
                       setEditingQrCode({
@@ -883,10 +869,10 @@ const QrManager: React.FC = () => {
               )}
             </div>
 
-            <div className="mt-6 flex justify-end space-x-3">
+            <div className="mt-4 sm:mt-6 flex flex-col-reverse sm:flex-row justify-end gap-2 sm:space-x-3">
               <button
                 type="button"
-                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50"
+                className="px-3 sm:px-4 py-1.5 sm:py-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 text-sm"
                 onClick={() => {
                   setShowEditModal(false);
                   setEditingQrCode(null);
@@ -896,7 +882,7 @@ const QrManager: React.FC = () => {
               </button>
               <button
                 type="button"
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                className="px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
                 onClick={handleSaveEdit}
                 disabled={loading.isSaving}
               >

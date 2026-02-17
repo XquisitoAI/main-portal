@@ -277,13 +277,13 @@ const AdminManager: React.FC<AdminManagerProps> = ({
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-800">Admin Manager</h1>
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Admin Manager</h1>
         <div className="flex space-x-2">
           {showTabs.includes("clientes") && (
             <button
-              className={`px-4 py-2 rounded-lg ${activeTab === "clientes" ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700"}`}
+              className={`px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base rounded-lg ${activeTab === "clientes" ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700"}`}
               onClick={() => setActiveTab("clientes")}
             >
               Clientes
@@ -291,7 +291,7 @@ const AdminManager: React.FC<AdminManagerProps> = ({
           )}
           {showTabs.includes("sucursales") && (
             <button
-              className={`px-4 py-2 rounded-lg ${activeTab === "sucursales" ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700"}`}
+              className={`px-3 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base rounded-lg ${activeTab === "sucursales" ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700"}`}
               onClick={() => setActiveTab("sucursales")}
             >
               Sucursales
@@ -302,28 +302,28 @@ const AdminManager: React.FC<AdminManagerProps> = ({
 
       {activeTab === "clientes" && (
         <div className="bg-white rounded-lg shadow-sm">
-          <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-            <h2 className="text-lg font-medium text-gray-800">
+          <div className="p-3 sm:p-6 border-b border-gray-100 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
+            <h2 className="text-base sm:text-lg font-medium text-gray-800">
               Gestión de Clientes
             </h2>
-            <div className="flex items-center">
-              <div className="relative mr-3">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-0">
+              <div className="relative sm:mr-3">
                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                   <SearchIcon className="h-4 w-4 text-gray-400" />
                 </div>
                 <input
                   type="text"
-                  className="pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-[240px]"
+                  className="pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-[240px] text-sm sm:text-base"
                   placeholder="Buscar por nombre..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
               <button
-                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                className="flex items-center justify-center px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm sm:text-base"
                 onClick={() => openClientModal()}
               >
-                <PlusIcon className="h-5 w-5 mr-2" />
+                <PlusIcon className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" />
                 Nuevo Cliente
               </button>
             </div>
@@ -340,31 +340,31 @@ const AdminManager: React.FC<AdminManagerProps> = ({
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Establecimiento
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Dueño
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Contacto
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Servicios
                   </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-2 sm:py-3 text-center text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Mesas
                   </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-2 sm:py-3 text-center text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Habitaciones
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Estado
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Registro Admin
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-2 sm:py-3 text-right text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Acciones
                   </th>
                 </tr>
@@ -372,76 +372,76 @@ const AdminManager: React.FC<AdminManagerProps> = ({
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredClients.map((client) => (
                   <tr key={client.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="font-medium text-gray-900">
+                    <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
+                      <div className="font-medium text-gray-900 text-xs sm:text-sm">
                         {client.name}
                       </div>
-                      <div className="text-sm text-gray-500">
+                      <div className="text-[10px] sm:text-sm text-gray-500">
                         Creado: {formatDate(client.createdAt)}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
+                    <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
+                      <div className="text-xs sm:text-sm text-gray-900">
                         {client.ownerName}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
+                    <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
+                      <div className="text-xs sm:text-sm text-gray-900">
                         {client.email}
                       </div>
-                      <div className="text-sm text-gray-500">
+                      <div className="text-[10px] sm:text-sm text-gray-500">
                         {client.phone}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
                       <div className="flex flex-wrap gap-1">
                         {client.services.map((service) => (
                           <span
                             key={service}
-                            className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800"
+                            className="px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs rounded-full bg-blue-100 text-blue-800"
                           >
                             {getServiceLabel(service)}
                           </span>
                         ))}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                    <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-center">
                       {client.services.includes("flex-bill") ||
                       client.services.includes("tap-order-pay") ? (
                         <div className="inline-flex items-center">
-                          <span className="text-lg font-semibold text-gray-900">
+                          <span className="text-sm sm:text-lg font-semibold text-gray-900">
                             {client.tableCount || 0}
                           </span>
-                          <span className="text-xs text-gray-500 ml-1">
+                          <span className="text-[10px] sm:text-xs text-gray-500 ml-1">
                             mesa{(client.tableCount || 0) !== 1 ? "s" : ""}
                           </span>
                         </div>
                       ) : (
-                        <span className="text-sm text-gray-400">—</span>
+                        <span className="text-xs sm:text-sm text-gray-400">—</span>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                    <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-center">
                       {client.services.includes("room-service") ? (
                         <div className="inline-flex items-center">
-                          <span className="text-lg font-semibold text-blue-900">
+                          <span className="text-sm sm:text-lg font-semibold text-blue-900">
                             {client.roomCount || 0}
                           </span>
-                          <span className="text-xs text-blue-600 ml-1">
+                          <span className="text-[10px] sm:text-xs text-blue-600 ml-1">
                             hab{(client.roomCount || 0) !== 1 ? "s" : ""}
                           </span>
                         </div>
                       ) : (
-                        <span className="text-sm text-gray-400">—</span>
+                        <span className="text-xs sm:text-sm text-gray-400">—</span>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
                       <span
-                        className={`px-2 py-1 text-xs rounded-full ${client.active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
+                        className={`px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs rounded-full ${client.active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
                       >
                         {client.active ? "Activo" : "Inactivo"}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
                       <InvitationStatus
                         clientId={client.id}
                         clientEmail={client.email}
@@ -449,20 +449,20 @@ const AdminManager: React.FC<AdminManagerProps> = ({
                         isLoading={invitationStatusesLoading}
                       />
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button
-                        className="text-indigo-600 hover:text-indigo-900 mr-3"
+                        className="text-indigo-600 hover:text-indigo-900 mr-2 sm:mr-3"
                         onClick={() => openClientModal(client)}
                         title="Editar cliente"
                       >
-                        <PencilIcon className="h-5 w-5" />
+                        <PencilIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                       </button>
                       <button
                         className="text-red-600 hover:text-red-900"
                         onClick={() => openDeleteModal("client", client)}
                         title="Eliminar cliente"
                       >
-                        <TrashIcon className="h-5 w-5" />
+                        <TrashIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                       </button>
                     </td>
                   </tr>
@@ -475,28 +475,28 @@ const AdminManager: React.FC<AdminManagerProps> = ({
       )}
       {activeTab === "sucursales" && (
         <div className="bg-white rounded-lg shadow-sm">
-          <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-            <h2 className="text-lg font-medium text-gray-800">
+          <div className="p-3 sm:p-6 border-b border-gray-100 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
+            <h2 className="text-base sm:text-lg font-medium text-gray-800">
               Gestión de Sucursales
             </h2>
-            <div className="flex items-center">
-              <div className="relative mr-3">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-0">
+              <div className="relative sm:mr-3">
                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                   <SearchIcon className="h-4 w-4 text-gray-400" />
                 </div>
                 <input
                   type="text"
-                  className="pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-[220px]"
+                  className="pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-[220px] text-sm sm:text-base"
                   placeholder="Buscar por sucursal..."
                   value={branchSearchTerm}
                   onChange={(e) => setBranchSearchTerm(e.target.value)}
                 />
               </div>
               <button
-                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                className="flex items-center justify-center px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm sm:text-base"
                 onClick={() => openBranchModal()}
               >
-                <PlusIcon className="h-5 w-5 mr-2" />
+                <PlusIcon className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" />
                 Nueva Sucursal
               </button>
             </div>
@@ -513,25 +513,25 @@ const AdminManager: React.FC<AdminManagerProps> = ({
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Cliente
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Sucursal
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Dirección
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Mesas
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Habitaciones
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Estado
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 sm:px-6 py-2 sm:py-3 text-right text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Acciones
                   </th>
                 </tr>
@@ -541,21 +541,21 @@ const AdminManager: React.FC<AdminManagerProps> = ({
                   const client = clients.find((c) => c.id === branch.clientId);
                   return (
                     <tr key={branch.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="font-medium text-gray-900">
+                      <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
+                        <div className="font-medium text-gray-900 text-xs sm:text-sm">
                           {client?.name || "Desconocido"}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-gray-900">{branch.name}</div>
+                      <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
+                        <div className="text-gray-900 text-xs sm:text-sm">{branch.name}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">
                         {branch.address}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">
                         {branch.tables}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">
                         {(() => {
                           const client = clients.find((c) => c.id === branch.clientId);
                           if (!client || !client.services.includes('room-service')) {
@@ -572,27 +572,27 @@ const AdminManager: React.FC<AdminManagerProps> = ({
                           return branch.rooms || '—';
                         })()}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
                         <span
-                          className={`px-2 py-1 text-xs rounded-full ${branch.active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
+                          className={`px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs rounded-full ${branch.active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
                         >
                           {branch.active ? "Activo" : "Inactivo"}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-right text-sm font-medium">
                         <button
-                          className="text-indigo-600 hover:text-indigo-900 mr-3"
+                          className="text-indigo-600 hover:text-indigo-900 mr-2 sm:mr-3"
                           onClick={() => openBranchModal(branch)}
                           title="Editar sucursal"
                         >
-                          <PencilIcon className="h-5 w-5" />
+                          <PencilIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                         </button>
                         <button
                           className="text-red-600 hover:text-red-900"
                           onClick={() => openDeleteModal("branch", branch)}
                           title="Eliminar sucursal"
                         >
-                          <TrashIcon className="h-5 w-5" />
+                          <TrashIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                         </button>
                       </td>
                     </tr>

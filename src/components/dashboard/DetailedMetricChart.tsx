@@ -269,13 +269,10 @@ const DetailedMetricChart: React.FC<DetailedMetricChartProps> = ({
         0
       );
       return (
-        <div className="bg-white p-2 border border-gray-200 shadow-sm rounded-md">
-          <p className="text-sm font-medium mb-1">{`Fecha: ${formatDateLabel(label)}`}</p>
+        <div className="bg-white p-1.5 sm:p-2 border border-gray-200 shadow-sm rounded-md">
+          <p className="text-xs sm:text-sm font-medium mb-1">{`Fecha: ${formatDateLabel(label)}`}</p>
           {payload.map((entry: any, index: number) => (
-            <div
-              key={index}
-              className="flex justify-between items-center text-xs mb-1"
-            >
+            <div key={index} className="flex justify-between items-center text-[10px] sm:text-xs mb-1">
               <div className="flex items-center">
                 <div
                   className="w-2 h-2 rounded-full mr-1"
@@ -288,7 +285,7 @@ const DetailedMetricChart: React.FC<DetailedMetricChartProps> = ({
               </span>
             </div>
           ))}
-          <div className="border-t border-gray-200 mt-1 pt-1 flex justify-between text-xs font-semibold">
+          <div className="border-t border-gray-200 mt-1 pt-1 flex justify-between text-[10px] sm:text-xs font-semibold">
             <span>Total:</span>
             <span>{formatValue(total)}</span>
           </div>
@@ -299,24 +296,19 @@ const DetailedMetricChart: React.FC<DetailedMetricChartProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl p-6 mx-4 relative max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl p-3 sm:p-6 relative max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
         {/* Botón de cierre */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-        >
-          <XIcon className="w-5 h-5" />
+        <button onClick={onClose} className="absolute top-2 right-2 sm:top-4 sm:right-4 text-gray-500 hover:text-gray-700">
+          <XIcon className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
 
         {/* Título y cambio porcentual */}
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-xl font-semibold text-gray-800">{title}</h3>
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-4 sm:mb-6 pr-6">
+          <h3 className="text-base sm:text-xl font-semibold text-gray-800">{title}</h3>
           <div
-            className={`text-sm font-medium px-2 py-1 rounded ${
-              percentChange >= 0
-                ? "bg-green-50 text-green-600"
-                : "bg-red-50 text-red-600"
+            className={`text-xs sm:text-sm font-medium px-2 py-1 rounded w-fit ${
+              percentChange >= 0 ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
             }`}
           >
             {formatChange(percentChange)}
@@ -324,57 +316,51 @@ const DetailedMetricChart: React.FC<DetailedMetricChartProps> = ({
         </div>
 
         {/* Controles de filtro */}
-        <div className="flex flex-wrap gap-4 mb-6 items-center">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 mb-4 sm:mb-6 items-start sm:items-center">
           {/* Selector de rango de fechas */}
-          <div className="flex gap-2 items-center">
-            <div>
-              <label className="text-xs text-gray-500 block mb-1">Inicio</label>
+          <div className="flex gap-2 items-center w-full sm:w-auto">
+            <div className="flex-1 sm:flex-none">
+              <label className="text-[10px] sm:text-xs text-gray-500 block mb-1">Inicio</label>
               <input
                 type="date"
                 value={formatDateForInput(dateRange.startDate)}
                 onChange={handleStartDateChange}
-                className="text-sm p-1.5 border border-gray-200 rounded"
+                className="text-xs sm:text-sm p-1 sm:p-1.5 border border-gray-200 rounded w-full"
               />
             </div>
-            <div>
-              <label className="text-xs text-gray-500 block mb-1">Fin</label>
+            <div className="flex-1 sm:flex-none">
+              <label className="text-[10px] sm:text-xs text-gray-500 block mb-1">Fin</label>
               <input
                 type="date"
                 value={formatDateForInput(dateRange.endDate)}
                 onChange={handleEndDateChange}
-                className="text-sm p-1.5 border border-gray-200 rounded"
+                className="text-xs sm:text-sm p-1 sm:p-1.5 border border-gray-200 rounded w-full"
               />
             </div>
           </div>
 
           {/* Toggle de visualización */}
-          <div className="flex bg-gray-100 rounded-md p-1 ml-auto">
+          <div className="flex bg-gray-100 rounded-md p-0.5 sm:p-1 sm:ml-auto w-full sm:w-auto justify-center">
             <button
-              onClick={() => setViewType("daily")}
-              className={`px-3 py-1 text-sm rounded-md ${
-                viewType === "daily"
-                  ? "bg-white text-purple-700 shadow"
-                  : "text-gray-600"
+              onClick={() => setViewType('daily')}
+              className={`px-2 sm:px-3 py-1 text-xs sm:text-sm rounded-md flex-1 sm:flex-none ${
+                viewType === 'daily' ? 'bg-white text-purple-700 shadow' : 'text-gray-600'
               }`}
             >
               Diario
             </button>
             <button
-              onClick={() => setViewType("weekly")}
-              className={`px-3 py-1 text-sm rounded-md ${
-                viewType === "weekly"
-                  ? "bg-white text-purple-700 shadow"
-                  : "text-gray-600"
+              onClick={() => setViewType('weekly')}
+              className={`px-2 sm:px-3 py-1 text-xs sm:text-sm rounded-md flex-1 sm:flex-none ${
+                viewType === 'weekly' ? 'bg-white text-purple-700 shadow' : 'text-gray-600'
               }`}
             >
               Semanal
             </button>
             <button
-              onClick={() => setViewType("monthly")}
-              className={`px-3 py-1 text-sm rounded-md ${
-                viewType === "monthly"
-                  ? "bg-white text-purple-700 shadow"
-                  : "text-gray-600"
+              onClick={() => setViewType('monthly')}
+              className={`px-2 sm:px-3 py-1 text-xs sm:text-sm rounded-md flex-1 sm:flex-none ${
+                viewType === 'monthly' ? 'bg-white text-purple-700 shadow' : 'text-gray-600'
               }`}
             >
               Mensual
@@ -383,7 +369,7 @@ const DetailedMetricChart: React.FC<DetailedMetricChartProps> = ({
         </div>
 
         {/* Gráfica */}
-        <div className="h-80">
+        <div className="h-56 sm:h-80">
           {isLoading ? (
             <div className="flex items-center justify-center h-full">
               <LoadingSpinner message="Cargando datos..." />
@@ -397,23 +383,23 @@ const DetailedMetricChart: React.FC<DetailedMetricChartProps> = ({
               <LineChart
                 data={timelineData}
                 margin={{
-                  top: 10,
-                  right: 30,
-                  left: 20,
-                  bottom: 30,
+                  top: 5,
+                  right: 10,
+                  left: 0,
+                  bottom: 20
                 }}
               >
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis
                   dataKey="date"
                   tickFormatter={formatDateLabel}
-                  tick={{ fontSize: 12 }}
-                  tickMargin={10}
-                  axisLine={{ stroke: "#E5E7EB" }}
+                  tick={{ fontSize: 10 }}
+                  tickMargin={8}
+                  axisLine={{ stroke: '#E5E7EB' }}
                   tickLine={false}
-                  angle={viewType === "daily" ? -45 : 0}
-                  textAnchor={viewType === "daily" ? "end" : "middle"}
-                  height={viewType === "daily" ? 60 : 30}
+                  angle={viewType === 'daily' ? -45 : 0}
+                  textAnchor={viewType === 'daily' ? 'end' : 'middle'}
+                  height={viewType === 'daily' ? 50 : 25}
                 />
                 <YAxis
                   tickFormatter={(value) => {
@@ -422,27 +408,52 @@ const DetailedMetricChart: React.FC<DetailedMetricChartProps> = ({
                       ? formatted.split(".")[0]
                       : formatted;
                   }}
-                  tick={{ fontSize: 12 }}
+                  tick={{ fontSize: 10 }}
                   axisLine={false}
                   tickLine={false}
+                  width={50}
                 />
                 <Tooltip content={<CustomTooltip />} />
-                <Legend wrapperStyle={{ fontSize: "12px" }} iconType="line" />
+                <Legend wrapperStyle={{ fontSize: '10px' }} iconType="line" />
                 <Line
                   type="monotone"
                   dataKey="Flex Bill"
                   stroke="#82ca9d"
                   strokeWidth={2}
-                  dot={{ r: 3 }}
-                  activeDot={{ r: 5 }}
+                  dot={{ r: 2 }}
+                  activeDot={{ r: 4 }}
                 />
                 <Line
                   type="monotone"
                   dataKey="Tap Order & Pay"
                   stroke="#8884d8"
                   strokeWidth={2}
+                  dot={{ r: 2 }}
+                  activeDot={{ r: 4 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="Pick & Go"
+                  stroke="#fbbf24"
+                  strokeWidth={2}
                   dot={{ r: 3 }}
                   activeDot={{ r: 5 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="Room Service"
+                  stroke="#d92926"
+                  strokeWidth={2}
+                  dot={{ r: 3 }}
+                  activeDot={{ r: 5 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="Tap & Pay"
+                  stroke="#3B82F6"
+                  strokeWidth={2}
+                  dot={{ r: 2 }}
+                  activeDot={{ r: 4 }}
                 />
                 <Line
                   type="monotone"
@@ -474,12 +485,12 @@ const DetailedMetricChart: React.FC<DetailedMetricChartProps> = ({
         </div>
 
         {/* Botón de limpiar filtros */}
-        <div className="flex justify-end mt-4">
+        <div className="flex justify-end mt-3 sm:mt-4">
           <button
             onClick={resetFilters}
-            className="flex items-center text-sm text-gray-600 hover:text-purple-600 bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded transition-colors"
+            className="flex items-center text-xs sm:text-sm text-gray-600 hover:text-purple-600 bg-gray-100 hover:bg-gray-200 px-2 sm:px-3 py-1 sm:py-1.5 rounded transition-colors"
           >
-            <RefreshCwIcon className="w-4 h-4 mr-1.5" />
+            <RefreshCwIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-1.5" />
             Limpiar filtros
           </button>
         </div>
