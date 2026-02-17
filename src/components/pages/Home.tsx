@@ -2,6 +2,7 @@ import React, { useState, useMemo, useCallback } from "react";
 import GlobalKpiCard from "../dashboard/GlobalKpiCard";
 import ServiceKpiCard from "../dashboard/ServiceKpiCard";
 import ServiceDistributionCharts from "../dashboard/ServiceDistributionCharts";
+import TransactionHistoryTable from "../dashboard/TransactionHistoryTable";
 import LoadingSpinner from "../ui/LoadingSpinner";
 import ErrorMessage from "../ui/ErrorMessage";
 import { useAuth } from "../../hooks/useAuth";
@@ -422,6 +423,14 @@ const Home: React.FC = () => {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Tercera fila: Historial de Transacciones */}
+      <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4">
+        <h2 className="text-base sm:text-lg font-medium text-gray-800 mb-3 sm:mb-4">
+          Historial de Transacciones
+        </h2>
+        <TransactionHistoryTable filters={superAdminFilters} />
       </div>
     </div>
   );

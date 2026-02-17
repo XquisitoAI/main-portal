@@ -8,6 +8,8 @@ import type {
   DashboardFilters,
   SuperAdminFilters,
   SuperAdminStats,
+  TransactionHistoryFilters,
+  TransactionHistoryResponse,
 } from "../types/api";
 import { useAuthenticatedApi } from "./useAuthenticatedApi";
 
@@ -50,6 +52,10 @@ export const queryKeys = {
   paymentMethodsTimeline: (
     filters: SuperAdminFilters & { view_type?: string }
   ) => ["paymentMethodsTimeline", filters],
+  transactionHistory: (filters: TransactionHistoryFilters) => [
+    "transactionHistory",
+    filters,
+  ],
 };
 
 // Hook para obtener todos los restaurantes
@@ -290,4 +296,39 @@ export const usePaymentMethodsTimeline = (
     filters,
     queryKeys.paymentMethodsTimeline(filters)
   );
+};
+
+// Hook para obtener historial de transacciones paginado
+export const useTransactionHistory = (
+  filters: TransactionHistoryFilters = {}
+) => {
+  const authenticatedApi = useAuthenticatedApi();
+
+  return useQuery<TransactionHistoryResponse>({
+    queryKey: queryKeys.transactionHistory(filters),
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "todos") {
+          if (Array.isArray(value)) {
+            if (value.length > 0) {
+              params.append(key, value.join(","));
+            }
+          } else {
+            params.append(key, value.toString());
+          }
+        }
+      });
+
+      const queryString = params.toString();
+      const url = `/api/super-admin/transactions${queryString ? `?${queryString}` : ""}`;
+
+      const response = await authenticatedApi.get(url);
+      return response.data;
+    },
+    staleTime: 1 * 60 * 1000,
+    retry: 2,
+    placeholderData: (previousData) => previousData,
+    enabled: !!filters.start_date && !!filters.end_date,
+  });
 };

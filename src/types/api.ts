@@ -394,3 +394,32 @@ export interface SuperAdminFilters {
   gender?: "todos" | "male" | "female" | "other";
   age_range?: "todos" | "18-24" | "25-34" | "35-44" | "45-54" | "55+";
 }
+
+// ===== HISTORIAL DE TRANSACCIONES =====
+export interface TransactionHistoryItem {
+  id: string;
+  total_amount_charged: number;
+  tip_amount: number;
+  restaurant_net_income: number;
+  xquisito_net_income: number;
+  ecart_commission_total: number;
+  created_at: string;
+  restaurant_id: number;
+  restaurant_name: string;
+  service_type: string;
+}
+
+export interface TransactionHistoryFilters extends SuperAdminFilters {
+  limit?: number;
+  offset?: number;
+}
+
+export interface TransactionHistoryResponse {
+  data: TransactionHistoryItem[];
+  pagination: {
+    total_count: number;
+    has_more: boolean;
+    limit: number;
+    offset: number;
+  };
+}
