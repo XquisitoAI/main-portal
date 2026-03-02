@@ -77,8 +77,7 @@ export const AppContextProvider: React.FC<{
       setLoading((prev) => ({ ...prev, isLoading: true }));
       clearError();
       const data = await mainPortalApi.getAllClients();
-      // Solo mostrar clientes activos
-      setClients(data.filter((client) => client.active !== false));
+      setClients(data);
     } catch (error) {
       handleError(error);
     } finally {
@@ -92,8 +91,7 @@ export const AppContextProvider: React.FC<{
       setLoading((prev) => ({ ...prev, isLoading: true }));
       clearError();
       const data = await mainPortalApi.getAllBranches();
-      // Solo mostrar sucursales activas
-      setBranches(data.filter((branch) => branch.active !== false));
+      setBranches(data);
     } catch (error) {
       handleError(error);
     } finally {
@@ -146,15 +144,8 @@ export const AppContextProvider: React.FC<{
     try {
       setLoading((prev) => ({ ...prev, isDeleting: true }));
       clearError();
-      // Soft delete: desactivar en lugar de eliminar
-      await mainPortalApi.updateClient(id, { active: false });
-      // Remover del estado local para que no se muestre
+      await mainPortalApi.deleteClient(id);
       setClients((prev) => prev.filter((client) => client.id !== id));
-      // También desactivar las sucursales asociadas
-      const clientBranches = branches.filter((b) => b.clientId === id);
-      for (const branch of clientBranches) {
-        await mainPortalApi.updateBranch(branch.id, { active: false });
-      }
       setBranches((prev) => prev.filter((branch) => branch.clientId !== id));
     } catch (error) {
       handleError(error);
@@ -201,9 +192,7 @@ export const AppContextProvider: React.FC<{
     try {
       setLoading((prev) => ({ ...prev, isDeleting: true }));
       clearError();
-      // Soft delete: desactivar en lugar de eliminar
-      await mainPortalApi.updateBranch(id, { active: false });
-      // Remover del estado local para que no se muestre
+      await mainPortalApi.deleteBranch(id);
       setBranches((prev) => prev.filter((branch) => branch.id !== id));
     } catch (error) {
       handleError(error);
