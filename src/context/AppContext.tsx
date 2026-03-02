@@ -77,7 +77,8 @@ export const AppContextProvider: React.FC<{
       setLoading((prev) => ({ ...prev, isLoading: true }));
       clearError();
       const data = await mainPortalApi.getAllClients();
-      setClients(data);
+      // Solo mostrar clientes activos
+      setClients(data.filter((client) => client.active !== false));
     } catch (error) {
       handleError(error);
     } finally {
@@ -91,7 +92,8 @@ export const AppContextProvider: React.FC<{
       setLoading((prev) => ({ ...prev, isLoading: true }));
       clearError();
       const data = await mainPortalApi.getAllBranches();
-      setBranches(data);
+      // Solo mostrar sucursales activas
+      setBranches(data.filter((branch) => branch.active !== false));
     } catch (error) {
       handleError(error);
     } finally {
@@ -123,14 +125,14 @@ export const AppContextProvider: React.FC<{
 
   const updateClient = async (
     id: string,
-    clientData: Partial<ClientFormData>
+    clientData: Partial<ClientFormData>,
   ) => {
     try {
       setLoading((prev) => ({ ...prev, isSaving: true }));
       clearError();
       const updatedClient = await mainPortalApi.updateClient(id, clientData);
       setClients((prev) =>
-        prev.map((client) => (client.id === id ? updatedClient : client))
+        prev.map((client) => (client.id === id ? updatedClient : client)),
       );
     } catch (error) {
       handleError(error);
@@ -144,8 +146,15 @@ export const AppContextProvider: React.FC<{
     try {
       setLoading((prev) => ({ ...prev, isDeleting: true }));
       clearError();
-      await mainPortalApi.deleteClient(id);
+      // Soft delete: desactivar en lugar de eliminar
+      await mainPortalApi.updateClient(id, { active: false });
+      // Remover del estado local para que no se muestre
       setClients((prev) => prev.filter((client) => client.id !== id));
+      // También desactivar las sucursales asociadas
+      const clientBranches = branches.filter((b) => b.clientId === id);
+      for (const branch of clientBranches) {
+        await mainPortalApi.updateBranch(branch.id, { active: false });
+      }
       setBranches((prev) => prev.filter((branch) => branch.clientId !== id));
     } catch (error) {
       handleError(error);
@@ -171,14 +180,14 @@ export const AppContextProvider: React.FC<{
 
   const updateBranch = async (
     id: string,
-    branchData: Partial<BranchFormData>
+    branchData: Partial<BranchFormData>,
   ) => {
     try {
       setLoading((prev) => ({ ...prev, isSaving: true }));
       clearError();
       const updatedBranch = await mainPortalApi.updateBranch(id, branchData);
       setBranches((prev) =>
-        prev.map((branch) => (branch.id === id ? updatedBranch : branch))
+        prev.map((branch) => (branch.id === id ? updatedBranch : branch)),
       );
     } catch (error) {
       handleError(error);
@@ -192,7 +201,9 @@ export const AppContextProvider: React.FC<{
     try {
       setLoading((prev) => ({ ...prev, isDeleting: true }));
       clearError();
-      await mainPortalApi.deleteBranch(id);
+      // Soft delete: desactivar en lugar de eliminar
+      await mainPortalApi.updateBranch(id, { active: false });
+      // Remover del estado local para que no se muestre
       setBranches((prev) => prev.filter((branch) => branch.id !== id));
     } catch (error) {
       handleError(error);
@@ -241,7 +252,7 @@ export const AppContextProvider: React.FC<{
       clearError();
       const updatedQrCode = await mainPortalApi.updateQRCode(id, data);
       setQrCodes((prev) =>
-        prev.map((qr) => (qr.id === id ? updatedQrCode : qr))
+        prev.map((qr) => (qr.id === id ? updatedQrCode : qr)),
       );
     } catch (error) {
       handleError(error);
@@ -273,7 +284,7 @@ export const AppContextProvider: React.FC<{
       clearError();
       const updatedQrCode = await mainPortalApi.toggleQRCodeStatus(id);
       setQrCodes((prev) =>
-        prev.map((qr) => (qr.id === id ? updatedQrCode : qr))
+        prev.map((qr) => (qr.id === id ? updatedQrCode : qr)),
       );
     } catch (error) {
       handleError(error);
