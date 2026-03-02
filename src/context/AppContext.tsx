@@ -77,7 +77,8 @@ export const AppContextProvider: React.FC<{
       setLoading((prev) => ({ ...prev, isLoading: true }));
       clearError();
       const data = await mainPortalApi.getAllClients();
-      setClients(data);
+      // Filtrar los clientes eliminados (soft delete)
+      setClients(data.filter((client: any) => client.deleted !== true));
     } catch (error) {
       handleError(error);
     } finally {
@@ -91,7 +92,8 @@ export const AppContextProvider: React.FC<{
       setLoading((prev) => ({ ...prev, isLoading: true }));
       clearError();
       const data = await mainPortalApi.getAllBranches();
-      setBranches(data);
+      // Filtrar las sucursales eliminadas (soft delete)
+      setBranches(data.filter((branch: any) => branch.deleted !== true));
     } catch (error) {
       handleError(error);
     } finally {
@@ -144,8 +146,15 @@ export const AppContextProvider: React.FC<{
     try {
       setLoading((prev) => ({ ...prev, isDeleting: true }));
       clearError();
-      await mainPortalApi.deleteClient(id);
+      // Soft delete: marcar como eliminado en lugar de eliminar físicamente
+      await mainPortalApi.updateClient(id, { deleted: true } as any);
+      // Remover del estado local para que no se muestre
       setClients((prev) => prev.filter((client) => client.id !== id));
+      // También marcar las sucursales asociadas como eliminadas
+      const clientBranches = branches.filter((b) => b.clientId === id);
+      for (const branch of clientBranches) {
+        await mainPortalApi.updateBranch(branch.id, { deleted: true } as any);
+      }
       setBranches((prev) => prev.filter((branch) => branch.clientId !== id));
     } catch (error) {
       handleError(error);
@@ -192,7 +201,9 @@ export const AppContextProvider: React.FC<{
     try {
       setLoading((prev) => ({ ...prev, isDeleting: true }));
       clearError();
-      await mainPortalApi.deleteBranch(id);
+      // Soft delete: marcar como eliminado en lugar de eliminar físicamente
+      await mainPortalApi.updateBranch(id, { deleted: true } as any);
+      // Remover del estado local para que no se muestre
       setBranches((prev) => prev.filter((branch) => branch.id !== id));
     } catch (error) {
       handleError(error);
