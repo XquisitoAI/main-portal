@@ -12,6 +12,7 @@ export interface Client {
   tableCount?: number; // Número de mesas (requerido para flex-bill y tap-order-pay) ✅ NUEVO
   roomCount?: number; // Número de habitaciones (requerido para room-service) ✅ NUEVO
   active: boolean; // Estado activo/inactivo
+  deleted?: boolean; // Soft delete flag
   createdAt: string; // Fecha de creación
   updatedAt?: string; // Fecha de última actualización ✅ NUEVO
 }
@@ -32,6 +33,7 @@ export interface Branch {
   roomRanges?: RoomRange[]; // Rangos de habitaciones (ej: [{start: 100, end: 129}, {start: 200, end: 229}])
   branchNumber?: number; // Número de sucursal para URLs
   active: boolean; // Estado activo/inactivo
+  deleted?: boolean; // Soft delete flag
   createdAt?: string; // Fecha de creación ✅ NUEVO
   updatedAt?: string; // Fecha de última actualización ✅ NUEVO
 }
@@ -43,7 +45,12 @@ export interface QrCode {
   restaurantId: number; // FK hacia Restaurant
   branchId: string; // FK hacia Branch
   branchNumber: number; // Número de sucursal para URLs
-  service: "flex-bill" | "tap-order-pay" | "room-service" | "pick-n-go" | "tap-pay";
+  service:
+    | "flex-bill"
+    | "tap-order-pay"
+    | "room-service"
+    | "pick-n-go"
+    | "tap-pay";
   qrType: "table" | "room" | "pickup";
   tableNumber?: number | null; // Número de mesa (para table)
   roomNumber?: number | null; // Número de habitación (para room)
@@ -71,7 +78,12 @@ export interface QrCodeFormData {
   restaurantId: number;
   branchId: string;
   branchNumber: number;
-  service: "flex-bill" | "tap-order-pay" | "room-service" | "pick-n-go" | "tap-pay";
+  service:
+    | "flex-bill"
+    | "tap-order-pay"
+    | "room-service"
+    | "pick-n-go"
+    | "tap-pay";
   qrType: "table" | "room" | "pickup";
   tableNumber?: number;
   roomNumber?: number;
@@ -83,7 +95,12 @@ export interface QrCodeBatchFormData extends QrCodeFormData {
 }
 
 export interface QrCodeUpdateData {
-  service?: "flex-bill" | "tap-order-pay" | "room-service" | "pick-n-go" |"tap-pay";
+  service?:
+    | "flex-bill"
+    | "tap-order-pay"
+    | "room-service"
+    | "pick-n-go"
+    | "tap-pay";
   qrType?: "table" | "room" | "pickup";
   tableNumber?: number | null;
   roomNumber?: number | null;

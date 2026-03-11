@@ -1,11 +1,6 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { useAppContext } from "../../context/AppContext";
-import {
-  PlusIcon,
-  TrashIcon,
-  PencilIcon,
-  SearchIcon,
-} from "lucide-react";
+import { PlusIcon, TrashIcon, PencilIcon, SearchIcon } from "lucide-react";
 import { formatDate } from "../../utils/formatters";
 import {
   Client,
@@ -19,6 +14,7 @@ import BranchModal from "../modals/BranchModal";
 import ConfirmDeleteModal from "../modals/ConfirmDeleteModal";
 import InvitationStatus from "../ui/InvitationStatus";
 import { useMainPortalApi } from "../../services/mainPortalApi";
+import toast from "react-hot-toast";
 
 interface AdminManagerProps {
   defaultTab?: "clientes" | "sucursales";
@@ -46,8 +42,11 @@ const AdminManager: React.FC<AdminManagerProps> = ({
   const [branchSearchTerm, setBranchSearchTerm] = useState("");
 
   // Estado para almacenar los estados de invitación
-  const [invitationStatuses, setInvitationStatuses] = useState<Record<string, any>>({});
-  const [invitationStatusesLoading, setInvitationStatusesLoading] = useState(true);
+  const [invitationStatuses, setInvitationStatuses] = useState<
+    Record<string, any>
+  >({});
+  const [invitationStatusesLoading, setInvitationStatusesLoading] =
+    useState(true);
 
   // Hook para la API
   const mainPortalApi = useMainPortalApi();
@@ -60,7 +59,7 @@ const AdminManager: React.FC<AdminManagerProps> = ({
         const statuses = await mainPortalApi.getInvitationStatuses();
         setInvitationStatuses(statuses);
       } catch (error) {
-        console.error('Error fetching invitation statuses:', error);
+        console.error("Error fetching invitation statuses:", error);
         setInvitationStatuses({});
       } finally {
         setInvitationStatusesLoading(false);
@@ -113,7 +112,7 @@ const AdminManager: React.FC<AdminManagerProps> = ({
   // Funciones para manejar modal de confirmación
   const openDeleteModal = (
     type: "client" | "branch",
-    item: Client | Branch
+    item: Client | Branch,
   ) => {
     setDeleteModal({ isOpen: true, type, item });
   };
@@ -162,7 +161,7 @@ const AdminManager: React.FC<AdminManagerProps> = ({
       const statuses = await mainPortalApi.getInvitationStatuses();
       setInvitationStatuses(statuses);
     } catch (error) {
-      console.error('Error refreshing invitation statuses:', error);
+      console.error("Error refreshing invitation statuses:", error);
     }
   };
 
@@ -175,6 +174,7 @@ const AdminManager: React.FC<AdminManagerProps> = ({
         // Editar cliente existente - no se envía invitación
         const { sendInvitation, ...clientDataForUpdate } = clientData;
         await updateClient(clientModal.client.id, clientDataForUpdate);
+        toast.success(`Cliente "${clientData.name}" actualizado exitosamente`);
       } else {
         // Crear nuevo cliente - enviar invitación si está marcado
         const { sendInvitation, ...clientDataForCreation } = clientData;
@@ -186,17 +186,21 @@ const AdminManager: React.FC<AdminManagerProps> = ({
         }
 
         await addClient(clientDataForCreation);
+        toast.success(`Cliente "${clientData.name}" creado exitosamente`);
       }
 
       // Refrescar estados de invitación después de crear/actualizar
       await refreshInvitationStatuses();
 
       // Pequeño delay para mostrar el feedback de "Guardado"
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       closeClientModal();
     } catch (error) {
       console.error("Error al guardar cliente:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Error desconocido";
+      toast.error(`Error al guardar cliente: ${errorMessage}`);
     } finally {
       setIsLoading((prev) => ({ ...prev, saving: false }));
     }
@@ -204,25 +208,30 @@ const AdminManager: React.FC<AdminManagerProps> = ({
 
   // Manejar guardado de sucursales
   const handleSaveBranch = async (branchData: any) => {
-    console.log('📤 Datos de sucursal a guardar:', branchData);
-    console.log('📤 room_ranges:', branchData.roomRanges);
+    console.log("📤 Datos de sucursal a guardar:", branchData);
+    console.log("📤 room_ranges:", branchData.roomRanges);
     setIsLoading((prev) => ({ ...prev, saving: true }));
 
     try {
       if (branchModal.branch) {
         // Editar sucursal existente
         await updateBranch(branchModal.branch.id, branchData);
+        toast.success(`Sucursal "${branchData.name}" actualizada exitosamente`);
       } else {
         // Crear nueva sucursal
         await addBranch(branchData);
+        toast.success(`Sucursal "${branchData.name}" creada exitosamente`);
       }
 
       // Pequeño delay para mostrar el feedback de "Guardado"
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       closeBranchModal();
     } catch (error) {
       console.error("Error al guardar sucursal:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Error desconocido";
+      toast.error(`Error al guardar sucursal: ${errorMessage}`);
     } finally {
       setIsLoading((prev) => ({ ...prev, saving: false }));
     }
@@ -237,16 +246,25 @@ const AdminManager: React.FC<AdminManagerProps> = ({
     try {
       if (deleteModal.type === "client") {
         await deleteClient(deleteModal.item.id);
+        toast.success(
+          `Cliente "${deleteModal.item.name}" eliminado exitosamente`,
+        );
       } else {
         await deleteBranch(deleteModal.item.id);
+        toast.success(
+          `Sucursal "${deleteModal.item.name}" eliminada exitosamente`,
+        );
       }
 
       // Pequeño delay para mostrar el feedback de "Eliminado"
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       closeDeleteModal();
     } catch (error) {
       console.error("Error al eliminar:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Error desconocido";
+      toast.error(`Error al eliminar: ${errorMessage}`);
     } finally {
       setIsLoading((prev) => ({ ...prev, deleting: false }));
     }
@@ -279,7 +297,9 @@ const AdminManager: React.FC<AdminManagerProps> = ({
   return (
     <div className="space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Admin Manager</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
+          Admin Manager
+        </h1>
         <div className="flex space-x-2">
           {showTabs.includes("clientes") && (
             <button
@@ -336,140 +356,144 @@ const AdminManager: React.FC<AdminManagerProps> = ({
               <p className="mt-4 text-gray-600">Cargando clientes...</p>
             </div>
           ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Establecimiento
-                  </th>
-                  <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Dueño
-                  </th>
-                  <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Contacto
-                  </th>
-                  <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Servicios
-                  </th>
-                  <th className="px-3 sm:px-6 py-2 sm:py-3 text-center text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Mesas
-                  </th>
-                  <th className="px-3 sm:px-6 py-2 sm:py-3 text-center text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Habitaciones
-                  </th>
-                  <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Estado
-                  </th>
-                  <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Registro Admin
-                  </th>
-                  <th className="px-3 sm:px-6 py-2 sm:py-3 text-right text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Acciones
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredClients.map((client) => (
-                  <tr key={client.id} className="hover:bg-gray-50">
-                    <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
-                      <div className="font-medium text-gray-900 text-xs sm:text-sm">
-                        {client.name}
-                      </div>
-                      <div className="text-[10px] sm:text-sm text-gray-500">
-                        Creado: {formatDate(client.createdAt)}
-                      </div>
-                    </td>
-                    <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
-                      <div className="text-xs sm:text-sm text-gray-900">
-                        {client.ownerName}
-                      </div>
-                    </td>
-                    <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
-                      <div className="text-xs sm:text-sm text-gray-900">
-                        {client.email}
-                      </div>
-                      <div className="text-[10px] sm:text-sm text-gray-500">
-                        {client.phone}
-                      </div>
-                    </td>
-                    <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
-                      <div className="flex flex-wrap gap-1">
-                        {client.services.map((service) => (
-                          <span
-                            key={service}
-                            className="px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs rounded-full bg-blue-100 text-blue-800"
-                          >
-                            {getServiceLabel(service)}
-                          </span>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-center">
-                      {client.services.includes("flex-bill") ||
-                      client.services.includes("tap-order-pay") ? (
-                        <div className="inline-flex items-center">
-                          <span className="text-sm sm:text-lg font-semibold text-gray-900">
-                            {client.tableCount || 0}
-                          </span>
-                          <span className="text-[10px] sm:text-xs text-gray-500 ml-1">
-                            mesa{(client.tableCount || 0) !== 1 ? "s" : ""}
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-xs sm:text-sm text-gray-400">—</span>
-                      )}
-                    </td>
-                    <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-center">
-                      {client.services.includes("room-service") ? (
-                        <div className="inline-flex items-center">
-                          <span className="text-sm sm:text-lg font-semibold text-blue-900">
-                            {client.roomCount || 0}
-                          </span>
-                          <span className="text-[10px] sm:text-xs text-blue-600 ml-1">
-                            hab{(client.roomCount || 0) !== 1 ? "s" : ""}
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-xs sm:text-sm text-gray-400">—</span>
-                      )}
-                    </td>
-                    <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
-                      <span
-                        className={`px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs rounded-full ${client.active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
-                      >
-                        {client.active ? "Activo" : "Inactivo"}
-                      </span>
-                    </td>
-                    <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
-                      <InvitationStatus
-                        clientId={client.id}
-                        clientEmail={client.email}
-                        invitationInfo={invitationStatuses[client.id]}
-                        isLoading={invitationStatusesLoading}
-                      />
-                    </td>
-                    <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        className="text-indigo-600 hover:text-indigo-900 mr-2 sm:mr-3"
-                        onClick={() => openClientModal(client)}
-                        title="Editar cliente"
-                      >
-                        <PencilIcon className="h-4 w-4 sm:h-5 sm:w-5" />
-                      </button>
-                      <button
-                        className="text-red-600 hover:text-red-900"
-                        onClick={() => openDeleteModal("client", client)}
-                        title="Eliminar cliente"
-                      >
-                        <TrashIcon className="h-4 w-4 sm:h-5 sm:w-5" />
-                      </button>
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Establecimiento
+                    </th>
+                    <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Dueño
+                    </th>
+                    <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Contacto
+                    </th>
+                    <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Servicios
+                    </th>
+                    <th className="px-3 sm:px-6 py-2 sm:py-3 text-center text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Mesas
+                    </th>
+                    <th className="px-3 sm:px-6 py-2 sm:py-3 text-center text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Habitaciones
+                    </th>
+                    <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Estado
+                    </th>
+                    <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Registro Admin
+                    </th>
+                    <th className="px-3 sm:px-6 py-2 sm:py-3 text-right text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Acciones
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredClients.map((client) => (
+                    <tr key={client.id} className="hover:bg-gray-50">
+                      <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
+                        <div className="font-medium text-gray-900 text-xs sm:text-sm">
+                          {client.name}
+                        </div>
+                        <div className="text-[10px] sm:text-sm text-gray-500">
+                          Creado: {formatDate(client.createdAt)}
+                        </div>
+                      </td>
+                      <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
+                        <div className="text-xs sm:text-sm text-gray-900">
+                          {client.ownerName}
+                        </div>
+                      </td>
+                      <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
+                        <div className="text-xs sm:text-sm text-gray-900">
+                          {client.email}
+                        </div>
+                        <div className="text-[10px] sm:text-sm text-gray-500">
+                          {client.phone}
+                        </div>
+                      </td>
+                      <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
+                        <div className="flex flex-wrap gap-1">
+                          {client.services.map((service) => (
+                            <span
+                              key={service}
+                              className="px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs rounded-full bg-blue-100 text-blue-800"
+                            >
+                              {getServiceLabel(service)}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-center">
+                        {client.services.includes("flex-bill") ||
+                        client.services.includes("tap-order-pay") ? (
+                          <div className="inline-flex items-center">
+                            <span className="text-sm sm:text-lg font-semibold text-gray-900">
+                              {client.tableCount || 0}
+                            </span>
+                            <span className="text-[10px] sm:text-xs text-gray-500 ml-1">
+                              mesa{(client.tableCount || 0) !== 1 ? "s" : ""}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-xs sm:text-sm text-gray-400">
+                            —
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-center">
+                        {client.services.includes("room-service") ? (
+                          <div className="inline-flex items-center">
+                            <span className="text-sm sm:text-lg font-semibold text-blue-900">
+                              {client.roomCount || 0}
+                            </span>
+                            <span className="text-[10px] sm:text-xs text-blue-600 ml-1">
+                              hab{(client.roomCount || 0) !== 1 ? "s" : ""}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-xs sm:text-sm text-gray-400">
+                            —
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
+                        <span
+                          className={`px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs rounded-full ${client.active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
+                        >
+                          {client.active ? "Activo" : "Inactivo"}
+                        </span>
+                      </td>
+                      <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
+                        <InvitationStatus
+                          clientId={client.id}
+                          clientEmail={client.email}
+                          invitationInfo={invitationStatuses[client.id]}
+                          isLoading={invitationStatusesLoading}
+                        />
+                      </td>
+                      <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button
+                          className="text-indigo-600 hover:text-indigo-900 mr-2 sm:mr-3"
+                          onClick={() => openClientModal(client)}
+                          title="Editar cliente"
+                        >
+                          <PencilIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+                        </button>
+                        <button
+                          className="text-red-600 hover:text-red-900"
+                          onClick={() => openDeleteModal("client", client)}
+                          title="Eliminar cliente"
+                        >
+                          <TrashIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       )}
@@ -509,98 +533,112 @@ const AdminManager: React.FC<AdminManagerProps> = ({
               <p className="mt-4 text-gray-600">Cargando sucursales...</p>
             </div>
           ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Cliente
-                  </th>
-                  <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Sucursal
-                  </th>
-                  <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Dirección
-                  </th>
-                  <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Mesas
-                  </th>
-                  <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Habitaciones
-                  </th>
-                  <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Estado
-                  </th>
-                  <th className="px-3 sm:px-6 py-2 sm:py-3 text-right text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Acciones
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredBranches.map((branch) => {
-                  const client = clients.find((c) => c.id === branch.clientId);
-                  return (
-                    <tr key={branch.id} className="hover:bg-gray-50">
-                      <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
-                        <div className="font-medium text-gray-900 text-xs sm:text-sm">
-                          {client?.name || "Desconocido"}
-                        </div>
-                      </td>
-                      <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
-                        <div className="text-gray-900 text-xs sm:text-sm">{branch.name}</div>
-                      </td>
-                      <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">
-                        {branch.address}
-                      </td>
-                      <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">
-                        {branch.tables}
-                      </td>
-                      <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">
-                        {(() => {
-                          const client = clients.find((c) => c.id === branch.clientId);
-                          if (!client || !client.services.includes('room-service')) {
-                            return '—';
-                          }
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Cliente
+                    </th>
+                    <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Sucursal
+                    </th>
+                    <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Dirección
+                    </th>
+                    <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Mesas
+                    </th>
+                    <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Habitaciones
+                    </th>
+                    <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Estado
+                    </th>
+                    <th className="px-3 sm:px-6 py-2 sm:py-3 text-right text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Acciones
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredBranches.map((branch) => {
+                    const client = clients.find(
+                      (c) => c.id === branch.clientId,
+                    );
+                    return (
+                      <tr key={branch.id} className="hover:bg-gray-50">
+                        <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
+                          <div className="font-medium text-gray-900 text-xs sm:text-sm">
+                            {client?.name || "Desconocido"}
+                          </div>
+                        </td>
+                        <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
+                          <div className="text-gray-900 text-xs sm:text-sm">
+                            {branch.name}
+                          </div>
+                        </td>
+                        <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">
+                          {branch.address}
+                        </td>
+                        <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">
+                          {branch.tables}
+                        </td>
+                        <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">
+                          {(() => {
+                            const client = clients.find(
+                              (c) => c.id === branch.clientId,
+                            );
+                            if (
+                              !client ||
+                              !client.services.includes("room-service")
+                            ) {
+                              return "—";
+                            }
 
-                          // Priorizar roomRanges si existen
-                          if (branch.roomRanges && branch.roomRanges.length > 0) {
-                            const total = calculateTotalRoomsFromRanges(branch.roomRanges);
-                            return total;
-                          }
+                            // Priorizar roomRanges si existen
+                            if (
+                              branch.roomRanges &&
+                              branch.roomRanges.length > 0
+                            ) {
+                              const total = calculateTotalRoomsFromRanges(
+                                branch.roomRanges,
+                              );
+                              return total;
+                            }
 
-                          // Fallback a rooms legacy
-                          return branch.rooms || '—';
-                        })()}
-                      </td>
-                      <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
-                        <span
-                          className={`px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs rounded-full ${branch.active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
-                        >
-                          {branch.active ? "Activo" : "Inactivo"}
-                        </span>
-                      </td>
-                      <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button
-                          className="text-indigo-600 hover:text-indigo-900 mr-2 sm:mr-3"
-                          onClick={() => openBranchModal(branch)}
-                          title="Editar sucursal"
-                        >
-                          <PencilIcon className="h-4 w-4 sm:h-5 sm:w-5" />
-                        </button>
-                        <button
-                          className="text-red-600 hover:text-red-900"
-                          onClick={() => openDeleteModal("branch", branch)}
-                          title="Eliminar sucursal"
-                        >
-                          <TrashIcon className="h-4 w-4 sm:h-5 sm:w-5" />
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                            // Fallback a rooms legacy
+                            return branch.rooms || "—";
+                          })()}
+                        </td>
+                        <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap">
+                          <span
+                            className={`px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs rounded-full ${branch.active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
+                          >
+                            {branch.active ? "Activo" : "Inactivo"}
+                          </span>
+                        </td>
+                        <td className="px-3 sm:px-6 py-2 sm:py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <button
+                            className="text-indigo-600 hover:text-indigo-900 mr-2 sm:mr-3"
+                            onClick={() => openBranchModal(branch)}
+                            title="Editar sucursal"
+                          >
+                            <PencilIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+                          </button>
+                          <button
+                            className="text-red-600 hover:text-red-900"
+                            onClick={() => openDeleteModal("branch", branch)}
+                            title="Eliminar sucursal"
+                          >
+                            <TrashIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       )}

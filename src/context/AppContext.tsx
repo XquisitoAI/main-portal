@@ -150,11 +150,13 @@ export const AppContextProvider: React.FC<{
       await mainPortalApi.updateClient(id, { deleted: true } as any);
       // Remover del estado local para que no se muestre
       setClients((prev) => prev.filter((client) => client.id !== id));
-      // También marcar las sucursales asociadas como eliminadas
+      // También marcar las sucursales asociadas como eliminadas (en paralelo)
       const clientBranches = branches.filter((b) => b.clientId === id);
-      for (const branch of clientBranches) {
-        await mainPortalApi.updateBranch(branch.id, { deleted: true } as any);
-      }
+      await Promise.all(
+        clientBranches.map((branch) =>
+          mainPortalApi.updateBranch(branch.id, { deleted: true } as any),
+        ),
+      );
       setBranches((prev) => prev.filter((branch) => branch.clientId !== id));
     } catch (error) {
       handleError(error);

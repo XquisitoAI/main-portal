@@ -34,6 +34,7 @@ const convertClientFromBackend = (backendClient: any): Client => ({
   tableCount: backendClient.table_count || 0,
   roomCount: backendClient.room_count || 0,
   active: backendClient.active,
+  deleted: backendClient.deleted,
   createdAt: backendClient.created_at,
   updatedAt: backendClient.updated_at,
 });
@@ -43,7 +44,7 @@ const convertClientToBackend = (
   frontendClient:
     | ClientFormDataWithInvitation
     | ClientFormData
-    | Partial<ClientFormData>
+    | Partial<ClientFormData>,
 ) => ({
   name: frontendClient.name,
   owner_name: frontendClient.ownerName,
@@ -53,6 +54,7 @@ const convertClientToBackend = (
   table_count: frontendClient.tableCount || 0,
   room_count: frontendClient.roomCount || 0,
   active: frontendClient.active,
+  deleted: (frontendClient as any).deleted,
   // Solo incluir sendInvitation si está presente
   ...("sendInvitation" in frontendClient && {
     sendInvitation: frontendClient.sendInvitation,
@@ -71,13 +73,14 @@ const convertBranchFromBackend = (backendBranch: any): Branch => ({
   roomRanges: backendBranch.room_ranges,
   branchNumber: backendBranch.branch_number,
   active: backendBranch.active,
+  deleted: backendBranch.deleted,
   createdAt: backendBranch.created_at,
   updatedAt: backendBranch.updated_at,
 });
 
 // Función para convertir sucursales del frontend a formato backend
 const convertBranchToBackend = (
-  frontendBranch: BranchFormData | Partial<BranchFormData>
+  frontendBranch: BranchFormData | Partial<BranchFormData>,
 ) => ({
   client_id: frontendBranch.clientId,
   name: frontendBranch.name,
@@ -86,6 +89,7 @@ const convertBranchToBackend = (
   rooms: frontendBranch.rooms,
   room_ranges: frontendBranch.roomRanges,
   active: frontendBranch.active,
+  deleted: (frontendBranch as any).deleted,
 });
 
 // Función para convertir QR codes del backend a formato frontend
@@ -110,31 +114,43 @@ const convertQrCodeFromBackend = (backendQrCode: any): QrCode => ({
 
 // Función para convertir QR codes del frontend a formato backend
 const convertQrCodeToBackend = (
-  frontendQrCode: QrCodeFormData | QrCodeBatchFormData | QrCodeUpdateData
+  frontendQrCode: QrCodeFormData | QrCodeBatchFormData | QrCodeUpdateData,
 ) => {
   const backendData: any = {};
 
-  if ('clientId' in frontendQrCode && frontendQrCode.clientId !== undefined)
+  if ("clientId" in frontendQrCode && frontendQrCode.clientId !== undefined)
     backendData.client_id = frontendQrCode.clientId;
-  if ('restaurantId' in frontendQrCode && frontendQrCode.restaurantId !== undefined)
+  if (
+    "restaurantId" in frontendQrCode &&
+    frontendQrCode.restaurantId !== undefined
+  )
     backendData.restaurant_id = frontendQrCode.restaurantId;
-  if ('branchId' in frontendQrCode && frontendQrCode.branchId !== undefined)
+  if ("branchId" in frontendQrCode && frontendQrCode.branchId !== undefined)
     backendData.branch_id = frontendQrCode.branchId;
-  if ('branchNumber' in frontendQrCode && frontendQrCode.branchNumber !== undefined)
+  if (
+    "branchNumber" in frontendQrCode &&
+    frontendQrCode.branchNumber !== undefined
+  )
     backendData.branch_number = frontendQrCode.branchNumber;
-  if ('service' in frontendQrCode && frontendQrCode.service !== undefined)
+  if ("service" in frontendQrCode && frontendQrCode.service !== undefined)
     backendData.service = frontendQrCode.service;
-  if ('qrType' in frontendQrCode && frontendQrCode.qrType !== undefined)
+  if ("qrType" in frontendQrCode && frontendQrCode.qrType !== undefined)
     backendData.qr_type = frontendQrCode.qrType;
-  if ('tableNumber' in frontendQrCode && frontendQrCode.tableNumber !== undefined)
+  if (
+    "tableNumber" in frontendQrCode &&
+    frontendQrCode.tableNumber !== undefined
+  )
     backendData.table_number = frontendQrCode.tableNumber;
-  if ('roomNumber' in frontendQrCode && frontendQrCode.roomNumber !== undefined)
+  if ("roomNumber" in frontendQrCode && frontendQrCode.roomNumber !== undefined)
     backendData.room_number = frontendQrCode.roomNumber;
-  if ('count' in frontendQrCode && frontendQrCode.count !== undefined)
+  if ("count" in frontendQrCode && frontendQrCode.count !== undefined)
     backendData.count = frontendQrCode.count;
-  if ('startNumber' in frontendQrCode && frontendQrCode.startNumber !== undefined)
+  if (
+    "startNumber" in frontendQrCode &&
+    frontendQrCode.startNumber !== undefined
+  )
     backendData.start_number = frontendQrCode.startNumber;
-  if ('isActive' in frontendQrCode && frontendQrCode.isActive !== undefined)
+  if ("isActive" in frontendQrCode && frontendQrCode.isActive !== undefined)
     backendData.is_active = frontendQrCode.isActive;
 
   return backendData;
@@ -168,7 +184,7 @@ class MainPortalApiService {
   private async makeRequest<T>(
     endpoint: string,
     options: RequestInit = {},
-    token?: string
+    token?: string,
   ): Promise<T> {
     try {
       const url = `${MAIN_PORTAL_BASE}${endpoint}`;
@@ -190,7 +206,7 @@ class MainPortalApiService {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(
-          errorData.message || `HTTP error! status: ${response.status}`
+          errorData.message || `HTTP error! status: ${response.status}`,
         );
       }
 
@@ -217,7 +233,7 @@ class MainPortalApiService {
       {
         method: "GET",
       },
-      token
+      token,
     );
     return (backendClients || []).map(convertClientFromBackend);
   }
@@ -228,14 +244,14 @@ class MainPortalApiService {
       {
         method: "GET",
       },
-      token
+      token,
     );
     return convertClientFromBackend(backendClient);
   }
 
   async createClient(
     clientData: ClientFormDataWithInvitation,
-    token: string
+    token: string,
   ): Promise<Client> {
     const backendData = convertClientToBackend(clientData);
     const backendClient = await this.makeRequest<any>(
@@ -244,7 +260,7 @@ class MainPortalApiService {
         method: "POST",
         body: JSON.stringify(backendData),
       },
-      token
+      token,
     );
     return convertClientFromBackend(backendClient);
   }
@@ -252,7 +268,7 @@ class MainPortalApiService {
   async updateClient(
     id: string,
     clientData: Partial<ClientFormData>,
-    token: string
+    token: string,
   ): Promise<Client> {
     const backendData = convertClientToBackend(clientData);
     const backendClient = await this.makeRequest<any>(
@@ -261,7 +277,7 @@ class MainPortalApiService {
         method: "PUT",
         body: JSON.stringify(backendData),
       },
-      token
+      token,
     );
     return convertClientFromBackend(backendClient);
   }
@@ -272,11 +288,14 @@ class MainPortalApiService {
       {
         method: "DELETE",
       },
-      token
+      token,
     );
   }
 
-  async checkClientAdminPortalStatus(email: string, token: string): Promise<{
+  async checkClientAdminPortalStatus(
+    email: string,
+    token: string,
+  ): Promise<{
     hasAdminPortalAccount: boolean;
     clerkUserId?: string;
     adminUserEmail?: string;
@@ -287,7 +306,7 @@ class MainPortalApiService {
       {
         method: "GET",
       },
-      token
+      token,
     );
   }
 
@@ -301,21 +320,21 @@ class MainPortalApiService {
       {
         method: "GET",
       },
-      token
+      token,
     );
     return (backendBranches || []).map(convertBranchFromBackend);
   }
 
   async getBranchesByClient(
     clientId: string,
-    token: string
+    token: string,
   ): Promise<Branch[]> {
     const backendBranches = await this.makeRequest<any[]>(
       `/branches?client_id=${clientId}`,
       {
         method: "GET",
       },
-      token
+      token,
     );
     return (backendBranches || []).map(convertBranchFromBackend);
   }
@@ -326,14 +345,14 @@ class MainPortalApiService {
       {
         method: "GET",
       },
-      token
+      token,
     );
     return convertBranchFromBackend(backendBranch);
   }
 
   async createBranch(
     branchData: BranchFormData,
-    token: string
+    token: string,
   ): Promise<Branch> {
     const backendData = convertBranchToBackend(branchData);
     const backendBranch = await this.makeRequest<any>(
@@ -342,7 +361,7 @@ class MainPortalApiService {
         method: "POST",
         body: JSON.stringify(backendData),
       },
-      token
+      token,
     );
     return convertBranchFromBackend(backendBranch);
   }
@@ -350,7 +369,7 @@ class MainPortalApiService {
   async updateBranch(
     id: string,
     branchData: Partial<BranchFormData>,
-    token: string
+    token: string,
   ): Promise<Branch> {
     const backendData = convertBranchToBackend(branchData);
     const backendBranch = await this.makeRequest<any>(
@@ -359,7 +378,7 @@ class MainPortalApiService {
         method: "PUT",
         body: JSON.stringify(backendData),
       },
-      token
+      token,
     );
     return convertBranchFromBackend(backendBranch);
   }
@@ -370,7 +389,7 @@ class MainPortalApiService {
       {
         method: "DELETE",
       },
-      token
+      token,
     );
   }
 
@@ -384,7 +403,7 @@ class MainPortalApiService {
       {
         method: "GET",
       },
-      token
+      token,
     );
   }
 
@@ -394,7 +413,7 @@ class MainPortalApiService {
       {
         method: "GET",
       },
-      token
+      token,
     );
   }
 
@@ -410,17 +429,19 @@ class MainPortalApiService {
       branchId?: string;
       service?: string;
       isActive?: boolean;
-    }
+    },
   ): Promise<QrCode[]> {
     let endpoint = "/qr-codes";
 
     if (filters) {
       const params = new URLSearchParams();
       if (filters.clientId) params.append("client_id", filters.clientId);
-      if (filters.restaurantId) params.append("restaurant_id", filters.restaurantId.toString());
+      if (filters.restaurantId)
+        params.append("restaurant_id", filters.restaurantId.toString());
       if (filters.branchId) params.append("branch_id", filters.branchId);
       if (filters.service) params.append("service", filters.service);
-      if (filters.isActive !== undefined) params.append("is_active", filters.isActive.toString());
+      if (filters.isActive !== undefined)
+        params.append("is_active", filters.isActive.toString());
 
       const queryString = params.toString();
       if (queryString) endpoint += `?${queryString}`;
@@ -431,7 +452,7 @@ class MainPortalApiService {
       {
         method: "GET",
       },
-      token
+      token,
     );
     return (backendQrCodes || []).map(convertQrCodeFromBackend);
   }
@@ -442,14 +463,14 @@ class MainPortalApiService {
       {
         method: "GET",
       },
-      token
+      token,
     );
     return convertQrCodeFromBackend(backendQrCode);
   }
 
   async createQRCode(
     qrCodeData: QrCodeFormData,
-    token: string
+    token: string,
   ): Promise<QrCode> {
     const backendData = convertQrCodeToBackend(qrCodeData);
     const backendQrCode = await this.makeRequest<any>(
@@ -458,14 +479,14 @@ class MainPortalApiService {
         method: "POST",
         body: JSON.stringify(backendData),
       },
-      token
+      token,
     );
     return convertQrCodeFromBackend(backendQrCode);
   }
 
   async createBatchQRCodes(
     batchData: QrCodeBatchFormData,
-    token: string
+    token: string,
   ): Promise<QrCode[]> {
     const backendData = convertQrCodeToBackend(batchData);
     const backendQrCodes = await this.makeRequest<any[]>(
@@ -474,7 +495,7 @@ class MainPortalApiService {
         method: "POST",
         body: JSON.stringify(backendData),
       },
-      token
+      token,
     );
     return (backendQrCodes || []).map(convertQrCodeFromBackend);
   }
@@ -482,7 +503,7 @@ class MainPortalApiService {
   async updateQRCode(
     id: string,
     updateData: QrCodeUpdateData,
-    token: string
+    token: string,
   ): Promise<QrCode> {
     const backendData = convertQrCodeToBackend(updateData);
     const backendQrCode = await this.makeRequest<any>(
@@ -491,7 +512,7 @@ class MainPortalApiService {
         method: "PUT",
         body: JSON.stringify(backendData),
       },
-      token
+      token,
     );
     return convertQrCodeFromBackend(backendQrCode);
   }
@@ -502,7 +523,7 @@ class MainPortalApiService {
       {
         method: "PATCH",
       },
-      token
+      token,
     );
     return convertQrCodeFromBackend(backendQrCode);
   }
@@ -513,7 +534,7 @@ class MainPortalApiService {
       {
         method: "DELETE",
       },
-      token
+      token,
     );
   }
 }
@@ -526,7 +547,7 @@ export function useMainPortalApi() {
   const { getToken } = useAuth();
 
   const makeAuthenticatedRequest = async <T>(
-    requestFn: (token: string) => Promise<T>
+    requestFn: (token: string) => Promise<T>,
   ): Promise<T> => {
     try {
       // Obtener token fresco, forzando refresh si es necesario
@@ -565,63 +586,63 @@ export function useMainPortalApi() {
     // Métodos de clientes
     getAllClients: () =>
       makeAuthenticatedRequest((token) =>
-        mainPortalApiService.getAllClients(token)
+        mainPortalApiService.getAllClients(token),
       ),
     getClientById: (id: string) =>
       makeAuthenticatedRequest((token) =>
-        mainPortalApiService.getClientById(id, token)
+        mainPortalApiService.getClientById(id, token),
       ),
     createClient: (data: ClientFormDataWithInvitation) =>
       makeAuthenticatedRequest((token) =>
-        mainPortalApiService.createClient(data, token)
+        mainPortalApiService.createClient(data, token),
       ),
     updateClient: (id: string, data: Partial<ClientFormData>) =>
       makeAuthenticatedRequest((token) =>
-        mainPortalApiService.updateClient(id, data, token)
+        mainPortalApiService.updateClient(id, data, token),
       ),
     deleteClient: (id: string) =>
       makeAuthenticatedRequest((token) =>
-        mainPortalApiService.deleteClient(id, token)
+        mainPortalApiService.deleteClient(id, token),
       ),
     checkClientAdminPortalStatus: (email: string) =>
       makeAuthenticatedRequest((token) =>
-        mainPortalApiService.checkClientAdminPortalStatus(email, token)
+        mainPortalApiService.checkClientAdminPortalStatus(email, token),
       ),
 
     // Métodos de sucursales
     getAllBranches: () =>
       makeAuthenticatedRequest((token) =>
-        mainPortalApiService.getAllBranches(token)
+        mainPortalApiService.getAllBranches(token),
       ),
     getBranchesByClient: (clientId: string) =>
       makeAuthenticatedRequest((token) =>
-        mainPortalApiService.getBranchesByClient(clientId, token)
+        mainPortalApiService.getBranchesByClient(clientId, token),
       ),
     getBranchById: (id: string) =>
       makeAuthenticatedRequest((token) =>
-        mainPortalApiService.getBranchById(id, token)
+        mainPortalApiService.getBranchById(id, token),
       ),
     createBranch: (data: BranchFormData) =>
       makeAuthenticatedRequest((token) =>
-        mainPortalApiService.createBranch(data, token)
+        mainPortalApiService.createBranch(data, token),
       ),
     updateBranch: (id: string, data: Partial<BranchFormData>) =>
       makeAuthenticatedRequest((token) =>
-        mainPortalApiService.updateBranch(id, data, token)
+        mainPortalApiService.updateBranch(id, data, token),
       ),
     deleteBranch: (id: string) =>
       makeAuthenticatedRequest((token) =>
-        mainPortalApiService.deleteBranch(id, token)
+        mainPortalApiService.deleteBranch(id, token),
       ),
 
     // Métodos de estadísticas
     getMainPortalStats: () =>
       makeAuthenticatedRequest((token) =>
-        mainPortalApiService.getMainPortalStats(token)
+        mainPortalApiService.getMainPortalStats(token),
       ),
     getInvitationStatuses: () =>
       makeAuthenticatedRequest((token) =>
-        mainPortalApiService.getInvitationStatuses(token)
+        mainPortalApiService.getInvitationStatuses(token),
       ),
 
     // Métodos de QR Codes
@@ -633,31 +654,31 @@ export function useMainPortalApi() {
       isActive?: boolean;
     }) =>
       makeAuthenticatedRequest((token) =>
-        mainPortalApiService.getAllQRCodes(token, filters)
+        mainPortalApiService.getAllQRCodes(token, filters),
       ),
     getQRCodeById: (id: string) =>
       makeAuthenticatedRequest((token) =>
-        mainPortalApiService.getQRCodeById(id, token)
+        mainPortalApiService.getQRCodeById(id, token),
       ),
     createQRCode: (data: QrCodeFormData) =>
       makeAuthenticatedRequest((token) =>
-        mainPortalApiService.createQRCode(data, token)
+        mainPortalApiService.createQRCode(data, token),
       ),
     createBatchQRCodes: (data: QrCodeBatchFormData) =>
       makeAuthenticatedRequest((token) =>
-        mainPortalApiService.createBatchQRCodes(data, token)
+        mainPortalApiService.createBatchQRCodes(data, token),
       ),
     updateQRCode: (id: string, data: QrCodeUpdateData) =>
       makeAuthenticatedRequest((token) =>
-        mainPortalApiService.updateQRCode(id, data, token)
+        mainPortalApiService.updateQRCode(id, data, token),
       ),
     toggleQRCodeStatus: (id: string) =>
       makeAuthenticatedRequest((token) =>
-        mainPortalApiService.toggleQRCodeStatus(id, token)
+        mainPortalApiService.toggleQRCodeStatus(id, token),
       ),
     deleteQRCode: (id: string) =>
       makeAuthenticatedRequest((token) =>
-        mainPortalApiService.deleteQRCode(id, token)
+        mainPortalApiService.deleteQRCode(id, token),
       ),
   };
 }
