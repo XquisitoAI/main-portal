@@ -76,7 +76,7 @@ export interface DishOrder {
   item: string;
   quantity: number;
   price: number;
-  status: "pending" | "cooking" | "delivered";
+  status: "preparing" | "ready" | "delivered";
   payment_status: "not_paid" | "paid";
   images?: string[];
   custom_fields?: Record<string, any>;
