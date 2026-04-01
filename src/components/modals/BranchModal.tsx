@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Branch, BranchFormData, Client, RoomRange } from "../../types";
+import {
+  Branch,
+  BranchFormData,
+  Client,
+  RoomRange,
+  PosProvider,
+} from "../../types";
 import Modal from "../ui/Modal";
 import { Check, Loader2, X } from "lucide-react";
 
@@ -11,6 +17,8 @@ interface BranchModalProps {
   clients: Client[];
   branches: Branch[];
   isLoading?: boolean;
+  currentPosProviderId?: string;
+  posProviders: PosProvider[];
 }
 
 const BranchModal: React.FC<BranchModalProps> = ({
@@ -21,6 +29,8 @@ const BranchModal: React.FC<BranchModalProps> = ({
   clients,
   branches,
   isLoading = false,
+  currentPosProviderId,
+  posProviders,
 }) => {
   const [formData, setFormData] = useState<BranchFormData>({
     clientId: "",
@@ -35,6 +45,12 @@ const BranchModal: React.FC<BranchModalProps> = ({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [newRangeStart, setNewRangeStart] = useState<string>("");
   const [newRangeEnd, setNewRangeEnd] = useState<string>("");
+
+  // Estados para POS
+  const [selectedPosProviderId, setSelectedPosProviderId] =
+    useState<string>("");
+  const [originalPosProviderId, setOriginalPosProviderId] =
+    useState<string>("");
 
   // Resetear formulario cuando cambia la sucursal o se abre/cierra
   useEffect(() => {
@@ -65,8 +81,18 @@ const BranchModal: React.FC<BranchModalProps> = ({
       setErrors({});
       setNewRangeStart("");
       setNewRangeEnd("");
+      setSelectedPosProviderId("");
+      setOriginalPosProviderId("");
     }
   }, [isOpen, branch]);
+
+  // Establecer integración POS existente al editar (viene del prop)
+  useEffect(() => {
+    if (isOpen && currentPosProviderId) {
+      setSelectedPosProviderId(currentPosProviderId);
+      setOriginalPosProviderId(currentPosProviderId);
+    }
+  }, [isOpen, currentPosProviderId]);
 
   // Calcular total de habitaciones desde los rangos
   const calculateTotalRoomsFromRanges = (ranges: RoomRange[]): number => {
@@ -123,7 +149,7 @@ const BranchModal: React.FC<BranchModalProps> = ({
   // Eliminar rango de habitaciones
   const removeRoomRange = (index: number) => {
     const updatedRanges = (formData.roomRanges || []).filter(
-      (_, i) => i !== index
+      (_, i) => i !== index,
     );
     setFormData((prev) => ({
       ...prev,
@@ -170,7 +196,7 @@ const BranchModal: React.FC<BranchModalProps> = ({
     if (formData.clientId) {
       const client = clients.find((c) => c.id === formData.clientId);
       const totalRooms = calculateTotalRoomsFromRanges(
-        formData.roomRanges || []
+        formData.roomRanges || [],
       );
 
       // Verificar si el cliente SOLO tiene room-service (sin otros servicios)
@@ -223,7 +249,13 @@ const BranchModal: React.FC<BranchModalProps> = ({
     if (validateForm()) {
       console.log("✅ Formulario válido, enviando datos:", formData);
       console.log("✅ roomRanges a enviar:", formData.roomRanges);
-      onSave(formData);
+      console.log("✅ POS Provider seleccionado:", selectedPosProviderId);
+      // Pasar el posProviderId junto con los datos del formulario
+      onSave({
+        ...formData,
+        posProviderId: selectedPosProviderId || null,
+        _posProviderChanged: selectedPosProviderId !== originalPosProviderId,
+      } as any);
     }
   };
 
@@ -257,11 +289,11 @@ const BranchModal: React.FC<BranchModalProps> = ({
     if (!client) return null;
 
     const clientBranches = branches.filter(
-      (b) => b.clientId === clientId && b.id !== branch?.id
+      (b) => b.clientId === clientId && b.id !== branch?.id,
     );
     const usedTables = clientBranches.reduce(
       (sum, b) => sum + (b.tables || 0),
-      0
+      0,
     );
     const availableTables = Math.max(0, (client.tableCount || 0) - usedTables);
 
@@ -303,7 +335,7 @@ const BranchModal: React.FC<BranchModalProps> = ({
     if (!client) return null;
 
     const clientBranches = branches.filter(
-      (b) => b.clientId === clientId && b.id !== branch?.id
+      (b) => b.clientId === clientId && b.id !== branch?.id,
     );
     const usedRooms = clientBranches.reduce((sum, b) => {
       // Priorizar roomRanges si existen, sino usar rooms legacy
@@ -332,7 +364,9 @@ const BranchModal: React.FC<BranchModalProps> = ({
           <div className="absolute inset-0 bg-white bg-opacity-75 z-10 flex items-center justify-center rounded-lg">
             <div className="text-center">
               <Loader2 className="h-6 w-6 sm:h-8 sm:w-8 animate-spin text-blue-600 mx-auto mb-2" />
-              <p className="text-xs sm:text-sm text-gray-600 font-medium">Guardando...</p>
+              <p className="text-xs sm:text-sm text-gray-600 font-medium">
+                Guardando...
+              </p>
             </div>
           </div>
         )}
@@ -361,7 +395,9 @@ const BranchModal: React.FC<BranchModalProps> = ({
                 ))}
             </select>
             {errors.clientId && (
-              <p className="mt-1 text-xs sm:text-sm text-red-600">{errors.clientId}</p>
+              <p className="mt-1 text-xs sm:text-sm text-red-600">
+                {errors.clientId}
+              </p>
             )}
           </div>
 
@@ -382,7 +418,9 @@ const BranchModal: React.FC<BranchModalProps> = ({
               placeholder="Ej: Sucursal Centro"
             />
             {errors.name && (
-              <p className="mt-1 text-xs sm:text-sm text-red-600">{errors.name}</p>
+              <p className="mt-1 text-xs sm:text-sm text-red-600">
+                {errors.name}
+              </p>
             )}
           </div>
         </div>
@@ -404,7 +442,9 @@ const BranchModal: React.FC<BranchModalProps> = ({
             placeholder="Ej: Av. Reforma 123, Centro, Ciudad de México, CP 06600"
           />
           {errors.address && (
-            <p className="mt-1 text-xs sm:text-sm text-red-600">{errors.address}</p>
+            <p className="mt-1 text-xs sm:text-sm text-red-600">
+              {errors.address}
+            </p>
           )}
         </div>
 
@@ -425,7 +465,7 @@ const BranchModal: React.FC<BranchModalProps> = ({
               }
 
               const availableTables = calculateAvailableTables(
-                formData.clientId
+                formData.clientId,
               );
 
               return (
@@ -454,7 +494,9 @@ const BranchModal: React.FC<BranchModalProps> = ({
                   />
 
                   {errors.tables && (
-                    <p className="mt-1 text-xs sm:text-sm text-red-600">{errors.tables}</p>
+                    <p className="mt-1 text-xs sm:text-sm text-red-600">
+                      {errors.tables}
+                    </p>
                   )}
                 </div>
               );
@@ -466,10 +508,10 @@ const BranchModal: React.FC<BranchModalProps> = ({
               const client = clients.find((c) => c.id === formData.clientId);
               if (client && client.services.includes("room-service")) {
                 const availableRooms = calculateAvailableRooms(
-                  formData.clientId
+                  formData.clientId,
                 );
                 const totalRooms = calculateTotalRoomsFromRanges(
-                  formData.roomRanges || []
+                  formData.roomRanges || [],
                 );
 
                 return (
@@ -528,7 +570,9 @@ const BranchModal: React.FC<BranchModalProps> = ({
                         }}
                         placeholder="Desde"
                       />
-                      <span className="text-gray-500 self-center text-xs sm:text-base">-</span>
+                      <span className="text-gray-500 self-center text-xs sm:text-base">
+                        -
+                      </span>
                       <input
                         type="number"
                         min="1"
@@ -569,6 +613,25 @@ const BranchModal: React.FC<BranchModalProps> = ({
             })()}
         </div>
 
+        {/* Integración POS */}
+        <div>
+          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+            Integración POS
+          </label>
+          <select
+            className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={selectedPosProviderId}
+            onChange={(e) => setSelectedPosProviderId(e.target.value)}
+          >
+            <option value="">Sin integración</option>
+            {posProviders.map((provider) => (
+              <option key={provider.id} value={provider.id}>
+                {provider.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
         {/* Estado */}
         <div className="flex items-center">
           <label className="flex items-center">
@@ -580,7 +643,9 @@ const BranchModal: React.FC<BranchModalProps> = ({
                 setFormData((prev) => ({ ...prev, active: e.target.checked }))
               }
             />
-            <span className="ml-2 text-xs sm:text-sm text-gray-700">Sucursal activa</span>
+            <span className="ml-2 text-xs sm:text-sm text-gray-700">
+              Sucursal activa
+            </span>
           </label>
         </div>
 
@@ -599,7 +664,7 @@ const BranchModal: React.FC<BranchModalProps> = ({
                 </p>
                 {(() => {
                   const client = clients.find(
-                    (c) => c.id === formData.clientId
+                    (c) => c.id === formData.clientId,
                   );
                   return client ? (
                     <>
@@ -644,19 +709,25 @@ const BranchModal: React.FC<BranchModalProps> = ({
                       <div className="text-base sm:text-lg font-bold text-gray-900">
                         {clientInfo.totalContracted}
                       </div>
-                      <div className="text-[10px] sm:text-xs text-gray-600">Contratadas</div>
+                      <div className="text-[10px] sm:text-xs text-gray-600">
+                        Contratadas
+                      </div>
                     </div>
                     <div className="text-center">
                       <div className="text-base sm:text-lg font-bold text-red-600">
                         {clientInfo.totalUsed}
                       </div>
-                      <div className="text-[10px] sm:text-xs text-gray-600">En Uso</div>
+                      <div className="text-[10px] sm:text-xs text-gray-600">
+                        En Uso
+                      </div>
                     </div>
                     <div className="text-center">
                       <div className="text-base sm:text-lg font-bold text-green-600">
                         {clientInfo.totalAvailable}
                       </div>
-                      <div className="text-[10px] sm:text-xs text-gray-600">Disponibles</div>
+                      <div className="text-[10px] sm:text-xs text-gray-600">
+                        Disponibles
+                      </div>
                     </div>
                   </div>
 
@@ -683,8 +754,8 @@ const BranchModal: React.FC<BranchModalProps> = ({
                   {/* Advertencia si no hay mesas disponibles */}
                   {clientInfo.totalAvailable === 0 && (
                     <div className="mt-2 sm:mt-3 p-2 bg-red-50 border border-red-200 rounded text-[10px] sm:text-xs text-red-700">
-                      <strong>Sin mesas disponibles:</strong> Este cliente ya
-                      ha utilizado todas sus mesas contratadas.
+                      <strong>Sin mesas disponibles:</strong> Este cliente ya ha
+                      utilizado todas sus mesas contratadas.
                     </div>
                   )}
                 </div>
@@ -708,7 +779,9 @@ const BranchModal: React.FC<BranchModalProps> = ({
             className="px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm"
             disabled={isLoading}
           >
-            {isLoading && <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 animate-spin" />}
+            {isLoading && (
+              <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 animate-spin" />
+            )}
             {isLoading
               ? "Guardando..."
               : branch

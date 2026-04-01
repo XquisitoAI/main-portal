@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback } from "react";
+import { Toaster } from "react-hot-toast";
 import GlobalKpiCard from "../dashboard/GlobalKpiCard";
 import ServiceKpiCard from "../dashboard/ServiceKpiCard";
 import ServiceDistributionCharts from "../dashboard/ServiceDistributionCharts";
@@ -6,7 +7,7 @@ import TransactionHistoryTable from "../dashboard/TransactionHistoryTable";
 import LoadingSpinner from "../ui/LoadingSpinner";
 import ErrorMessage from "../ui/ErrorMessage";
 import { useAuth } from "../../hooks/useAuth";
-import { useSuperAdminStats, useRestaurants } from "../../hooks/useApiData";
+import { useRealtimeStats, useRestaurants } from "../../hooks/useApiData";
 import { formatCurrency, formatNumber } from "../../utils/formatters";
 import {
   CreditCardIcon,
@@ -48,7 +49,7 @@ const Home: React.FC = () => {
         gender: "todos",
         age_range: "todos",
       };
-    }
+    },
   );
 
   // Estado de los filtros UI
@@ -134,19 +135,25 @@ const Home: React.FC = () => {
     setSuperAdminFilters(newFilters);
   }, []);
 
-  // Obtener datos del Super Admin desde el backend
+  // Obtener datos del Super Admin en tiempo real usando WebSocket
   const {
     data: superAdminStats,
     isLoading: statsLoading,
-    isError: statsError,
-    error,
+    error: statsError,
     refetch,
-  } = useSuperAdminStats(superAdminFilters);
+    isConnected: socketConnected,
+  } = useRealtimeStats(superAdminFilters);
+
+  // DEBUG: Verificar estado de superAdminStats
+  console.log("[Home] superAdminStats:", superAdminStats);
+  console.log("[Home] socketConnected:", socketConnected);
+  console.log("[Home] statsLoading:", statsLoading);
+
   const { data: restaurantsList, isLoading: restaurantsLoading } =
     useRestaurants();
 
   const isLoading = statsLoading || restaurantsLoading;
-  const isError = statsError;
+  const isError = !!statsError;
 
   // Calcular métricas de servicios basado en datos reales del Super Admin
   const serviceMetrics = useMemo(() => {
@@ -204,7 +211,7 @@ const Home: React.FC = () => {
           </h1>
         </div>
         <ErrorMessage
-          message={error?.message || "Error al cargar los datos del dashboard"}
+          message={statsError || "Error al cargar los datos del dashboard"}
           onRetry={refetch}
         />
       </div>
@@ -228,211 +235,232 @@ const Home: React.FC = () => {
   }
 
   return (
-    <div className="space-y-3 sm:space-y-4">
-      {/* Fila de filtros */}
-      <DashboardFilters
-        filters={uiFilters}
-        onFilterChange={handleFilterChange}
-        restaurants={restaurantsList || []}
-      />
+    <>
+      {/* Toast notifications */}
+      <Toaster />
 
-      {/* Primera fila: Indicadores Clave y Distribución por Servicio */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        {/* Contenedor 1: Indicadores Clave */}
-        <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4">
-          <h2 className="text-base sm:text-lg font-medium text-gray-800 mb-3 sm:mb-4">
-            Indicadores Clave
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
-            <GlobalKpiCard
-              title="Volumen transaccionado"
-              value={formatCurrency(superAdminStats?.transaction_volume || 0)}
-              previousValue={formatCurrency(
-                superAdminStats?.previous_period?.transaction_volume || 0
-              )}
-              change={superAdminStats?.transaction_volume_change || 0}
-              trendData={[]}
-              tooltip="Suma de pagos aprobados en el rango (SUM de payment_amount donde payment_status='paid')"
-              icon={<DollarSignIcon className="w-4 h-4 text-green-500" />}
-              filters={superAdminFilters}
-            />
+      <div className="space-y-3 sm:space-y-4">
+        {/* Fila de filtros */}
+        <DashboardFilters
+          filters={uiFilters}
+          onFilterChange={handleFilterChange}
+          restaurants={restaurantsList || []}
+        />
 
-            <GlobalKpiCard
-              title="Ingresos Xquisito"
-              value={formatCurrency(superAdminStats?.xquisito_income || 0)}
-              previousValue={formatCurrency(
-                superAdminStats?.previous_period?.xquisito_income || 0
-              )}
-              change={superAdminStats?.xquisito_income_change || 0}
-              trendData={[]}
-              tooltip="Comisión/fee de Xquisito sobre el volumen (Volumen transaccionado × fee_servicio)"
-              icon={<ReceiptIcon className="w-4 h-4 text-blue-500" />}
-              filters={superAdminFilters}
-            />
-
-            <GlobalKpiCard
-              title="Comensales"
-              value={formatNumber(superAdminStats?.active_diners || 0)}
-              previousValue={formatNumber(
-                superAdminStats?.previous_period?.active_diners || 0
-              )}
-              change={superAdminStats?.active_diners_change || 0}
-              trendData={[]}
-              tooltip="Usuarios que han realizado al menos un pedido en el período"
-              icon={<UsersIcon className="w-4 h-4 text-indigo-500" />}
-            />
-
-            <GlobalKpiCard
-              title="Órdenes Exitosas"
-              value={formatNumber(superAdminStats?.successful_orders || 0)}
-              previousValue={formatNumber(
-                superAdminStats?.previous_period?.successful_orders || 0
-              )}
-              change={superAdminStats?.successful_orders_change || 0}
-              trendData={[]}
-              tooltip="Número absoluto de órdenes con estado exitoso (payment_status = success)"
-              icon={<CheckIcon className="w-4 h-4 text-green-500" />}
-              filters={superAdminFilters}
-            />
-
-            <GlobalKpiCard
-              title="Admins Activos"
-              value={formatNumber(superAdminStats?.active_admins || 0)}
-              previousValue={formatNumber(
-                superAdminStats?.previous_period?.active_admins || 0
-              )}
-              change={superAdminStats?.active_admins_change || 0}
-              trendData={[]}
-              tooltip="Administradores activos en el sistema"
-              icon={<UserCheckIcon className="w-4 h-4 text-purple-500" />}
-              hideChange={true}
-            />
-
-            {/* Métodos de pago */}
-            {superAdminStats?.most_used_payment_method && (
+        {/* Primera fila: Indicadores Clave y Distribución por Servicio */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+          {/* Contenedor 1: Indicadores Clave */}
+          <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <h2 className="text-base sm:text-lg font-medium text-gray-800">
+                Indicadores Clave
+              </h2>
+              <div
+                className={`flex items-center gap-2 text-xs ${socketConnected ? "text-green-600" : "text-gray-400"}`}
+              >
+                <span
+                  className={`w-2 h-2 rounded-full ${socketConnected ? "bg-green-500 animate-pulse" : "bg-gray-400"}`}
+                ></span>
+                <span className="hidden sm:inline">
+                  {socketConnected ? "Tiempo real" : "Desconectado"}
+                </span>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
               <GlobalKpiCard
-                title="Método de Pago más Usado"
-                value={superAdminStats.most_used_payment_method.method || "N/A"}
-                previousValue={
-                  superAdminStats.most_used_payment_method.method || "N/A"
-                }
-                change={0}
-                trendData={[0, 0, 0, 0, 0, 0]}
-                tooltip={`Método de pago con mayor número de transacciones (${superAdminStats.most_used_payment_method.count || 0} usos)`}
-                icon={<CreditCardIcon className="w-4 h-4 text-blue-500" />}
-                isText={true}
-                hideChange={true}
+                title="Volumen transaccionado"
+                value={formatCurrency(superAdminStats?.transaction_volume || 0)}
+                previousValue={formatCurrency(
+                  superAdminStats?.previous_period?.transaction_volume || 0,
+                )}
+                change={superAdminStats?.transaction_volume_change || 0}
+                trendData={[]}
+                tooltip="Suma de pagos aprobados en el rango (SUM de payment_amount donde payment_status='paid')"
+                icon={<DollarSignIcon className="w-4 h-4 text-green-500" />}
                 filters={superAdminFilters}
               />
-            )}
 
-            <GlobalKpiCard
-              title="Total de Transacciones"
-              value={formatNumber(superAdminStats?.total_transactions || 0)}
-              previousValue={formatNumber(
-                superAdminStats?.previous_period?.total_transactions || 0
+              <GlobalKpiCard
+                title="Ingresos Xquisito"
+                value={formatCurrency(superAdminStats?.xquisito_income || 0)}
+                previousValue={formatCurrency(
+                  superAdminStats?.previous_period?.xquisito_income || 0,
+                )}
+                change={superAdminStats?.xquisito_income_change || 0}
+                trendData={[]}
+                tooltip="Comisión/fee de Xquisito sobre el volumen (Volumen transaccionado × fee_servicio)"
+                icon={<ReceiptIcon className="w-4 h-4 text-blue-500" />}
+                filters={superAdminFilters}
+              />
+
+              <GlobalKpiCard
+                title="Comensales"
+                value={formatNumber(superAdminStats?.active_diners || 0)}
+                previousValue={formatNumber(
+                  superAdminStats?.previous_period?.active_diners || 0,
+                )}
+                change={superAdminStats?.active_diners_change || 0}
+                trendData={[]}
+                tooltip="Usuarios que han realizado al menos un pedido en el período"
+                icon={<UsersIcon className="w-4 h-4 text-indigo-500" />}
+              />
+
+              <GlobalKpiCard
+                title="Órdenes Exitosas"
+                value={formatNumber(superAdminStats?.successful_orders || 0)}
+                previousValue={formatNumber(
+                  superAdminStats?.previous_period?.successful_orders || 0,
+                )}
+                change={superAdminStats?.successful_orders_change || 0}
+                trendData={[]}
+                tooltip="Número absoluto de órdenes con estado exitoso (payment_status = success)"
+                icon={<CheckIcon className="w-4 h-4 text-green-500" />}
+                filters={superAdminFilters}
+              />
+
+              <GlobalKpiCard
+                title="Admins Activos"
+                value={formatNumber(superAdminStats?.active_admins || 0)}
+                previousValue={formatNumber(
+                  superAdminStats?.previous_period?.active_admins || 0,
+                )}
+                change={superAdminStats?.active_admins_change || 0}
+                trendData={[]}
+                tooltip="Administradores activos en el sistema"
+                icon={<UserCheckIcon className="w-4 h-4 text-purple-500" />}
+                hideChange={true}
+              />
+
+              {/* Métodos de pago */}
+              {superAdminStats?.most_used_payment_method && (
+                <GlobalKpiCard
+                  title="Método de Pago más Usado"
+                  value={
+                    superAdminStats.most_used_payment_method.method || "N/A"
+                  }
+                  previousValue={
+                    superAdminStats.most_used_payment_method.method || "N/A"
+                  }
+                  change={0}
+                  trendData={[0, 0, 0, 0, 0, 0]}
+                  tooltip={`Método de pago con mayor número de transacciones (${superAdminStats.most_used_payment_method.count || 0} usos)`}
+                  icon={<CreditCardIcon className="w-4 h-4 text-blue-500" />}
+                  isText={true}
+                  hideChange={true}
+                  filters={superAdminFilters}
+                />
               )}
-              change={superAdminStats?.total_transactions_change || 0}
-              trendData={[]}
-              tooltip="Total de transacciones procesadas (éxito + fallo)"
-              icon={<ArrowDownUpIcon className="w-4 h-4 text-indigo-500" />}
-              filters={superAdminFilters}
-            />
 
-            <GlobalKpiCard
-              title="Campañas Creadas"
-              value={formatNumber(superAdminStats?.total_campaigns || 0)}
-              previousValue={formatNumber(
-                superAdminStats?.previous_period?.total_campaigns || 0
-              )}
-              change={superAdminStats?.total_campaigns_change || 0}
-              trendData={[]}
-              tooltip="Total de campañas creadas por usuarios del admin-portal"
-              icon={<MegaphoneIcon className="w-4 h-4 text-purple-500" />}
-              filters={superAdminFilters}
-            />
+              <GlobalKpiCard
+                title="Total de Transacciones"
+                value={formatNumber(superAdminStats?.total_transactions || 0)}
+                previousValue={formatNumber(
+                  superAdminStats?.previous_period?.total_transactions || 0,
+                )}
+                change={superAdminStats?.total_transactions_change || 0}
+                trendData={[]}
+                tooltip="Total de transacciones procesadas (éxito + fallo)"
+                icon={<ArrowDownUpIcon className="w-4 h-4 text-indigo-500" />}
+                filters={superAdminFilters}
+              />
 
-            <GlobalKpiCard
-              title="Campañas Activas"
-              value={formatNumber(superAdminStats?.active_campaigns || 0)}
-              previousValue={formatNumber(superAdminStats?.active_campaigns || 0)}
-              change={0}
-              trendData={[]}
-              tooltip="Campañas actualmente activas o en ejecución"
-              icon={<RadioIcon className="w-4 h-4 text-green-500" />}
-              filters={superAdminFilters}
-              hideChange={true}
+              <GlobalKpiCard
+                title="Campañas Creadas"
+                value={formatNumber(superAdminStats?.total_campaigns || 0)}
+                previousValue={formatNumber(
+                  superAdminStats?.previous_period?.total_campaigns || 0,
+                )}
+                change={superAdminStats?.total_campaigns_change || 0}
+                trendData={[]}
+                tooltip="Total de campañas creadas por usuarios del admin-portal"
+                icon={<MegaphoneIcon className="w-4 h-4 text-purple-500" />}
+                filters={superAdminFilters}
+              />
+
+              <GlobalKpiCard
+                title="Campañas Activas"
+                value={formatNumber(superAdminStats?.active_campaigns || 0)}
+                previousValue={formatNumber(
+                  superAdminStats?.active_campaigns || 0,
+                )}
+                change={0}
+                trendData={[]}
+                tooltip="Campañas actualmente activas o en ejecución"
+                icon={<RadioIcon className="w-4 h-4 text-green-500" />}
+                filters={superAdminFilters}
+                hideChange={true}
+              />
+            </div>
+          </div>
+
+          {/* Contenedor 2: Distribución por Servicio */}
+          <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4">
+            <ServiceDistributionCharts
+              compact={true}
+              volumeByService={superAdminStats?.volume_by_service || []}
+              ordersByService={superAdminStats?.orders_by_service || []}
+              transactionsByService={
+                superAdminStats?.transactions_by_service || []
+              }
+              filters={{
+                restaurant_id: superAdminFilters.restaurant_id,
+                service: superAdminFilters.service,
+                start_date: superAdminFilters.start_date,
+                end_date: superAdminFilters.end_date,
+              }}
             />
           </div>
         </div>
 
-        {/* Contenedor 2: Distribución por Servicio */}
+        {/* Segunda fila: Indicadores por Servicio (horizontal) */}
         <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4">
-          <ServiceDistributionCharts
-            compact={true}
-            volumeByService={superAdminStats?.volume_by_service || []}
-            ordersByService={superAdminStats?.orders_by_service || []}
-            transactionsByService={
-              superAdminStats?.transactions_by_service || []
-            }
-            filters={{
-              restaurant_id: superAdminFilters.restaurant_id,
-              service: superAdminFilters.service,
-              start_date: superAdminFilters.start_date,
-              end_date: superAdminFilters.end_date,
-            }}
-          />
-        </div>
-      </div>
-
-      {/* Segunda fila: Indicadores por Servicio (horizontal) */}
-      <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4">
-        <h2 className="text-base sm:text-lg font-medium text-gray-800 mb-3 sm:mb-4">
-          Indicadores Por Servicio
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
-          {serviceMetrics.length > 0 ? (
-            serviceMetrics
-              .slice(0, 5)
-              .map((service) => (
-                <ServiceKpiCard
-                  key={service.id}
-                  name={service.name}
-                  status={service.status}
-                  gmv={service.gmv}
-                  gmvPercentage={service.gmvPercentage}
-                  usage={service.usage}
-                  quota={service.quota}
-                  keyMetric={service.keyMetric}
-                  secondaryMetric={service.secondaryMetric}
-                  initialFilters={superAdminFilters}
-                />
-              ))
-          ) : (
-            <div className="col-span-full flex items-center justify-center py-8">
-              <div className="text-center">
-                <UsersIcon className="mx-auto h-12 w-12 text-gray-400" />
-                <h3 className="mt-2 text-sm font-medium text-gray-900">
-                  No hay datos de servicios
-                </h3>
-                <p className="mt-1 text-sm text-gray-500">
-                  No se encontraron datos de servicios para el período
-                  seleccionado.
-                </p>
+          <h2 className="text-base sm:text-lg font-medium text-gray-800 mb-3 sm:mb-4">
+            Indicadores Por Servicio
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
+            {serviceMetrics.length > 0 ? (
+              serviceMetrics
+                .slice(0, 5)
+                .map((service) => (
+                  <ServiceKpiCard
+                    key={service.id}
+                    name={service.name}
+                    status={service.status}
+                    gmv={service.gmv}
+                    gmvPercentage={service.gmvPercentage}
+                    usage={service.usage}
+                    quota={service.quota}
+                    keyMetric={service.keyMetric}
+                    secondaryMetric={service.secondaryMetric}
+                    initialFilters={superAdminFilters}
+                  />
+                ))
+            ) : (
+              <div className="col-span-full flex items-center justify-center py-8">
+                <div className="text-center">
+                  <UsersIcon className="mx-auto h-12 w-12 text-gray-400" />
+                  <h3 className="mt-2 text-sm font-medium text-gray-900">
+                    No hay datos de servicios
+                  </h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    No se encontraron datos de servicios para el período
+                    seleccionado.
+                  </p>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
+        </div>
+
+        {/* Tercera fila: Historial de Transacciones */}
+        <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4">
+          <h2 className="text-base sm:text-lg font-medium text-gray-800 mb-3 sm:mb-4">
+            Historial de Transacciones
+          </h2>
+          <TransactionHistoryTable filters={superAdminFilters} />
         </div>
       </div>
-
-      {/* Tercera fila: Historial de Transacciones */}
-      <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4">
-        <h2 className="text-base sm:text-lg font-medium text-gray-800 mb-3 sm:mb-4">
-          Historial de Transacciones
-        </h2>
-        <TransactionHistoryTable filters={superAdminFilters} />
-      </div>
-    </div>
+    </>
   );
 };
 

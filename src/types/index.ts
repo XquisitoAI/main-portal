@@ -2,6 +2,22 @@
 // INTERFACES PRINCIPALES DEL SISTEMA
 // ============================================
 
+export interface PosProvider {
+  id: string;
+  code: string;
+  name: string;
+  syncMode: string;
+  isActive: boolean;
+}
+
+export interface PosIntegration {
+  id: string;
+  branchId: string;
+  providerId: string;
+  providerName: string;
+  isActive: boolean;
+}
+
 export interface Client {
   id: string;
   name: string; // Nombre del Restaurante
@@ -32,6 +48,7 @@ export interface Branch {
   rooms?: number; // Número total de habitaciones (para room-service) - DEPRECATED, usar roomRanges
   roomRanges?: RoomRange[]; // Rangos de habitaciones (ej: [{start: 100, end: 129}, {start: 200, end: 229}])
   branchNumber?: number; // Número de sucursal para URLs
+  posProviderId?: string | null; // ID del proveedor POS integrado
   active: boolean; // Estado activo/inactivo
   deleted?: boolean; // Soft delete flag
   createdAt?: string; // Fecha de creación ✅ NUEVO

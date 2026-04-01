@@ -1,4 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import {
   analyticsService,
   restaurantService,
@@ -12,6 +14,7 @@ import type {
   TransactionHistoryResponse,
 } from "../types/api";
 import { useAuthenticatedApi } from "./useAuthenticatedApi";
+import { useSocket } from "./useSocket";
 
 // Query keys para React Query
 export const queryKeys = {
@@ -26,7 +29,7 @@ export const queryKeys = {
     limit?: number,
     offset?: number,
     status?: string,
-    dateFilter?: string
+    dateFilter?: string,
   ) => ["orders", restaurantId, limit, offset, status, dateFilter],
   dashboardSummary: (restaurantId: number) => [
     "dashboardSummary",
@@ -47,10 +50,10 @@ export const queryKeys = {
     filters,
   ],
   transactionsTimeline: (
-    filters: SuperAdminFilters & { view_type?: string }
+    filters: SuperAdminFilters & { view_type?: string },
   ) => ["transactionsTimeline", filters],
   paymentMethodsTimeline: (
-    filters: SuperAdminFilters & { view_type?: string }
+    filters: SuperAdminFilters & { view_type?: string },
   ) => ["paymentMethodsTimeline", filters],
   transactionHistory: (filters: TransactionHistoryFilters) => [
     "transactionHistory",
@@ -66,7 +69,7 @@ export const useRestaurants = () => {
     queryKey: queryKeys.restaurants,
     queryFn: async () => {
       const response = await authenticatedApi.get(
-        "/api/super-admin/restaurants"
+        "/api/super-admin/restaurants",
       );
       return response.data.data || [];
     },
@@ -103,7 +106,7 @@ export const useOrders = (
   limit = 20,
   offset = 0,
   status = "todos",
-  dateFilter = "hoy"
+  dateFilter = "hoy",
 ) => {
   return useQuery({
     queryKey: queryKeys.orders(restaurantId, limit, offset, status, dateFilter),
@@ -113,7 +116,7 @@ export const useOrders = (
         limit,
         offset,
         status,
-        dateFilter
+        dateFilter,
       ),
     staleTime: 1 * 60 * 1000, // 1 minuto - órdenes cambian frecuentemente
     retry: 2,
@@ -221,7 +224,7 @@ export const useSuperAdminStats = (filters: SuperAdminFilters = {}) => {
 const useTimeline = (
   endpoint: string,
   filters: SuperAdminFilters & { view_type?: string },
-  queryKey: any[]
+  queryKey: any[],
 ) => {
   const authenticatedApi = useAuthenticatedApi();
 
@@ -257,50 +260,50 @@ const useTimeline = (
 
 // Hook para obtener timeline de volumen
 export const useVolumeTimeline = (
-  filters: SuperAdminFilters & { view_type?: string } = {}
+  filters: SuperAdminFilters & { view_type?: string } = {},
 ) => {
   return useTimeline(
     "timeline/volume",
     filters,
-    queryKeys.volumeTimeline(filters)
+    queryKeys.volumeTimeline(filters),
   );
 };
 
 // Hook para obtener timeline de órdenes
 export const useOrdersTimeline = (
-  filters: SuperAdminFilters & { view_type?: string } = {}
+  filters: SuperAdminFilters & { view_type?: string } = {},
 ) => {
   return useTimeline(
     "timeline/orders",
     filters,
-    queryKeys.ordersTimeline(filters)
+    queryKeys.ordersTimeline(filters),
   );
 };
 
 // Hook para obtener timeline de transacciones
 export const useTransactionsTimeline = (
-  filters: SuperAdminFilters & { view_type?: string } = {}
+  filters: SuperAdminFilters & { view_type?: string } = {},
 ) => {
   return useTimeline(
     "timeline/transactions",
     filters,
-    queryKeys.transactionsTimeline(filters)
+    queryKeys.transactionsTimeline(filters),
   );
 };
 
 export const usePaymentMethodsTimeline = (
-  filters: SuperAdminFilters & { view_type?: string } = {}
+  filters: SuperAdminFilters & { view_type?: string } = {},
 ) => {
   return useTimeline(
     "timeline/payment-methods",
     filters,
-    queryKeys.paymentMethodsTimeline(filters)
+    queryKeys.paymentMethodsTimeline(filters),
   );
 };
 
 // Hook para obtener historial de transacciones paginado
 export const useTransactionHistory = (
-  filters: TransactionHistoryFilters = {}
+  filters: TransactionHistoryFilters = {},
 ) => {
   const authenticatedApi = useAuthenticatedApi();
 
@@ -331,4 +334,108 @@ export const useTransactionHistory = (
     placeholderData: (previousData) => previousData,
     enabled: !!filters.start_date && !!filters.end_date,
   });
+};
+
+// Hook para obtener estadísticas en tiempo real usando WebSocket
+export const useRealtimeStats = (filters: SuperAdminFilters = {}) => {
+  const { socket, isConnected } = useSocket();
+  const [stats, setStats] = useState<SuperAdminStats | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  console.log(
+    "[useRealtimeStats] Current state - stats:",
+    stats,
+    "isLoading:",
+    isLoading,
+    "isConnected:",
+    isConnected,
+  );
+
+  useEffect(() => {
+    if (!socket || !isConnected) {
+      return;
+    }
+
+    // Solicitar stats iniciales
+    setIsLoading(true);
+    socket.emit("request:stats", filters);
+
+    // Escuchar actualizaciones de stats
+    const handleStatsUpdated = (data: {
+      success: boolean;
+      data: SuperAdminStats;
+      timestamp: string;
+    }) => {
+      console.log("[Stats] Updated:", data);
+      console.log("[Stats] Setting stats to:", data.data);
+      setStats(data.data);
+      console.log("[Stats] Stats set complete");
+      setIsLoading(false);
+      setError(null);
+    };
+
+    const handleStatsError = (data: {
+      success: boolean;
+      error: string;
+      timestamp: string;
+    }) => {
+      console.error("[Stats] Error:", data);
+      setError(data.error);
+      setIsLoading(false);
+    };
+
+    // Escuchar notificaciones de nuevos pagos
+    const handleNewPayment = (data?: {
+      restaurantId: number;
+      timestamp: string;
+    }) => {
+      console.log("[Stats] New payment detected, requesting update");
+
+      // Mostrar toast de notificación
+      toast.success("💰 Nueva transacción recibida", {
+        duration: 3000,
+        position: "top-right",
+        style: {
+          background: "#10B981",
+          color: "#fff",
+          fontWeight: "500",
+        },
+        icon: "🔔",
+      });
+
+      socket.emit("request:stats", filters);
+    };
+
+    socket.on("stats:updated", handleStatsUpdated);
+    socket.on("stats:error", handleStatsError);
+    socket.on("payment:new", handleNewPayment);
+
+    // Cleanup
+    return () => {
+      socket.off("stats:updated", handleStatsUpdated);
+      socket.off("stats:error", handleStatsError);
+      socket.off("payment:new", handleNewPayment);
+    };
+  }, [socket, isConnected, filters]);
+
+  // Función para refetch manual
+  const refetch = () => {
+    if (socket && isConnected) {
+      setIsLoading(true);
+      socket.emit("request:stats", filters);
+    }
+  };
+
+  const returnValue = {
+    data: stats,
+    isLoading,
+    error,
+    refetch,
+    isConnected,
+  };
+
+  console.log("[useRealtimeStats] Returning:", returnValue);
+
+  return returnValue;
 };

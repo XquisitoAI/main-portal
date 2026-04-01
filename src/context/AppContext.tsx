@@ -31,7 +31,7 @@ interface AppContextType {
   addClient: (client: ClientFormDataWithInvitation) => Promise<void>;
   updateClient: (id: string, client: Partial<ClientFormData>) => Promise<void>;
   deleteClient: (id: string) => Promise<void>;
-  addBranch: (branch: BranchFormData) => Promise<void>;
+  addBranch: (branch: BranchFormData) => Promise<Branch>;
   updateBranch: (id: string, branch: Partial<BranchFormData>) => Promise<void>;
   deleteBranch: (id: string) => Promise<void>;
   createBatchQrCodes: (data: QrCodeBatchFormData) => Promise<void>;
@@ -166,12 +166,13 @@ export const AppContextProvider: React.FC<{
     }
   };
 
-  const addBranch = async (branch: BranchFormData) => {
+  const addBranch = async (branch: BranchFormData): Promise<Branch> => {
     try {
       setLoading((prev) => ({ ...prev, isSaving: true }));
       clearError();
       const newBranch = await mainPortalApi.createBranch(branch);
       setBranches((prev) => [...prev, newBranch]);
+      return newBranch;
     } catch (error) {
       handleError(error);
       throw error;

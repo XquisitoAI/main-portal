@@ -9,6 +9,8 @@ import type {
   QrCodeFormData,
   QrCodeBatchFormData,
   QrCodeUpdateData,
+  PosProvider,
+  PosIntegration,
 } from "../types";
 
 // ===============================================
@@ -72,6 +74,7 @@ const convertBranchFromBackend = (backendBranch: any): Branch => ({
   rooms: backendBranch.rooms,
   roomRanges: backendBranch.room_ranges,
   branchNumber: backendBranch.branch_number,
+  posProviderId: backendBranch.pos_provider_id,
   active: backendBranch.active,
   deleted: backendBranch.deleted,
   createdAt: backendBranch.created_at,
@@ -418,6 +421,146 @@ class MainPortalApiService {
   }
 
   // ===============================================
+  // MÉTODOS DE POS INTEGRATIONS
+  // ===============================================
+
+  async getPosProviders(token: string): Promise<PosProvider[]> {
+    // El endpoint de POS está en /api/pos, no en /api/main-portal
+    // Hacemos la llamada directamente sin usar makeRequest
+    const url = `${API_BASE_URL}/api/pos/providers`;
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error fetching POS providers: ${response.status}`);
+    }
+
+    const data = await response.json();
+    if (!data.success) {
+      throw new Error(data.error || "Failed to fetch POS providers");
+    }
+
+    const providers = data.providers || [];
+    return providers.map((p: any) => ({
+      id: p.id,
+      code: p.code,
+      name: p.name,
+      syncMode: p.sync_mode,
+      isActive: p.is_active,
+    }));
+  }
+
+  async getBranchPosIntegration(
+    branchId: string,
+    token: string,
+  ): Promise<PosIntegration | null> {
+    try {
+      const url = `${API_BASE_URL}/api/pos/branch/${branchId}/integration`;
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        // Si no hay integración, el endpoint devuelve 404
+        if (response.status === 404) return null;
+        throw new Error(`Error fetching POS integration: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (!data.success) return null;
+
+      const integration = data.integration;
+      if (!integration) return null;
+
+      return {
+        id: integration.id,
+        branchId: integration.branch_id,
+        providerId: integration.pos_providers?.id || integration.provider_id,
+        providerName: integration.pos_providers?.name || "",
+        isActive: integration.is_active,
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  async setBranchPosIntegration(
+    branchId: string,
+    providerId: string,
+    token: string,
+  ): Promise<void> {
+    const url = `${API_BASE_URL}/api/pos/branch/${branchId}/integration`;
+    const response = await fetch(url, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ providerId }),
+    });
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      throw new Error(
+        data.error || `Error setting POS integration: ${response.status}`,
+      );
+    }
+  }
+
+  async deleteBranchPosIntegration(
+    branchId: string,
+    token: string,
+  ): Promise<void> {
+    const url = `${API_BASE_URL}/api/pos/branch/${branchId}/integration`;
+    const response = await fetch(url, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok && response.status !== 404) {
+      const data = await response.json().catch(() => ({}));
+      throw new Error(
+        data.error || `Error deleting POS integration: ${response.status}`,
+      );
+    }
+  }
+
+  async getAllPosIntegrations(token: string): Promise<Record<string, string>> {
+    const url = `${API_BASE_URL}/api/pos/integrations`;
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error fetching POS integrations: ${response.status}`);
+    }
+
+    const data = await response.json();
+    if (!data.success) {
+      throw new Error(data.error || "Failed to fetch POS integrations");
+    }
+
+    // Retorna { branchId: providerId }
+    return data.integrations || {};
+  }
+
+  // ===============================================
   // MÉTODOS DE QR CODES
   // ===============================================
 
@@ -643,6 +786,32 @@ export function useMainPortalApi() {
     getInvitationStatuses: () =>
       makeAuthenticatedRequest((token) =>
         mainPortalApiService.getInvitationStatuses(token),
+      ),
+
+    // Métodos de POS Integrations
+    getPosProviders: () =>
+      makeAuthenticatedRequest((token) =>
+        mainPortalApiService.getPosProviders(token),
+      ),
+    getAllPosIntegrations: () =>
+      makeAuthenticatedRequest((token) =>
+        mainPortalApiService.getAllPosIntegrations(token),
+      ),
+    getBranchPosIntegration: (branchId: string) =>
+      makeAuthenticatedRequest((token) =>
+        mainPortalApiService.getBranchPosIntegration(branchId, token),
+      ),
+    setBranchPosIntegration: (branchId: string, providerId: string) =>
+      makeAuthenticatedRequest((token) =>
+        mainPortalApiService.setBranchPosIntegration(
+          branchId,
+          providerId,
+          token,
+        ),
+      ),
+    deleteBranchPosIntegration: (branchId: string) =>
+      makeAuthenticatedRequest((token) =>
+        mainPortalApiService.deleteBranchPosIntegration(branchId, token),
       ),
 
     // Métodos de QR Codes

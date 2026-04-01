@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useTransactionHistory } from "../../hooks/useApiData";
+import { useSocket } from "../../hooks/useSocket";
 import { formatCurrency, formatDate, formatTime } from "../../utils/formatters";
 import {
   ChevronLeftIcon,
@@ -48,11 +49,38 @@ const TransactionHistoryTable: React.FC<TransactionHistoryTableProps> = ({
       limit: ITEMS_PER_PAGE,
       offset: currentPage * ITEMS_PER_PAGE,
     }),
-    [filters, currentPage]
+    [filters, currentPage],
   );
 
-  const { data, isLoading, isError, error } =
+  const { data, isLoading, isError, error, refetch } =
     useTransactionHistory(queryFilters);
+
+  // WebSocket para actualizaciones en tiempo real
+  const { socket, isConnected } = useSocket();
+
+  useEffect(() => {
+    if (!socket || !isConnected) {
+      return;
+    }
+
+    // Escuchar notificaciones de nuevos pagos
+    const handleNewPayment = (data?: {
+      restaurantId: number;
+      timestamp: string;
+    }) => {
+      console.log(
+        "[TransactionHistory] New payment detected, refetching transactions",
+      );
+      refetch();
+    };
+
+    socket.on("payment:new", handleNewPayment);
+
+    // Cleanup
+    return () => {
+      socket.off("payment:new", handleNewPayment);
+    };
+  }, [socket, isConnected, refetch]);
 
   useEffect(() => {
     setCurrentPage(0);
@@ -276,7 +304,9 @@ const TransactionHistoryTable: React.FC<TransactionHistoryTableProps> = ({
       {/* Paginación mejorada */}
       <div className="flex items-center justify-between px-4 py-4 border-t border-gray-100 mt-4">
         <div className="text-sm text-gray-600">
-          <span className="font-medium">{currentPage * ITEMS_PER_PAGE + 1}</span>
+          <span className="font-medium">
+            {currentPage * ITEMS_PER_PAGE + 1}
+          </span>
           {" - "}
           <span className="font-medium">
             {Math.min((currentPage + 1) * ITEMS_PER_PAGE, totalCount)}

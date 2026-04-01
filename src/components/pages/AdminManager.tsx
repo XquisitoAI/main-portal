@@ -34,6 +34,7 @@ const AdminManager: React.FC<AdminManagerProps> = ({
     addBranch,
     updateBranch,
     deleteBranch,
+    loadBranches,
     loading,
   } = useAppContext();
 
@@ -47,6 +48,9 @@ const AdminManager: React.FC<AdminManagerProps> = ({
   >({});
   const [invitationStatusesLoading, setInvitationStatusesLoading] =
     useState(true);
+
+  // Estado para almacenar proveedores POS
+  const [posProviders, setPosProviders] = useState<any[]>([]);
 
   // Hook para la API
   const mainPortalApi = useMainPortalApi();
@@ -67,6 +71,22 @@ const AdminManager: React.FC<AdminManagerProps> = ({
     };
 
     fetchInvitationStatuses();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Solo cargar una vez al montar el componente
+
+  // Cargar proveedores POS una sola vez
+  useEffect(() => {
+    const fetchPosProviders = async () => {
+      try {
+        const providers = await mainPortalApi.getPosProviders();
+        setPosProviders(providers.filter((p: any) => p.isActive));
+      } catch (error) {
+        console.error("Error fetching POS providers:", error);
+        setPosProviders([]);
+      }
+    };
+
+    fetchPosProviders();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Solo cargar una vez al montar el componente
 
@@ -210,18 +230,60 @@ const AdminManager: React.FC<AdminManagerProps> = ({
   const handleSaveBranch = async (branchData: any) => {
     console.log("📤 Datos de sucursal a guardar:", branchData);
     console.log("📤 room_ranges:", branchData.roomRanges);
+    console.log("📤 posProviderId:", branchData.posProviderId);
     setIsLoading((prev) => ({ ...prev, saving: true }));
 
+    // Extraer posProviderId y _posProviderChanged del branchData
+    const { posProviderId, _posProviderChanged, ...branchDataClean } =
+      branchData;
+
     try {
-      if (branchModal.branch) {
+      let branchId: string;
+      const isEditing = !!branchModal.branch;
+
+      if (isEditing) {
         // Editar sucursal existente
-        await updateBranch(branchModal.branch.id, branchData);
-        toast.success(`Sucursal "${branchData.name}" actualizada exitosamente`);
+        await updateBranch(branchModal.branch!.id, branchDataClean);
+        branchId = branchModal.branch!.id;
       } else {
         // Crear nueva sucursal
-        await addBranch(branchData);
-        toast.success(`Sucursal "${branchData.name}" creada exitosamente`);
+        const newBranch = await addBranch(branchDataClean);
+        branchId = newBranch.id;
       }
+
+      // Manejar integración POS si cambió
+      if (_posProviderChanged) {
+        try {
+          if (posProviderId) {
+            // Crear o actualizar integración POS
+            await mainPortalApi.setBranchPosIntegration(
+              branchId,
+              posProviderId,
+            );
+            console.log("✅ Integración POS configurada");
+          } else {
+            // Eliminar integración POS
+            await mainPortalApi.deleteBranchPosIntegration(branchId);
+            console.log("✅ Integración POS eliminada");
+          }
+
+          // Recargar sucursales para obtener el posProviderId actualizado
+          await loadBranches();
+        } catch (posError) {
+          console.error("Error al configurar integración POS:", posError);
+          // No fallar el guardado completo, solo mostrar advertencia
+          toast.error(
+            "Sucursal guardada, pero hubo un error con la integración POS",
+          );
+          setIsLoading((prev) => ({ ...prev, saving: false }));
+          return;
+        }
+      }
+
+      // Mostrar toast de éxito solo al final
+      toast.success(
+        `Sucursal "${branchData.name}" ${isEditing ? "actualizada" : "creada"} exitosamente`,
+      );
 
       // Pequeño delay para mostrar el feedback de "Guardado"
       await new Promise((resolve) => setTimeout(resolve, 500));
@@ -660,6 +722,8 @@ const AdminManager: React.FC<AdminManagerProps> = ({
         clients={clients}
         branches={branches}
         isLoading={loading.isSaving || isLoading.saving}
+        currentPosProviderId={branchModal.branch?.posProviderId ?? undefined}
+        posProviders={posProviders}
       />
 
       <ConfirmDeleteModal
