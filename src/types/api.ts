@@ -377,6 +377,10 @@ export interface SuperAdminStats {
     service: string;
     count: number;
   }>;
+  income_by_service: Array<{
+    service: string;
+    income: number;
+  }>;
 }
 
 export interface SuperAdminFilters {

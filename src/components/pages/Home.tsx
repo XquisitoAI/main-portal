@@ -167,6 +167,7 @@ const Home: React.FC = () => {
     return superAdminStats.volume_by_service.map((volumeData, index) => {
       const ordersData = superAdminStats.orders_by_service[index];
       const transactionsData = superAdminStats.transactions_by_service[index];
+      const incomeData = superAdminStats.income_by_service?.[index];
       const totalVolume = superAdminStats.transaction_volume || 1;
       const totalOrders = superAdminStats.successful_orders || 1;
 
@@ -178,6 +179,7 @@ const Home: React.FC = () => {
         gmvPercentage: (volumeData.volume / totalVolume) * 100,
         usage: ordersData?.count || 0,
         quota: totalOrders,
+        xquisitoIncome: incomeData?.income || 0,
         keyMetric: {
           name: "Órdenes",
           value: ordersData?.count || 0,
@@ -430,6 +432,7 @@ const Home: React.FC = () => {
                     gmvPercentage={service.gmvPercentage}
                     usage={service.usage}
                     quota={service.quota}
+                    xquisitoIncome={service.xquisitoIncome}
                     keyMetric={service.keyMetric}
                     secondaryMetric={service.secondaryMetric}
                     initialFilters={superAdminFilters}
