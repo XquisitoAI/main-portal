@@ -37,6 +37,7 @@ const ServiceDashboardModal: React.FC<ServiceDashboardModalProps> = ({
   serviceName,
   initialFilters,
 }) => {
+  const hasOrders = serviceName === "Flex Bill" || serviceName === "Tap & Pay";
   const [viewType, setViewType] = useState<"daily" | "weekly" | "monthly" | "hourly">("weekly");
 
   const getDefaultDateRange = () => {
@@ -56,7 +57,7 @@ const ServiceDashboardModal: React.FC<ServiceDashboardModalProps> = ({
   const [selectedDay, setSelectedDay] = useState<Date>(() => new Date());
   const [startHour, setStartHour] = useState<number>(0);
   const [endHour, setEndHour] = useState<number>(23);
-  const [selectedMetric, setSelectedMetric] = useState<"gmv" | "orders" | "transactions" | "avgTicket">("gmv");
+  const [selectedMetric, setSelectedMetric] = useState<"gmv" | "orders" | "transactions" | "avgTicket" | "avgTicketPerTransaction">("gmv");
   const [isMetricDropdownOpen, setIsMetricDropdownOpen] = useState(false);
 
   const crossesMidnight = viewType === "hourly" && endHour < startHour;
@@ -128,15 +129,15 @@ const ServiceDashboardModal: React.FC<ServiceDashboardModalProps> = ({
 
   const serviceMetrics = useMemo(() => {
     if (!volumeData || !ordersData || !transactionsData) {
-      return { gmv: 0, orders: 0, transactions: 0, avgTicket: 0, gmvChange: 0, ordersChange: 0, transactionsChange: 0, avgTicketChange: 0 };
+      return { gmv: 0, orders: 0, transactions: 0, avgTicket: 0, avgTicketPerTransaction: 0, gmvChange: 0, ordersChange: 0, transactionsChange: 0, avgTicketChange: 0, avgTicketPerTransactionChange: 0 };
     }
 
     const totalGmv = volumeData.reduce((s: number, i: TimelineDataItem) => s + sumRow(i), 0);
     const totalOrders = ordersData.reduce((s: number, i: TimelineDataItem) => s + sumRow(i), 0);
     const totalTransactions = transactionsData.reduce((s: number, i: TimelineDataItem) => s + sumRow(i), 0);
     const avgTicket = totalOrders > 0 ? totalGmv / totalOrders : 0;
+    const avgTicketPerTransaction = totalTransactions > 0 ? totalGmv / totalTransactions : 0;
 
-    // Comparar penúltimo vs último período
     const calcChange = (data: any[]) => {
       if (data.length < 2) return 0;
       const prev = sumRow(data[data.length - 2]);
@@ -157,15 +158,28 @@ const ServiceDashboardModal: React.FC<ServiceDashboardModalProps> = ({
     const lastAvgTicket = lastOrders > 0 ? lastGmv / lastOrders : 0;
     const avgTicketChange = prevAvgTicket > 0 ? ((lastAvgTicket - prevAvgTicket) / prevAvgTicket) * 100 : 0;
 
-    return { gmv: totalGmv, orders: totalOrders, transactions: totalTransactions, avgTicket, gmvChange, ordersChange, transactionsChange, avgTicketChange };
+    const prevTx = transactionsData.length > 1 ? sumRow(transactionsData[transactionsData.length - 2]) : 0;
+    const lastTx = transactionsData.length > 0 ? sumRow(transactionsData[transactionsData.length - 1]) : 0;
+    const prevAvgTxTicket = prevTx > 0 ? prevGmv / prevTx : 0;
+    const lastAvgTxTicket = lastTx > 0 ? lastGmv / lastTx : 0;
+    const avgTicketPerTransactionChange = prevAvgTxTicket > 0 ? ((lastAvgTxTicket - prevAvgTxTicket) / prevAvgTxTicket) * 100 : 0;
+
+    return { gmv: totalGmv, orders: totalOrders, transactions: totalTransactions, avgTicket, avgTicketPerTransaction, gmvChange, ordersChange, transactionsChange, avgTicketChange, avgTicketPerTransactionChange };
   }, [volumeData, ordersData, transactionsData]);
 
-  const metricOptions = [
-    { value: "gmv", label: "GMV total" },
-    { value: "orders", label: "Total de órdenes" },
-    { value: "transactions", label: "Total de transacciones" },
-    { value: "avgTicket", label: "Ticket promedio por orden" },
-  ];
+  const metricOptions = hasOrders
+    ? [
+        { value: "gmv", label: "GMV total" },
+        { value: "orders", label: "Total de órdenes" },
+        { value: "transactions", label: "Total de transacciones" },
+        { value: "avgTicket", label: "Ticket promedio por orden" },
+        { value: "avgTicketPerTransaction", label: "Ticket promedio por transacción" },
+      ]
+    : [
+        { value: "gmv", label: "GMV total" },
+        { value: "transactions", label: "Total de transacciones" },
+        { value: "avgTicketPerTransaction", label: "Ticket promedio por transacción" },
+      ];
 
   const chartData = useMemo(() => {
     if (!volumeData || !ordersData || !transactionsData) return [];
@@ -176,7 +190,8 @@ const ServiceDashboardModal: React.FC<ServiceDashboardModalProps> = ({
       const totalOrders = sumRow(ordersItem);
       const totalTransactions = sumRow(transactionsItem);
       const avgTicket = totalOrders > 0 ? totalGmv / totalOrders : 0;
-      return { date: volumeItem.date, gmv: totalGmv, orders: totalOrders, transactions: totalTransactions, avgTicket: Math.round(avgTicket) };
+      const avgTicketPerTx = totalTransactions > 0 ? totalGmv / totalTransactions : 0;
+      return { date: volumeItem.date, gmv: totalGmv, orders: totalOrders, transactions: totalTransactions, avgTicket: Math.round(avgTicket), avgTicketPerTransaction: Math.round(avgTicketPerTx) };
     });
   }, [volumeData, ordersData, transactionsData]);
 
@@ -217,6 +232,7 @@ const ServiceDashboardModal: React.FC<ServiceDashboardModalProps> = ({
     switch (selectedMetric) {
       case "gmv":
       case "avgTicket":
+      case "avgTicketPerTransaction":
         return formatCurrency(value);
       default:
         return formatNumber(value);
@@ -381,36 +397,69 @@ const ServiceDashboardModal: React.FC<ServiceDashboardModalProps> = ({
         ) : (
           <>
             {/* Indicadores clave */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6">
-              <div className="bg-white rounded-lg p-2 sm:p-4 border border-gray-100 shadow-sm">
-                <h3 className="text-[10px] sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">GMV total</h3>
-                <p className="text-base sm:text-2xl font-semibold">{formatCurrency(serviceMetrics.gmv)}</p>
-                <div className={`text-[10px] sm:text-xs mt-1 ${serviceMetrics.gmvChange >= 0 ? "text-green-600" : "text-red-600"}`}>
-                  {formatChange(serviceMetrics.gmvChange)} vs. período anterior
+            {hasOrders ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-4 mb-4 sm:mb-6">
+                <div className="bg-white rounded-lg p-2 sm:p-4 border border-gray-100 shadow-sm">
+                  <h3 className="text-[10px] sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">GMV total</h3>
+                  <p className="text-base sm:text-2xl font-semibold">{formatCurrency(serviceMetrics.gmv)}</p>
+                  <div className={`text-[10px] sm:text-xs mt-1 ${serviceMetrics.gmvChange >= 0 ? "text-green-600" : "text-red-600"}`}>
+                    {formatChange(serviceMetrics.gmvChange)} vs. período anterior
+                  </div>
+                </div>
+                <div className="bg-white rounded-lg p-2 sm:p-4 border border-gray-100 shadow-sm">
+                  <h3 className="text-[10px] sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Total de órdenes</h3>
+                  <p className="text-base sm:text-2xl font-semibold">{formatNumber(serviceMetrics.orders)}</p>
+                  <div className={`text-[10px] sm:text-xs mt-1 ${serviceMetrics.ordersChange >= 0 ? "text-green-600" : "text-red-600"}`}>
+                    {formatChange(serviceMetrics.ordersChange)} vs. período anterior
+                  </div>
+                </div>
+                <div className="bg-white rounded-lg p-2 sm:p-4 border border-gray-100 shadow-sm">
+                  <h3 className="text-[10px] sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Total de transacciones</h3>
+                  <p className="text-base sm:text-2xl font-semibold">{formatNumber(serviceMetrics.transactions)}</p>
+                  <div className={`text-[10px] sm:text-xs mt-1 ${serviceMetrics.transactionsChange >= 0 ? "text-green-600" : "text-red-600"}`}>
+                    {formatChange(serviceMetrics.transactionsChange)} vs. período anterior
+                  </div>
+                </div>
+                <div className="bg-white rounded-lg p-2 sm:p-4 border border-gray-100 shadow-sm">
+                  <h3 className="text-[10px] sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Ticket promedio por orden</h3>
+                  <p className="text-base sm:text-2xl font-semibold">{formatCurrency(serviceMetrics.avgTicket)}</p>
+                  <div className={`text-[10px] sm:text-xs mt-1 ${serviceMetrics.avgTicketChange >= 0 ? "text-green-600" : "text-red-600"}`}>
+                    {formatChange(serviceMetrics.avgTicketChange)} vs. período anterior
+                  </div>
+                </div>
+                <div className="bg-white rounded-lg p-2 sm:p-4 border border-gray-100 shadow-sm">
+                  <h3 className="text-[10px] sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Ticket promedio por transacción</h3>
+                  <p className="text-base sm:text-2xl font-semibold">{formatCurrency(serviceMetrics.avgTicketPerTransaction)}</p>
+                  <div className={`text-[10px] sm:text-xs mt-1 ${serviceMetrics.avgTicketPerTransactionChange >= 0 ? "text-green-600" : "text-red-600"}`}>
+                    {formatChange(serviceMetrics.avgTicketPerTransactionChange)} vs. período anterior
+                  </div>
                 </div>
               </div>
-              <div className="bg-white rounded-lg p-2 sm:p-4 border border-gray-100 shadow-sm">
-                <h3 className="text-[10px] sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Total de órdenes</h3>
-                <p className="text-base sm:text-2xl font-semibold">{formatNumber(serviceMetrics.orders)}</p>
-                <div className={`text-[10px] sm:text-xs mt-1 ${serviceMetrics.ordersChange >= 0 ? "text-green-600" : "text-red-600"}`}>
-                  {formatChange(serviceMetrics.ordersChange)} vs. período anterior
+            ) : (
+              <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-4 sm:mb-6">
+                <div className="bg-white rounded-lg p-2 sm:p-4 border border-gray-100 shadow-sm">
+                  <h3 className="text-[10px] sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">GMV total</h3>
+                  <p className="text-base sm:text-2xl font-semibold">{formatCurrency(serviceMetrics.gmv)}</p>
+                  <div className={`text-[10px] sm:text-xs mt-1 ${serviceMetrics.gmvChange >= 0 ? "text-green-600" : "text-red-600"}`}>
+                    {formatChange(serviceMetrics.gmvChange)} vs. período anterior
+                  </div>
+                </div>
+                <div className="bg-white rounded-lg p-2 sm:p-4 border border-gray-100 shadow-sm">
+                  <h3 className="text-[10px] sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Total de transacciones</h3>
+                  <p className="text-base sm:text-2xl font-semibold">{formatNumber(serviceMetrics.transactions)}</p>
+                  <div className={`text-[10px] sm:text-xs mt-1 ${serviceMetrics.transactionsChange >= 0 ? "text-green-600" : "text-red-600"}`}>
+                    {formatChange(serviceMetrics.transactionsChange)} vs. período anterior
+                  </div>
+                </div>
+                <div className="bg-white rounded-lg p-2 sm:p-4 border border-gray-100 shadow-sm">
+                  <h3 className="text-[10px] sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Ticket promedio por transacción</h3>
+                  <p className="text-base sm:text-2xl font-semibold">{formatCurrency(serviceMetrics.avgTicketPerTransaction)}</p>
+                  <div className={`text-[10px] sm:text-xs mt-1 ${serviceMetrics.avgTicketPerTransactionChange >= 0 ? "text-green-600" : "text-red-600"}`}>
+                    {formatChange(serviceMetrics.avgTicketPerTransactionChange)} vs. período anterior
+                  </div>
                 </div>
               </div>
-              <div className="bg-white rounded-lg p-2 sm:p-4 border border-gray-100 shadow-sm">
-                <h3 className="text-[10px] sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Total de transacciones</h3>
-                <p className="text-base sm:text-2xl font-semibold">{formatNumber(serviceMetrics.transactions)}</p>
-                <div className={`text-[10px] sm:text-xs mt-1 ${serviceMetrics.transactionsChange >= 0 ? "text-green-600" : "text-red-600"}`}>
-                  {formatChange(serviceMetrics.transactionsChange)} vs. período anterior
-                </div>
-              </div>
-              <div className="bg-white rounded-lg p-2 sm:p-4 border border-gray-100 shadow-sm">
-                <h3 className="text-[10px] sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Ticket promedio por orden</h3>
-                <p className="text-base sm:text-2xl font-semibold">{formatCurrency(serviceMetrics.avgTicket)}</p>
-                <div className={`text-[10px] sm:text-xs mt-1 ${serviceMetrics.avgTicketChange >= 0 ? "text-green-600" : "text-red-600"}`}>
-                  {formatChange(serviceMetrics.avgTicketChange)} vs. período anterior
-                </div>
-              </div>
-            </div>
+            )}
 
             {/* Gráfica */}
             <div className="bg-white rounded-lg p-2 sm:p-4 border border-gray-100 shadow-sm mb-4 sm:mb-6">

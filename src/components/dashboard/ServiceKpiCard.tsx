@@ -76,7 +76,9 @@ const ServiceKpiCard: React.FC<ServiceKpiCardProps> = ({
         onClick={handleCardClick}
       >
         <div className="flex items-center justify-between mb-1.5 sm:mb-2 gap-1">
-          <h3 className="font-medium text-gray-800 text-xs sm:text-sm truncate">{name}</h3>
+          <h3 className="font-medium text-gray-800 text-xs sm:text-sm truncate">
+            {name}
+          </h3>
           <span
             className={`text-[10px] sm:text-xs px-1 sm:px-1.5 py-0.5 rounded-full flex-shrink-0 ${getStatusStyle()}`}
           >
@@ -97,16 +99,11 @@ const ServiceKpiCard: React.FC<ServiceKpiCardProps> = ({
             </span>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
-          <div className="min-w-0">
-            <p className="text-[10px] sm:text-xs text-gray-500 truncate">{keyMetric.name}</p>
-            <p className={`text-[10px] sm:text-xs font-medium ${getMetricStyle()}`}>
-              {keyMetric.value}
-              {keyMetric.unit}
+        <div className="min-w-0">
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] sm:text-xs text-gray-500 truncate">
+              {secondaryMetric.name}
             </p>
-          </div>
-          <div className="min-w-0">
-            <p className="text-[10px] sm:text-xs text-gray-500 truncate">{secondaryMetric.name}</p>
             <p className="text-[10px] sm:text-xs font-medium">
               {secondaryMetric.value}
               {secondaryMetric.unit}
