@@ -71,10 +71,41 @@ const DetailedVolumeChart: React.FC<DetailedVolumeChartProps> = ({
   };
 
   // Estado para los filtros
-  const [viewType, setViewType] = useState<"daily" | "weekly" | "monthly">(
-    "weekly"
-  );
+  const [viewType, setViewType] = useState<
+    "daily" | "weekly" | "monthly" | "hourly"
+  >("weekly");
   const [dateRange, setDateRange] = useState(getDefaultDateRange());
+  const [selectedDay, setSelectedDay] = useState<Date>(() => new Date());
+  const [startHour, setStartHour] = useState<number>(0);
+  const [endHour, setEndHour] = useState<number>(23);
+
+  const crossesMidnight = viewType === "hourly" && endHour < startHour;
+  const endDayForHourly = (() => {
+    if (!crossesMidnight) return selectedDay;
+    const d = new Date(selectedDay);
+    d.setDate(d.getDate() + 1);
+    return d;
+  })();
+
+  const localDateStr = (date: Date) => {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  };
+
+  const hourlyTimelineFilters =
+    viewType === "hourly"
+      ? {
+          start_date: localDateStr(selectedDay),
+          end_date: localDateStr(endDayForHourly),
+          start_time: `${String(startHour).padStart(2, "0")}:00`,
+          end_time: `${String(endHour).padStart(2, "0")}:00`,
+        }
+      : {
+          start_date: dateRange.startDate.toISOString().split("T")[0],
+          end_date: dateRange.endDate.toISOString().split("T")[0],
+        };
 
   // Obtener datos del backend
   const {
@@ -83,8 +114,7 @@ const DetailedVolumeChart: React.FC<DetailedVolumeChartProps> = ({
     isError,
   } = useVolumeTimeline({
     view_type: viewType,
-    start_date: dateRange.startDate.toISOString().split("T")[0],
-    end_date: dateRange.endDate.toISOString().split("T")[0],
+    ...hourlyTimelineFilters,
   });
 
   // Calcular el cambio porcentual
@@ -113,6 +143,22 @@ const DetailedVolumeChart: React.FC<DetailedVolumeChartProps> = ({
     });
   };
 
+  const navigateDay = (delta: number) => {
+    setSelectedDay((d) => {
+      const next = new Date(d);
+      next.setDate(next.getDate() + delta);
+      return next;
+    });
+  };
+
+  const formatDayDisplay = (date: Date) =>
+    date.toLocaleDateString("es-MX", {
+      weekday: "short",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+
   // Función para limpiar filtros
   const resetFilters = () => {
     setViewType("weekly");
@@ -120,11 +166,17 @@ const DetailedVolumeChart: React.FC<DetailedVolumeChartProps> = ({
       startDate: new Date(new Date().setDate(new Date().getDate() - 30)),
       endDate: new Date(),
     });
+    setSelectedDay(new Date());
+    setStartHour(0);
+    setEndHour(23);
   };
 
   // Formatear etiqueta de fecha para mostrar en el eje X
   const formatDateLabel = (dateKey: string) => {
-    if (viewType === "daily") {
+    if (viewType === "hourly") {
+      const hour = dateKey.split("T")[1];
+      return `${hour}:00`;
+    } else if (viewType === "daily") {
       const [year, month, day] = dateKey.split("-");
       const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
       return date.toLocaleDateString("es-MX", {
@@ -152,7 +204,7 @@ const DetailedVolumeChart: React.FC<DetailedVolumeChartProps> = ({
     if (active && payload && payload.length) {
       const total = payload.reduce(
         (sum: number, entry: any) => sum + entry.value,
-        0
+        0,
       );
       return (
         <div className="bg-white p-1.5 sm:p-2 border border-gray-200 shadow-sm rounded-md">
@@ -213,30 +265,46 @@ const DetailedVolumeChart: React.FC<DetailedVolumeChartProps> = ({
 
         {/* Controles de filtro */}
         <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 mb-4 sm:mb-6 items-start sm:items-center">
-          {/* Selector de rango de fechas */}
-          <div className="flex gap-2 items-center w-full sm:w-auto">
-            <div className="flex-1 sm:flex-none">
-              <label className="text-[10px] sm:text-xs text-gray-500 block mb-1">Inicio</label>
-              <input
-                type="date"
-                value={formatDateForInput(dateRange.startDate)}
-                onChange={handleStartDateChange}
-                className="text-xs sm:text-sm p-1 sm:p-1.5 border border-gray-200 rounded w-full"
-              />
+          {/* Selector de rango de fechas — oculto en modo Hora */}
+          {viewType !== "hourly" && (
+            <div className="flex gap-2 items-center w-full sm:w-auto">
+              <div className="flex-1 sm:flex-none">
+                <label className="text-[10px] sm:text-xs text-gray-500 block mb-1">
+                  Inicio
+                </label>
+                <input
+                  type="date"
+                  value={formatDateForInput(dateRange.startDate)}
+                  onChange={handleStartDateChange}
+                  className="text-xs sm:text-sm p-1 sm:p-1.5 border border-gray-200 rounded w-full"
+                />
+              </div>
+              <div className="flex-1 sm:flex-none">
+                <label className="text-[10px] sm:text-xs text-gray-500 block mb-1">
+                  Fin
+                </label>
+                <input
+                  type="date"
+                  value={formatDateForInput(dateRange.endDate)}
+                  onChange={handleEndDateChange}
+                  className="text-xs sm:text-sm p-1 sm:p-1.5 border border-gray-200 rounded w-full"
+                />
+              </div>
             </div>
-            <div className="flex-1 sm:flex-none">
-              <label className="text-[10px] sm:text-xs text-gray-500 block mb-1">Fin</label>
-              <input
-                type="date"
-                value={formatDateForInput(dateRange.endDate)}
-                onChange={handleEndDateChange}
-                className="text-xs sm:text-sm p-1 sm:p-1.5 border border-gray-200 rounded w-full"
-              />
-            </div>
-          </div>
+          )}
 
           {/* Toggle de visualización */}
           <div className="flex bg-gray-100 rounded-md p-0.5 sm:p-1 sm:ml-auto w-full sm:w-auto justify-center">
+            <button
+              onClick={() => setViewType("hourly")}
+              className={`px-2 sm:px-3 py-1 text-xs sm:text-sm rounded-md flex-1 sm:flex-none ${
+                viewType === "hourly"
+                  ? "bg-white text-purple-700 shadow"
+                  : "text-gray-600"
+              }`}
+            >
+              Hora
+            </button>
             <button
               onClick={() => setViewType("daily")}
               className={`px-2 sm:px-3 py-1 text-xs sm:text-sm rounded-md flex-1 sm:flex-none ${
@@ -269,6 +337,67 @@ const DetailedVolumeChart: React.FC<DetailedVolumeChartProps> = ({
             </button>
           </div>
         </div>
+        {/* Controles de modo Hora */}
+        {viewType === "hourly" && (
+          <div className="flex flex-wrap gap-3 sm:gap-4 mb-4 sm:mb-6 items-center">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => navigateDay(-1)}
+                className="w-6 h-6 flex items-center justify-center rounded bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm"
+              >
+                ‹
+              </button>
+              <span className="text-xs sm:text-sm font-medium text-gray-700 min-w-[160px] text-center">
+                {formatDayDisplay(selectedDay)}
+              </span>
+              <button
+                onClick={() => navigateDay(1)}
+                className="w-6 h-6 flex items-center justify-center rounded bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm"
+              >
+                ›
+              </button>
+            </div>
+            <div className="flex items-center gap-2">
+              <div>
+                <label className="text-[10px] sm:text-xs text-gray-500 block mb-1">
+                  Desde
+                </label>
+                <select
+                  value={startHour}
+                  onChange={(e) => setStartHour(Number(e.target.value))}
+                  className="text-xs sm:text-sm p-1 sm:p-1.5 border border-gray-200 rounded"
+                >
+                  {Array.from({ length: 24 }, (_, i) => (
+                    <option key={i} value={i}>
+                      {String(i).padStart(2, "0")}:00
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-[10px] sm:text-xs text-gray-500 block mb-1">
+                  Hasta
+                </label>
+                <select
+                  value={endHour}
+                  onChange={(e) => setEndHour(Number(e.target.value))}
+                  className="text-xs sm:text-sm p-1 sm:p-1.5 border border-gray-200 rounded"
+                >
+                  {Array.from({ length: 24 }, (_, i) => (
+                    <option key={i} value={i}>
+                      {String(i).padStart(2, "0")}:00
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {crossesMidnight && (
+                <span className="text-[10px] sm:text-xs bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full self-end mb-1">
+                  +1 día
+                </span>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Gráfica */}
         <div className="h-56 sm:h-80">
@@ -299,9 +428,17 @@ const DetailedVolumeChart: React.FC<DetailedVolumeChartProps> = ({
                   tickMargin={8}
                   axisLine={{ stroke: "#E5E7EB" }}
                   tickLine={false}
-                  angle={viewType === "daily" ? -45 : 0}
-                  textAnchor={viewType === "daily" ? "end" : "middle"}
-                  height={viewType === "daily" ? 50 : 25}
+                  angle={
+                    viewType === "daily" || viewType === "hourly" ? -45 : 0
+                  }
+                  textAnchor={
+                    viewType === "daily" || viewType === "hourly"
+                      ? "end"
+                      : "middle"
+                  }
+                  height={
+                    viewType === "daily" || viewType === "hourly" ? 50 : 25
+                  }
                 />
                 <YAxis
                   tickFormatter={(value) => formatCurrency(value).split(".")[0]}

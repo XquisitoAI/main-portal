@@ -382,6 +382,8 @@ export interface SuperAdminStats {
 export interface SuperAdminFilters {
   start_date?: string;
   end_date?: string;
+  start_time?: string; // "HH:00" — solo para view_type=hourly
+  end_time?: string;   // "HH:00" — solo para view_type=hourly
   restaurant_id?: number | number[]; // Permitir un ID o array de IDs
   service?:
     | "todos"

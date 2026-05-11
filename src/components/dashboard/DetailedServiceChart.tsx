@@ -74,10 +74,13 @@ const DetailedServiceChart: React.FC<DetailedServiceChartProps> = ({
   };
 
   // Estado para los filtros
-  const [viewType, setViewType] = useState<"daily" | "weekly" | "monthly">(
-    "weekly"
-  );
+  const [viewType, setViewType] = useState<
+    "daily" | "weekly" | "monthly" | "hourly"
+  >("weekly");
   const [dateRange, setDateRange] = useState(getInitialDateRange());
+  const [selectedDay, setSelectedDay] = useState<Date>(() => new Date());
+  const [startHour, setStartHour] = useState<number>(0);
+  const [endHour, setEndHour] = useState<number>(23);
   // Estado para los datos de la gráfica
   const [chartData, setChartData] = useState<any[]>([]);
   const [percentChange, setPercentChange] = useState<number>(0);
@@ -100,10 +103,32 @@ const DetailedServiceChart: React.FC<DetailedServiceChartProps> = ({
             ? "/api/super-admin/timeline/orders"
             : "/api/super-admin/timeline/transactions";
 
+      const crossesMidnight = viewType === "hourly" && endHour < startHour;
+      const endDayForHourly = (() => {
+        if (!crossesMidnight) return selectedDay;
+        const d = new Date(selectedDay);
+        d.setDate(d.getDate() + 1);
+        return d;
+      })();
+
+      const localDateStr = (date: Date) => {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, "0");
+        const d = String(date.getDate()).padStart(2, "0");
+        return `${y}-${m}-${d}`;
+      };
+
       const params = new URLSearchParams();
       params.append("view_type", viewType);
-      params.append("start_date", dateRange.startDate.toISOString());
-      params.append("end_date", dateRange.endDate.toISOString());
+      if (viewType === "hourly") {
+        params.append("start_date", localDateStr(selectedDay));
+        params.append("end_date", localDateStr(endDayForHourly));
+        params.append("start_time", `${String(startHour).padStart(2, "0")}:00`);
+        params.append("end_time", `${String(endHour).padStart(2, "0")}:00`);
+      } else {
+        params.append("start_date", dateRange.startDate.toISOString());
+        params.append("end_date", dateRange.endDate.toISOString());
+      }
 
       if (filters.restaurant_id !== undefined) {
         if (Array.isArray(filters.restaurant_id)) {
@@ -118,7 +143,7 @@ const DetailedServiceChart: React.FC<DetailedServiceChartProps> = ({
       }
 
       const response = await authenticatedApi.get(
-        `${endpoint}?${params.toString()}`
+        `${endpoint}?${params.toString()}`,
       );
       const data = response.data.data;
 
@@ -135,7 +160,15 @@ const DetailedServiceChart: React.FC<DetailedServiceChartProps> = ({
   // Actualizar los datos cuando cambien los filtros
   useEffect(() => {
     fetchTimelineData();
-  }, [viewType, dateRange, chartType, filters]);
+  }, [
+    viewType,
+    dateRange,
+    chartType,
+    filters,
+    selectedDay,
+    startHour,
+    endHour,
+  ]);
   // Formatear valores según el tipo de métrica
   const formatValue = (value: number) => {
     switch (chartType) {
@@ -169,6 +202,22 @@ const DetailedServiceChart: React.FC<DetailedServiceChartProps> = ({
     });
   };
 
+  const navigateDay = (delta: number) => {
+    setSelectedDay((d) => {
+      const next = new Date(d);
+      next.setDate(next.getDate() + delta);
+      return next;
+    });
+  };
+
+  const formatDayDisplay = (date: Date) =>
+    date.toLocaleDateString("es-MX", {
+      weekday: "short",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+
   // Función para limpiar filtros
   const resetFilters = () => {
     setViewType("weekly");
@@ -176,11 +225,18 @@ const DetailedServiceChart: React.FC<DetailedServiceChartProps> = ({
       startDate: new Date(new Date().setDate(new Date().getDate() - 30)),
       endDate: new Date(),
     });
+    setSelectedDay(new Date());
+    setStartHour(0);
+    setEndHour(23);
   };
 
   // Formatear etiqueta de fecha para mostrar en el eje X
   const formatDateLabel = (dateKey: string) => {
-    if (viewType === "daily") {
+    if (viewType === "hourly") {
+      // dateKey = "YYYY-MM-DDTHH"
+      const hour = dateKey.split("T")[1];
+      return `${hour}:00`;
+    } else if (viewType === "daily") {
       const [year, month, day] = dateKey.split("-");
       const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
       return date.toLocaleDateString("es-MX", {
@@ -231,7 +287,7 @@ const DetailedServiceChart: React.FC<DetailedServiceChartProps> = ({
           <div className="text-[10px] sm:text-xs font-medium border-t border-gray-100 mt-1 pt-1">
             Total:{" "}
             {formatValue(
-              payload.reduce((sum: number, entry: any) => sum + entry.value, 0)
+              payload.reduce((sum: number, entry: any) => sum + entry.value, 0),
             )}
           </div>
         </div>
@@ -251,7 +307,9 @@ const DetailedServiceChart: React.FC<DetailedServiceChartProps> = ({
         </button>
         {/* Título y cambio porcentual */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-4 sm:mb-6 pr-6">
-          <h3 className="text-base sm:text-xl font-semibold text-gray-800">{title}</h3>
+          <h3 className="text-base sm:text-xl font-semibold text-gray-800">
+            {title}
+          </h3>
           <div
             className={`text-xs sm:text-sm font-medium px-2 py-1 rounded w-fit ${percentChange >= 0 ? "bg-green-50 text-green-600" : "bg-red-50 text-red-600"}`}
           >
@@ -268,29 +326,41 @@ const DetailedServiceChart: React.FC<DetailedServiceChartProps> = ({
         )}
         {/* Controles de filtro */}
         <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 mb-4 sm:mb-6 items-start sm:items-center">
-          {/* Selector de rango de fechas */}
-          <div className="flex gap-2 items-center w-full sm:w-auto">
-            <div className="flex-1 sm:flex-none">
-              <label className="text-[10px] sm:text-xs text-gray-500 block mb-1">Inicio</label>
-              <input
-                type="date"
-                value={formatDateForInput(dateRange.startDate)}
-                onChange={handleStartDateChange}
-                className="text-xs sm:text-sm p-1 sm:p-1.5 border border-gray-200 rounded w-full"
-              />
+          {/* Selector de rango de fechas — oculto en modo Hora */}
+          {viewType !== "hourly" && (
+            <div className="flex gap-2 items-center w-full sm:w-auto">
+              <div className="flex-1 sm:flex-none">
+                <label className="text-[10px] sm:text-xs text-gray-500 block mb-1">
+                  Inicio
+                </label>
+                <input
+                  type="date"
+                  value={formatDateForInput(dateRange.startDate)}
+                  onChange={handleStartDateChange}
+                  className="text-xs sm:text-sm p-1 sm:p-1.5 border border-gray-200 rounded w-full"
+                />
+              </div>
+              <div className="flex-1 sm:flex-none">
+                <label className="text-[10px] sm:text-xs text-gray-500 block mb-1">
+                  Fin
+                </label>
+                <input
+                  type="date"
+                  value={formatDateForInput(dateRange.endDate)}
+                  onChange={handleEndDateChange}
+                  className="text-xs sm:text-sm p-1 sm:p-1.5 border border-gray-200 rounded w-full"
+                />
+              </div>
             </div>
-            <div className="flex-1 sm:flex-none">
-              <label className="text-[10px] sm:text-xs text-gray-500 block mb-1">Fin</label>
-              <input
-                type="date"
-                value={formatDateForInput(dateRange.endDate)}
-                onChange={handleEndDateChange}
-                className="text-xs sm:text-sm p-1 sm:p-1.5 border border-gray-200 rounded w-full"
-              />
-            </div>
-          </div>
+          )}
           {/* Toggle de visualización */}
           <div className="flex bg-gray-100 rounded-md p-0.5 sm:p-1 sm:ml-auto w-full sm:w-auto justify-center">
+            <button
+              onClick={() => setViewType("hourly")}
+              className={`px-2 sm:px-3 py-1 text-xs sm:text-sm rounded-md flex-1 sm:flex-none ${viewType === "hourly" ? "bg-white text-purple-700 shadow" : "text-gray-600"}`}
+            >
+              Hora
+            </button>
             <button
               onClick={() => setViewType("daily")}
               className={`px-2 sm:px-3 py-1 text-xs sm:text-sm rounded-md flex-1 sm:flex-none ${viewType === "daily" ? "bg-white text-purple-700 shadow" : "text-gray-600"}`}
@@ -311,6 +381,69 @@ const DetailedServiceChart: React.FC<DetailedServiceChartProps> = ({
             </button>
           </div>
         </div>
+        {/* Controles de modo Hora */}
+        {viewType === "hourly" && (
+          <div className="flex flex-wrap gap-3 sm:gap-4 mb-4 sm:mb-6 items-center">
+            {/* Navegador de día */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => navigateDay(-1)}
+                className="w-6 h-6 flex items-center justify-center rounded bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm"
+              >
+                ‹
+              </button>
+              <span className="text-xs sm:text-sm font-medium text-gray-700 min-w-[160px] text-center">
+                {formatDayDisplay(selectedDay)}
+              </span>
+              <button
+                onClick={() => navigateDay(1)}
+                className="w-6 h-6 flex items-center justify-center rounded bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm"
+              >
+                ›
+              </button>
+            </div>
+            {/* Rango de hora */}
+            <div className="flex items-center gap-2">
+              <div>
+                <label className="text-[10px] sm:text-xs text-gray-500 block mb-1">
+                  Desde
+                </label>
+                <select
+                  value={startHour}
+                  onChange={(e) => setStartHour(Number(e.target.value))}
+                  className="text-xs sm:text-sm p-1 sm:p-1.5 border border-gray-200 rounded"
+                >
+                  {Array.from({ length: 24 }, (_, i) => (
+                    <option key={i} value={i}>
+                      {String(i).padStart(2, "0")}:00
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-[10px] sm:text-xs text-gray-500 block mb-1">
+                  Hasta
+                </label>
+                <select
+                  value={endHour}
+                  onChange={(e) => setEndHour(Number(e.target.value))}
+                  className="text-xs sm:text-sm p-1 sm:p-1.5 border border-gray-200 rounded"
+                >
+                  {Array.from({ length: 24 }, (_, i) => (
+                    <option key={i} value={i}>
+                      {String(i).padStart(2, "0")}:00
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {endHour < startHour && (
+                <span className="text-[10px] sm:text-xs bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full self-end mb-1">
+                  +1 día
+                </span>
+              )}
+            </div>
+          </div>
+        )}
         {/* Gráfica */}
         <div className="h-56 sm:h-80 relative">
           {isLoading ? (
@@ -340,9 +473,17 @@ const DetailedServiceChart: React.FC<DetailedServiceChartProps> = ({
                     stroke: "#E5E7EB",
                   }}
                   tickLine={false}
-                  angle={viewType === "daily" ? -45 : 0}
-                  textAnchor={viewType === "daily" ? "end" : "middle"}
-                  height={viewType === "daily" ? 50 : 25}
+                  angle={
+                    viewType === "daily" || viewType === "hourly" ? -45 : 0
+                  }
+                  textAnchor={
+                    viewType === "daily" || viewType === "hourly"
+                      ? "end"
+                      : "middle"
+                  }
+                  height={
+                    viewType === "daily" || viewType === "hourly" ? 50 : 25
+                  }
                 />
                 <YAxis
                   tickFormatter={(value) => {
