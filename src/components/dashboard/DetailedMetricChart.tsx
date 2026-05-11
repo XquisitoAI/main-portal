@@ -42,30 +42,20 @@ interface TimelineDataItem {
   "Tap & Pay"?: number;
 }
 
-// Calcular el cambio porcentual entre primer y último valor
+const SERVICES = ["Flex Bill", "Tap Order & Pay", "Pick & Go", "Room Service", "Tap & Pay"];
+
+// Compara el último período vs. el penúltimo (ej: hoy vs ayer, esta semana vs la anterior)
 const calculatePercentChange = (
   data: any[],
   metricType: "currency" | "number" | "percent",
 ) => {
   if (data.length < 2) return 0;
-
-  // Sumar Flex Bill, Tap Order & Pay, Pick & Go, Room Service & Tap & Pay para cada período
-  const firstTotal =
-    (data[0]["Flex Bill"] || 0) +
-    (data[0]["Tap Order & Pay"] || 0) +
-    (data[0]["Pick & Go"] || 0) +
-    (data[0]["Room Service"] || 0) +
-    (data[0]["Tap & Pay"] || 0);
-  const lastTotal =
-    (data[data.length - 1]["Flex Bill"] || 0) +
-    (data[data.length - 1]["Tap Order & Pay"] || 0) +
-    (data[data.length - 1]["Pick & Go"] || 0) +
-    (data[data.length - 1]["Room Service"] || 0) +
-    (data[data.length - 1]["Tap & Pay"] || 0);
-
-  if (firstTotal === 0) return lastTotal > 0 ? 100 : 0;
-
-  return ((lastTotal - firstTotal) / firstTotal) * 100;
+  const prev = data[data.length - 2];
+  const curr = data[data.length - 1];
+  const prevTotal = SERVICES.reduce((s, k) => s + (prev[k] || 0), 0);
+  const currTotal = SERVICES.reduce((s, k) => s + (curr[k] || 0), 0);
+  if (prevTotal === 0) return currTotal > 0 ? 100 : 0;
+  return ((currTotal - prevTotal) / prevTotal) * 100;
 };
 
 const DetailedMetricChart: React.FC<DetailedMetricChartProps> = ({

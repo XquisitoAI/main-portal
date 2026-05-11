@@ -35,19 +35,15 @@ interface DetailedServiceChartProps {
   };
 }
 
-// Calcular el cambio porcentual total
+// Compara el último período vs. el penúltimo (ej: hoy vs ayer, esta semana vs la anterior)
 const calculateTotalChange = (data: any[], services: string[]) => {
   if (data.length < 2) return 0;
-  // Sumar todos los valores del primer período
-  const firstTotal = services.reduce((sum, service) => {
-    return sum + (data[0][service] || 0);
-  }, 0);
-  // Sumar todos los valores del último período
-  const lastTotal = services.reduce((sum, service) => {
-    return sum + (data[data.length - 1][service] || 0);
-  }, 0);
-  // Calcular el cambio porcentual
-  return ((lastTotal - firstTotal) / firstTotal) * 100;
+  const prev = data[data.length - 2];
+  const curr = data[data.length - 1];
+  const prevTotal = services.reduce((sum, s) => sum + (prev[s] || 0), 0);
+  const currTotal = services.reduce((sum, s) => sum + (curr[s] || 0), 0);
+  if (prevTotal === 0) return currTotal > 0 ? 100 : 0;
+  return ((currTotal - prevTotal) / prevTotal) * 100;
 };
 
 const DetailedServiceChart: React.FC<DetailedServiceChartProps> = ({
