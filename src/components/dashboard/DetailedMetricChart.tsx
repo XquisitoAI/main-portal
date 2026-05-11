@@ -598,30 +598,6 @@ const DetailedMetricChart: React.FC<DetailedMetricChartProps> = ({
                   dot={{ r: 2 }}
                   activeDot={{ r: 4 }}
                 />
-                <Line
-                  type="monotone"
-                  dataKey="Pick & Go"
-                  stroke="#fbbf24"
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                  activeDot={{ r: 5 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="Room Service"
-                  stroke="#d92926"
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                  activeDot={{ r: 5 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="Tap & Pay"
-                  stroke="#3B82F6"
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                  activeDot={{ r: 5 }}
-                />
               </LineChart>
             </ResponsiveContainer>
           )}
