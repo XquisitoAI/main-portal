@@ -187,9 +187,9 @@ const TransactionHistoryTable: React.FC<TransactionHistoryTableProps> = ({
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-500">Xquisito:</span>
+                <span className="text-gray-500">Even:</span>
                 <span className="text-blue-600">
-                  {formatCurrency(tx.xquisito_net_income)}
+                  {formatCurrency(tx.even_net_income)}
                 </span>
               </div>
               <div className="flex justify-between col-span-2">
@@ -234,7 +234,7 @@ const TransactionHistoryTable: React.FC<TransactionHistoryTableProps> = ({
                   <span className="text-green-600">Restaurant</span>
                 </th>
                 <th className="px-5 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  <span className="text-blue-600">Xquisito</span>
+                  <span className="text-blue-600">Even</span>
                 </th>
                 <th className="px-5 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider hidden lg:table-cell">
                   <span className="text-purple-600">Ecart</span>
@@ -286,7 +286,7 @@ const TransactionHistoryTable: React.FC<TransactionHistoryTableProps> = ({
                   </td>
                   <td className="px-5 py-4 whitespace-nowrap text-right">
                     <span className="text-sm font-medium text-blue-600">
-                      {formatCurrency(tx.xquisito_net_income)}
+                      {formatCurrency(tx.even_net_income)}
                     </span>
                   </td>
                   <td className="px-5 py-4 whitespace-nowrap text-right hidden lg:table-cell">

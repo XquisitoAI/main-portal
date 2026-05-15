@@ -7,8 +7,8 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Main Portal - Xquisito",
-  description: "Portal de Super Administrador de Xquisito",
+  title: "Main Portal - Even",
+  description: "Portal de Super Administrador de Even",
   icons: {
     icon: [
       {

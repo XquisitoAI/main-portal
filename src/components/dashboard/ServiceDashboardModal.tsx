@@ -71,7 +71,7 @@ const ServiceDashboardModal: React.FC<ServiceDashboardModalProps> = ({
     | "transactions"
     | "avgTicket"
     | "avgTicketPerTransaction"
-    | "xquisito"
+    | "even"
   >("gmv");
   const [isMetricDropdownOpen, setIsMetricDropdownOpen] = useState(false);
 
@@ -153,13 +153,13 @@ const ServiceDashboardModal: React.FC<ServiceDashboardModalProps> = ({
         transactions: 0,
         avgTicket: 0,
         avgTicketPerTransaction: 0,
-        xquisito: 0,
+        even: 0,
         gmvChange: 0,
         ordersChange: 0,
         transactionsChange: 0,
         avgTicketChange: 0,
         avgTicketPerTransactionChange: 0,
-        xquisitoChange: 0,
+        evenChange: 0,
       };
     }
 
@@ -221,23 +221,23 @@ const ServiceDashboardModal: React.FC<ServiceDashboardModalProps> = ({
         ? ((lastAvgTxTicket - prevAvgTxTicket) / prevAvgTxTicket) * 100
         : 0;
 
-    const xquisitoKey = `${serviceName}_income`;
-    const totalXquisito = volumeData.reduce(
-      (s: number, i: any) => s + (i[xquisitoKey] || 0),
+    const evenKey = `${serviceName}_income`;
+    const totalEven = volumeData.reduce(
+      (s: number, i: any) => s + (i[evenKey] || 0),
       0,
     );
-    const lastXquisito =
+    const lastEven =
       volumeData.length > 0
-        ? volumeData[volumeData.length - 1][xquisitoKey] || 0
+        ? volumeData[volumeData.length - 1][evenKey] || 0
         : 0;
-    const prevXquisito =
+    const prevEven =
       volumeData.length > 1
-        ? volumeData[volumeData.length - 2][xquisitoKey] || 0
+        ? volumeData[volumeData.length - 2][evenKey] || 0
         : 0;
-    const xquisitoChange =
-      prevXquisito > 0
-        ? ((lastXquisito - prevXquisito) / prevXquisito) * 100
-        : lastXquisito > 0
+    const evenChange =
+      prevEven > 0
+        ? ((lastEven - prevEven) / prevEven) * 100
+        : lastEven > 0
           ? 100
           : 0;
 
@@ -247,13 +247,13 @@ const ServiceDashboardModal: React.FC<ServiceDashboardModalProps> = ({
       transactions: totalTransactions,
       avgTicket,
       avgTicketPerTransaction,
-      xquisito: totalXquisito,
+      even: totalEven,
       gmvChange,
       ordersChange,
       transactionsChange,
       avgTicketChange,
       avgTicketPerTransactionChange,
-      xquisitoChange,
+      evenChange,
     };
   }, [volumeData, ordersData, transactionsData, serviceName]);
 
@@ -267,7 +267,7 @@ const ServiceDashboardModal: React.FC<ServiceDashboardModalProps> = ({
           value: "avgTicketPerTransaction",
           label: "Ticket promedio por transacción",
         },
-        { value: "xquisito", label: "Ingresos Xquisito" },
+        { value: "even", label: "Ingresos Even" },
       ]
     : [
         { value: "gmv", label: "GMV total" },
@@ -276,7 +276,7 @@ const ServiceDashboardModal: React.FC<ServiceDashboardModalProps> = ({
           value: "avgTicketPerTransaction",
           label: "Ticket promedio por transacción",
         },
-        { value: "xquisito", label: "Ingresos Xquisito" },
+        { value: "even", label: "Ingresos Even" },
       ];
 
   const chartData = useMemo(() => {
@@ -290,7 +290,7 @@ const ServiceDashboardModal: React.FC<ServiceDashboardModalProps> = ({
       const avgTicket = totalOrders > 0 ? totalGmv / totalOrders : 0;
       const avgTicketPerTx =
         totalTransactions > 0 ? totalGmv / totalTransactions : 0;
-      const xquisitoKey = `${serviceName}_income`;
+      const evenKey = `${serviceName}_income`;
       return {
         date: volumeItem.date,
         gmv: totalGmv,
@@ -298,7 +298,7 @@ const ServiceDashboardModal: React.FC<ServiceDashboardModalProps> = ({
         transactions: totalTransactions,
         avgTicket: Math.round(avgTicket),
         avgTicketPerTransaction: Math.round(avgTicketPerTx),
-        xquisito: (volumeItem as any)[xquisitoKey] || 0,
+        even: (volumeItem as any)[evenKey] || 0,
       };
     });
   }, [volumeData, ordersData, transactionsData, serviceName]);
@@ -349,7 +349,7 @@ const ServiceDashboardModal: React.FC<ServiceDashboardModalProps> = ({
       case "gmv":
       case "avgTicket":
       case "avgTicketPerTransaction":
-      case "xquisito":
+      case "even":
         return formatCurrency(value);
       default:
         return formatNumber(value);
@@ -357,7 +357,7 @@ const ServiceDashboardModal: React.FC<ServiceDashboardModalProps> = ({
   };
 
   const formatYAxisTick = (value: number) => {
-    if (selectedMetric === "gmv" || selectedMetric === "xquisito")
+    if (selectedMetric === "gmv" || selectedMetric === "even")
       return formatCurrency(value).split(".")[0];
     if (
       selectedMetric === "avgTicket" ||
@@ -628,15 +628,15 @@ const ServiceDashboardModal: React.FC<ServiceDashboardModalProps> = ({
                 </div>
                 <div className="bg-white rounded-lg p-2 sm:p-4 border border-gray-100 shadow-sm">
                   <h3 className="text-[10px] sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                    Ingresos Xquisito
+                    Ingresos Even
                   </h3>
                   <p className="text-base sm:text-2xl font-semibold">
-                    {formatCurrency(serviceMetrics.xquisito)}
+                    {formatCurrency(serviceMetrics.even)}
                   </p>
                   <div
-                    className={`text-[10px] sm:text-xs mt-1 ${serviceMetrics.xquisitoChange >= 0 ? "text-green-600" : "text-red-600"}`}
+                    className={`text-[10px] sm:text-xs mt-1 ${serviceMetrics.evenChange >= 0 ? "text-green-600" : "text-red-600"}`}
                   >
-                    {formatChange(serviceMetrics.xquisitoChange)} vs. período
+                    {formatChange(serviceMetrics.evenChange)} vs. período
                     anterior
                   </div>
                 </div>
@@ -687,15 +687,15 @@ const ServiceDashboardModal: React.FC<ServiceDashboardModalProps> = ({
                 </div>
                 <div className="bg-white rounded-lg p-2 sm:p-4 border border-gray-100 shadow-sm">
                   <h3 className="text-[10px] sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                    Ingresos Xquisito
+                    Ingresos Even
                   </h3>
                   <p className="text-base sm:text-2xl font-semibold">
-                    {formatCurrency(serviceMetrics.xquisito)}
+                    {formatCurrency(serviceMetrics.even)}
                   </p>
                   <div
-                    className={`text-[10px] sm:text-xs mt-1 ${serviceMetrics.xquisitoChange >= 0 ? "text-green-600" : "text-red-600"}`}
+                    className={`text-[10px] sm:text-xs mt-1 ${serviceMetrics.evenChange >= 0 ? "text-green-600" : "text-red-600"}`}
                   >
-                    {formatChange(serviceMetrics.xquisitoChange)} vs. período
+                    {formatChange(serviceMetrics.evenChange)} vs. período
                     anterior
                   </div>
                 </div>

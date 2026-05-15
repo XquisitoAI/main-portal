@@ -130,7 +130,7 @@ export interface DashboardMetrics {
     percentage: number;
   }>;
 
-  // Distribución por servicio Xquisito
+  // Distribución por servicio Even
   services_distribution: Array<{
     service_name: string; // 'Tap Order & Pay', 'Flex Bill', etc.
     usage_count: number;
@@ -332,7 +332,7 @@ export interface SuperAdminDashboard {
 export interface SuperAdminStats {
   // Métricas principales
   transaction_volume: number;
-  xquisito_income: number;
+  even_income: number;
   active_diners: number;
   successful_orders: number;
   active_admins: number;
@@ -346,7 +346,7 @@ export interface SuperAdminStats {
 
   // Cambios porcentuales
   transaction_volume_change: number;
-  xquisito_income_change: number;
+  even_income_change: number;
   active_diners_change: number;
   successful_orders_change: number;
   active_admins_change: number;
@@ -356,7 +356,7 @@ export interface SuperAdminStats {
   // Métricas del período anterior
   previous_period?: {
     transaction_volume: number;
-    xquisito_income: number;
+    even_income: number;
     active_diners: number;
     successful_orders: number;
     active_admins: number;
@@ -387,7 +387,7 @@ export interface SuperAdminFilters {
   start_date?: string;
   end_date?: string;
   start_time?: string; // "HH:00" — solo para view_type=hourly
-  end_time?: string;   // "HH:00" — solo para view_type=hourly
+  end_time?: string; // "HH:00" — solo para view_type=hourly
   restaurant_id?: number | number[]; // Permitir un ID o array de IDs
   service?:
     | "todos"
@@ -407,7 +407,7 @@ export interface TransactionHistoryItem {
   total_amount_charged: number;
   tip_amount: number;
   restaurant_net_income: number;
-  xquisito_net_income: number;
+  even_net_income: number;
   ecart_commission_total: number;
   created_at: string;
   restaurant_id: number;

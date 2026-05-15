@@ -43,10 +43,10 @@ const QrManager: React.FC = () => {
     ? branches.filter((branch) => branch.clientId === selectedClientId)
     : branches;
   const selectedBranch = branches.find(
-    (branch) => branch.id === selectedBranchId
+    (branch) => branch.id === selectedBranchId,
   );
   const selectedClient = clients.find(
-    (client) => client.id === selectedClientId
+    (client) => client.id === selectedClientId,
   );
   const clientName = selectedBranch
     ? clients.find((client) => client.id === selectedBranch.clientId)?.name
@@ -61,7 +61,7 @@ const QrManager: React.FC = () => {
     "tap-order-pay": "table",
     "room-service": "room",
     "pick-n-go": "pickup",
-    "tap-pay":"table"
+    "tap-pay": "table",
   };
 
   // Auto-detectar tipo de QR cuando cambia el servicio
@@ -95,11 +95,13 @@ const QrManager: React.FC = () => {
   }, [selectedClientId, selectedBranchId]);
 
   // Verificar si ya existe un QR de Pick & Go para la sucursal seleccionada
-  const existingPickAndGoQr = service === "pick-n-go" && selectedBranchId
-    ? qrCodes.find(
-        (qr) => qr.branchId === selectedBranchId && qr.service === "pick-n-go"
-      )
-    : null;
+  const existingPickAndGoQr =
+    service === "pick-n-go" && selectedBranchId
+      ? qrCodes.find(
+          (qr) =>
+            qr.branchId === selectedBranchId && qr.service === "pick-n-go",
+        )
+      : null;
 
   // Validar que el número de QR codes solicitado no exceda la capacidad
   const validateQrCodeCount = (): boolean => {
@@ -113,12 +115,12 @@ const QrManager: React.FC = () => {
     // Validación especial para Pick & Go: solo 1 QR por sucursal
     if (service === "pick-n-go") {
       const existingPickAndGoQr = qrCodes.find(
-        (qr) => qr.branchId === selectedBranchId && qr.service === "pick-n-go"
+        (qr) => qr.branchId === selectedBranchId && qr.service === "pick-n-go",
       );
 
       if (existingPickAndGoQr) {
         setValidationError(
-          "Ya existe un código QR de Pick & Go para esta sucursal. Solo se permite 1 QR de Pick & Go por sucursal."
+          "Ya existe un código QR de Pick & Go para esta sucursal. Solo se permite 1 QR de Pick & Go por sucursal.",
         );
         return false;
       }
@@ -137,7 +139,7 @@ const QrManager: React.FC = () => {
 
     if (qrType === "table" && endNumber > selectedBranch.tables) {
       setValidationError(
-        `La sucursal solo tiene ${selectedBranch.tables} mesas. No puedes generar QR codes más allá de la mesa ${selectedBranch.tables}.`
+        `La sucursal solo tiene ${selectedBranch.tables} mesas. No puedes generar QR codes más allá de la mesa ${selectedBranch.tables}.`,
       );
       return false;
     }
@@ -147,7 +149,7 @@ const QrManager: React.FC = () => {
       const roomCount = client.roomCount || 0;
       if (endNumber > roomCount) {
         setValidationError(
-          `El cliente solo tiene ${roomCount} habitaciones. No puedes generar QR codes más allá de la habitación ${roomCount}.`
+          `El cliente solo tiene ${roomCount} habitaciones. No puedes generar QR codes más allá de la habitación ${roomCount}.`,
         );
         return false;
       }
@@ -265,7 +267,7 @@ const QrManager: React.FC = () => {
           URL.revokeObjectURL(downloadUrl);
         },
         "image/png",
-        1.0 // Calidad máxima
+        1.0, // Calidad máxima
       );
 
       URL.revokeObjectURL(url);
@@ -292,7 +294,9 @@ const QrManager: React.FC = () => {
 
     try {
       // Obtener el branch_number de la sucursal seleccionada
-      const selectedBranch = branches.find(b => b.id === editingQrCode.branchId);
+      const selectedBranch = branches.find(
+        (b) => b.id === editingQrCode.branchId,
+      );
 
       await updateQrCode(editingQrCode.id, {
         service: editingQrCode.service,
@@ -366,7 +370,9 @@ const QrManager: React.FC = () => {
   return (
     <div className="space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0">
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-800">QR Manager</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
+          QR Manager
+        </h1>
         <button
           className="flex items-center px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm sm:text-base w-full sm:w-auto justify-center sm:justify-start"
           onClick={() => setShowQrForm(true)}
@@ -469,7 +475,9 @@ const QrManager: React.FC = () => {
                   min="1"
                   className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={startNumber}
-                  onChange={(e) => setStartNumber(parseInt(e.target.value) || 1)}
+                  onChange={(e) =>
+                    setStartNumber(parseInt(e.target.value) || 1)
+                  }
                   disabled={!selectedBranchId}
                 />
                 <p className="mt-1 text-[10px] sm:text-xs text-gray-500">
@@ -508,7 +516,8 @@ const QrManager: React.FC = () => {
               <div className="col-span-1 sm:col-span-2">
                 <div className="p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg">
                   <p className="text-xs sm:text-sm text-blue-800">
-                    <strong>Pick & Go:</strong> Solo se permite 1 QR por sucursal. Este QR será válido para toda la sucursal.
+                    <strong>Pick & Go:</strong> Solo se permite 1 QR por
+                    sucursal. Este QR será válido para toda la sucursal.
                   </p>
                 </div>
               </div>
@@ -518,7 +527,11 @@ const QrManager: React.FC = () => {
               <div className="col-span-1 sm:col-span-2">
                 <div className="p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg">
                   <p className="text-xs sm:text-sm text-red-800">
-                    <strong>Ya existe un código QR de Pick & Go para esta sucursal.</strong> Solo se permite 1 QR de Pick & Go por sucursal. No puedes crear otro.
+                    <strong>
+                      Ya existe un código QR de Pick & Go para esta sucursal.
+                    </strong>{" "}
+                    Solo se permite 1 QR de Pick & Go por sucursal. No puedes
+                    crear otro.
                   </p>
                 </div>
               </div>
@@ -618,7 +631,9 @@ const QrManager: React.FC = () => {
         {loading.isLoading ? (
           <div className="p-8 sm:p-12 text-center">
             <div className="inline-block animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-blue-600"></div>
-            <p className="mt-3 sm:mt-4 text-sm sm:text-base text-gray-500">Cargando códigos QR...</p>
+            <p className="mt-3 sm:mt-4 text-sm sm:text-base text-gray-500">
+              Cargando códigos QR...
+            </p>
           </div>
         ) : filteredQrCodes.length > 0 ? (
           <div className="p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
@@ -627,7 +642,7 @@ const QrManager: React.FC = () => {
               const client = branch
                 ? clients.find((c) => c.id === branch.clientId)
                 : null;
-              const qrUrl = `https://xquisito.ai/qr/${qrCode.code}`;
+              const qrUrl = `https://letseven.io/qr/${qrCode.code}`;
 
               return (
                 <div
@@ -650,21 +665,25 @@ const QrManager: React.FC = () => {
                               : qrCode.service === "room-service"
                                 ? "bg-green-100 text-green-700"
                                 : qrCode.service === "tap-pay"
-                                ? "bg-red-100 text-red-700"
-                                : "bg-orange-100 text-orange-700"
+                                  ? "bg-red-100 text-red-700"
+                                  : "bg-orange-100 text-orange-700"
                         }`}
                       >
                         {qrCode.service
                           .split("-")
                           .map(
                             (word) =>
-                              word.charAt(0).toUpperCase() + word.slice(1)
+                              word.charAt(0).toUpperCase() + word.slice(1),
                           )
                           .join(" ")}
                       </span>
                     </div>
-                    <h3 className="font-medium text-xs sm:text-sm">{client?.name}</h3>
-                    <p className="text-[10px] sm:text-xs text-gray-500">{branch?.name}</p>
+                    <h3 className="font-medium text-xs sm:text-sm">
+                      {client?.name}
+                    </h3>
+                    <p className="text-[10px] sm:text-xs text-gray-500">
+                      {branch?.name}
+                    </p>
                     <p className="text-xs sm:text-sm font-semibold text-gray-700 mt-1">
                       {qrCode.qrType === "table" &&
                         `Mesa #${qrCode.tableNumber}`}
@@ -782,7 +801,7 @@ const QrManager: React.FC = () => {
                   <option value="">Seleccionar Sucursal</option>
                   {branches
                     .filter(
-                      (branch) => branch.clientId === editingQrCode.clientId
+                      (branch) => branch.clientId === editingQrCode.clientId,
                     )
                     .map((branch) => (
                       <option key={branch.id} value={branch.id}>
@@ -809,7 +828,7 @@ const QrManager: React.FC = () => {
                   <option value="">Seleccionar Servicio</option>
                   {(() => {
                     const editingClient = clients.find(
-                      (c) => c.id === editingQrCode.clientId
+                      (c) => c.id === editingQrCode.clientId,
                     );
                     const clientServices = editingClient?.services || [];
                     const serviceLabels: Record<string, string> = {

@@ -72,7 +72,7 @@ const Sidebar: React.FC = () => {
         <div className="max-w-[64px] max-h-[64px] pt-4 pb-3">
           <img
             src="/logo-short-white.webp"
-            alt="Xquisito"
+            alt="Even Logo"
             className="object-contain w-full h-full"
           />
         </div>

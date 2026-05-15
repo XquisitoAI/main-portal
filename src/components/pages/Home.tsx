@@ -179,7 +179,7 @@ const Home: React.FC = () => {
         gmvPercentage: (volumeData.volume / totalVolume) * 100,
         usage: ordersData?.count || 0,
         quota: totalOrders,
-        xquisitoIncome: incomeData?.income || 0,
+        evenIncome: incomeData?.income || 0,
         keyMetric: {
           name: "Órdenes",
           value: ordersData?.count || 0,
@@ -283,14 +283,14 @@ const Home: React.FC = () => {
               />
 
               <GlobalKpiCard
-                title="Ingresos Xquisito"
-                value={formatCurrency(superAdminStats?.xquisito_income || 0)}
+                title="Ingresos Even"
+                value={formatCurrency(superAdminStats?.even_income || 0)}
                 previousValue={formatCurrency(
-                  superAdminStats?.previous_period?.xquisito_income || 0,
+                  superAdminStats?.previous_period?.even_income || 0,
                 )}
-                change={superAdminStats?.xquisito_income_change || 0}
+                change={superAdminStats?.even_income_change || 0}
                 trendData={[]}
-                tooltip="Comisión/fee de Xquisito sobre el volumen (Volumen transaccionado × fee_servicio)"
+                tooltip="Comisión/fee de Even sobre el volumen (Volumen transaccionado × fee_servicio)"
                 icon={<ReceiptIcon className="w-4 h-4 text-blue-500" />}
                 filters={superAdminFilters}
               />
@@ -432,7 +432,7 @@ const Home: React.FC = () => {
                     gmvPercentage={service.gmvPercentage}
                     usage={service.usage}
                     quota={service.quota}
-                    xquisitoIncome={service.xquisitoIncome}
+                    evenIncome={service.evenIncome}
                     keyMetric={service.keyMetric}
                     secondaryMetric={service.secondaryMetric}
                     initialFilters={superAdminFilters}

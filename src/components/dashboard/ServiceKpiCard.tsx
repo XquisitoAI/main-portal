@@ -20,7 +20,7 @@ interface ServiceKpiCardProps {
   gmvPercentage: number;
   usage: number;
   quota: number;
-  xquisitoIncome?: number;
+  evenIncome?: number;
   keyMetric: KeyMetric;
   secondaryMetric: KeyMetric;
   onClick?: () => void;
@@ -34,7 +34,7 @@ const ServiceKpiCard: React.FC<ServiceKpiCardProps> = ({
   gmvPercentage,
   usage,
   quota,
-  xquisitoIncome = 0,
+  evenIncome = 0,
   keyMetric,
   secondaryMetric,
   onClick,
@@ -104,10 +104,10 @@ const ServiceKpiCard: React.FC<ServiceKpiCardProps> = ({
         <div className="mb-1.5 sm:mb-2">
           <div className="flex items-center justify-between">
             <span className="text-[10px] sm:text-xs text-gray-500">
-              Ingresos Xquisito
+              Ingresos Even
             </span>
             <span className="text-[10px] sm:text-xs font-medium">
-              {formatCompactNumber(xquisitoIncome)}
+              {formatCompactNumber(evenIncome)}
             </span>
           </div>
         </div>

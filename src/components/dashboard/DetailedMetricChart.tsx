@@ -42,7 +42,13 @@ interface TimelineDataItem {
   "Tap & Pay"?: number;
 }
 
-const SERVICES = ["Flex Bill", "Tap Order & Pay", "Pick & Go", "Room Service", "Tap & Pay"];
+const SERVICES = [
+  "Flex Bill",
+  "Tap Order & Pay",
+  "Pick & Go",
+  "Room Service",
+  "Tap & Pay",
+];
 
 // Compara el último período vs. el penúltimo (ej: hoy vs ayer, esta semana vs la anterior)
 const calculatePercentChange = (
@@ -119,8 +125,8 @@ const DetailedMetricChart: React.FC<DetailedMetricChartProps> = ({
 
   // Determinar qué hook usar basado en el título
   const getTimelineHook = () => {
-    if (title === "Ingresos Xquisito") {
-      // Ingresos Xquisito usa los mismos datos que Volumen, pero se calculará con el fee
+    if (title === "Ingresos Even") {
+      // Ingresos Even usa los mismos datos que Volumen, pero se calculará con el fee
       return useVolumeTimeline;
     } else if (title === "Órdenes Exitosas") {
       return useOrdersTimeline;
@@ -147,8 +153,8 @@ const DetailedMetricChart: React.FC<DetailedMetricChartProps> = ({
   const timelineData = useMemo(() => {
     if (!rawTimelineData) return [];
 
-    // Para Ingresos Xquisito, aplicar el fee del 3%
-    if (title === "Ingresos Xquisito") {
+    // Para Ingresos Even, aplicar el fee del 3%
+    if (title === "Ingresos Even") {
       const processedData = rawTimelineData.map((item: TimelineDataItem) => ({
         date: item.date,
         "Flex Bill": (item["Flex Bill"] || 0) * 0.03,
@@ -158,7 +164,7 @@ const DetailedMetricChart: React.FC<DetailedMetricChartProps> = ({
         "Tap & Pay": (item["Tap & Pay"] || 0) * 0.03,
       }));
 
-      console.log("=== FRONTEND: DetailedMetricChart (Ingresos Xquisito) ===");
+      console.log("=== FRONTEND: DetailedMetricChart (Ingresos Even) ===");
       console.log("Raw data total before 3% fee:");
       const rawTotal = rawTimelineData.reduce(
         (sum: number, item: TimelineDataItem) =>
